@@ -1,0 +1,20 @@
+node_modules/
+.next/
+out/
+build/
+
+# entorno
+.env
+.env*.local
+
+# fotografías subidas por usuarios (contenido generado en tiempo de ejecución)
+public/uploads/*
+!public/uploads/.gitkeep
+
+# logs
+npm-debug.log*
+*.log
+
+# sistema
+.DS_Store
+Thumbs.db

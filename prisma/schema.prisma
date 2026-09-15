@@ -1,0 +1,74 @@
+// Modelo de datos del Sprint 1: un único reporte que representa tanto
+// mascotas perdidas (HU-1, HU-13, HU-3) como mascotas encontradas (HU-2, HU-5).
+// El campo `tipo` diferencia el caso de uso sin duplicar el modelo.
+//
+// Base de datos: PostgreSQL alojado en Supabase.
+// `url` usa el connection pooler de Supabase (para las consultas de la app
+// en runtime) y `directUrl` usa la conexión directa (puerto 5432), que
+// Prisma necesita para `db push` / `migrate` porque el pooler en modo
+// transacción no soporta declaraciones preparadas.
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum TipoReporte {
+  PERDIDA
+  ENCONTRADA
+}
+
+enum Tamano {
+  PEQUENO
+  MEDIANO
+  GRANDE
+}
+
+// Único valor activo en el Sprint 1. El campo existe para no romper el
+// modelo cuando en un sprint futuro se implemente HU-12 (marcar reencontrada).
+enum EstadoReporte {
+  ACTIVO
+}
+
+model Reporte {
+  id   String      @id @default(cuid())
+  tipo TipoReporte
+
+  // Datos mínimos obligatorios (HU-13)
+  especie String
+  color   String
+  tamano  Tamano
+  zona    String
+  fecha   DateTime
+
+  // Datos opcionales de la mascota
+  raza              String?
+  nombre            String?
+  tieneCollar       Boolean?
+  senasParticulares String?
+
+  // Fotografía (HU-1 / HU-5): ruta relativa servida desde /uploads
+  fotoUrl String
+
+  // Ubicación geográfica (HU-3)
+  latitud  Float
+  longitud Float
+
+  // Información de contacto (opcional para reportes anónimos de HU-2)
+  contactoNombre   String?
+  contactoTelefono String?
+  contactoEmail    String?
+
+  // HU-2: permite registrar un hallazgo sin crear cuenta
+  reportanteAnonimo Boolean @default(false)
+
+  estado   EstadoReporte @default(ACTIVO)
+  creadoEn DateTime      @default(now())
+
+  @@index([tipo])
+}
