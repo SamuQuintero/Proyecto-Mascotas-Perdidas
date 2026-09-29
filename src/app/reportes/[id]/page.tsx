@@ -1,14 +1,16 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import DetalleReporte from "@/components/DetalleReporte";
-import type { Reporte } from "@/lib/tipos";
+import { adminActual } from "@/lib/admin";
+import { alertasDeReporte } from "@/lib/alertas";
+import { serializarReporte } from "@/lib/tipos";
 
 export default async function DetalleReportePage({
   params,
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { nuevo?: string };
+  searchParams: { nuevo?: string; editado?: string };
 }) {
   const reporte = await prisma.reporte.findUnique({
     where: { id: params.id },
@@ -18,10 +20,21 @@ export default async function DetalleReportePage({
     notFound();
   }
 
+  const serializado = serializarReporte(reporte);
+  const alertas = await alertasDeReporte(serializado);
+
   return (
     <DetalleReporte
-      reporte={reporte as unknown as Reporte}
-      esNuevo={searchParams.nuevo === "true"}
+      reporte={serializado}
+      alertas={alertas}
+      aviso={
+        searchParams.nuevo === "true"
+          ? "nuevo"
+          : searchParams.editado === "true"
+            ? "editado"
+            : null
+      }
+      esAdmin={adminActual() !== null}
     />
   );
 }

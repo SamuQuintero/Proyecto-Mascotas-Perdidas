@@ -1,20 +1,28 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  MapContainer,
+  Marker,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import L from "leaflet";
+import { LocateFixed } from "lucide-react";
 
-// Centro por defecto cuando aún no hay un punto seleccionado ni permiso de
-// geolocalización (Bogotá, Colombia). Es solo el punto de partida visual del
-// mapa, no se guarda como ubicación del reporte.
-const CENTRO_POR_DEFECTO: [number, number] = [4.711, -74.0721];
+// El mapa siempre arranca centrado en Pasto (Nariño), la ciudad donde opera
+// la aplicación. Es solo el punto de partida visual: no se guarda como
+// ubicación del reporte hasta que la persona toca el mapa o usa su ubicación.
+export const CENTRO_PASTO: [number, number] = [1.2136, -77.2811];
+const CENTRO_POR_DEFECTO = CENTRO_PASTO;
 
 function crearIcono(color: string) {
   return L.divIcon({
     className: "",
-    html: `<div style="width:28px;height:28px;border-radius:50% 50% 50% 0;background:${color};transform:rotate(-45deg);border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
+    html: `<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;background:${color};transform:rotate(-45deg);border:3px solid white;box-shadow:0 6px 14px rgba(28,24,41,0.35)"></div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 30],
   });
 }
 
@@ -35,6 +43,18 @@ function CapturaClicks({
       onCambiar(evento.latlng.lat, evento.latlng.lng);
     },
   });
+  return null;
+}
+
+// Si el punto queda fuera de la vista (p. ej. al usar "mi ubicación"),
+// mueve el mapa hasta él.
+function Recentrar({ lat, lng }: { lat: number | null; lng: number | null }) {
+  const mapa = useMap();
+  useEffect(() => {
+    if (lat !== null && lng !== null && !mapa.getBounds().contains([lat, lng])) {
+      mapa.setView([lat, lng], 15);
+    }
+  }, [lat, lng, mapa]);
   return null;
 }
 
@@ -66,10 +86,10 @@ export default function MapaSelector({ lat, lng, color, onCambiar }: Props) {
 
   return (
     <div className="space-y-2">
-      <div className="h-64 w-full overflow-hidden rounded-xl border border-slate-200">
+      <div className="h-72 w-full overflow-hidden rounded-2xl border border-tinta-200">
         <MapContainer
           center={posicion}
-          zoom={lat !== null ? 15 : 12}
+          zoom={lat !== null ? 15 : 14}
           className="h-full w-full"
         >
           <TileLayer
@@ -77,22 +97,24 @@ export default function MapaSelector({ lat, lng, color, onCambiar }: Props) {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <CapturaClicks onCambiar={onCambiar} />
+          <Recentrar lat={lat} lng={lng} />
           {lat !== null && lng !== null && (
             <Marker position={[lat, lng]} icon={icono} />
           )}
         </MapContainer>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-tinta-500">
           Toca el mapa para marcar el punto exacto.
         </p>
         <button
           type="button"
           onClick={usarMiUbicacion}
           disabled={buscandoUbicacion}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-full border border-tinta-200 bg-white px-3.5 py-2 text-xs font-semibold text-tinta-700 shadow-sm transition hover:-translate-y-0.5 hover:border-tinta-300 disabled:opacity-50"
         >
-          {buscandoUbicacion ? "Buscando…" : "📍 Usar mi ubicación actual"}
+          <LocateFixed className="h-3.5 w-3.5" aria-hidden="true" />
+          {buscandoUbicacion ? "Buscando…" : "Usar mi ubicación actual"}
         </button>
       </div>
       {errorGeo && <p className="text-xs text-red-600">{errorGeo}</p>}

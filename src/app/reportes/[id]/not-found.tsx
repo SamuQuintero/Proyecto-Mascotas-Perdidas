@@ -1,18 +1,15 @@
 import Link from "next/link";
+import { SearchX } from "lucide-react";
 
 export default function ReporteNoEncontrado() {
   return (
-    <div className="mx-auto max-w-md space-y-4 py-16 text-center">
-      <h1 className="text-2xl font-bold text-slate-900">
-        Reporte no encontrado
-      </h1>
-      <p className="text-slate-600">
-        Este reporte no existe o fue eliminado.
-      </p>
-      <Link
-        href="/reportes"
-        className="inline-block rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-      >
+    <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-20 text-center">
+      <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-perdida-100 text-perdida-600">
+        <SearchX className="h-8 w-8" aria-hidden="true" />
+      </span>
+      <h1 className="titulo-display text-3xl">Reporte no encontrado</h1>
+      <p className="text-tinta-500">Este reporte no existe o fue retirado.</p>
+      <Link href="/reportes" className="boton-primario">
         Ver todos los reportes
       </Link>
     </div>

@@ -1,10 +1,20 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import Link from "next/link";
+import { Bricolage_Grotesque, Plus_Jakarta_Sans } from "next/font/google";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
+import PiePagina from "@/components/PiePagina";
+import { adminActual } from "@/lib/admin";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+});
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
+});
 
 export const metadata: Metadata = {
   title: "PetMatch — Mascotas perdidas y encontradas",
@@ -17,29 +27,18 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const admin = adminActual();
+
   return (
     <html lang="es">
-      <body className={`${inter.variable} font-sans antialiased`}>
-        <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-            <Link
-              href="/"
-              className="flex items-center gap-2 text-lg font-bold text-slate-900"
-            >
-              <span aria-hidden="true">🐾</span>
-              PetMatch
-            </Link>
-            <Link
-              href="/reportes"
-              className="text-sm font-medium text-slate-600 hover:text-slate-900"
-            >
-              Ver reportes
-            </Link>
-          </div>
-        </header>
-        <main className="mx-auto min-h-[calc(100vh-64px)] max-w-5xl px-4 py-8">
+      <body
+        className={`${jakarta.variable} ${bricolage.variable} flex min-h-screen flex-col font-sans antialiased`}
+      >
+        <Navbar admin={admin} />
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-6 sm:px-6 sm:pt-10">
           {children}
         </main>
+        <PiePagina />
       </body>
     </html>
   );

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { primerErrorPorCampo, reporteSchema } from "./validacion";
+import { fechaParaInput, horaParaInput } from "./formato";
+import { mascotaSchema, primerErrorPorCampo, reporteSchema } from "./validacion";
 
 const datosBasePerdida = {
   tipo: "PERDIDA" as const,
@@ -8,6 +9,7 @@ const datosBasePerdida = {
   tamano: "MEDIANO" as const,
   zona: "Barrio Santa Bárbara",
   fecha: "2026-01-01",
+  hora: "15:30",
   latitud: 4.71,
   longitud: -74.07,
   contactoTelefono: "3001234567",
@@ -20,6 +22,7 @@ const datosBaseEncontrada = {
   tamano: "PEQUENO" as const,
   zona: "Cerca al parque principal",
   fecha: "2026-01-01",
+  hora: "08:05",
   latitud: 4.6,
   longitud: -74.08,
   reportanteAnonimo: true,
@@ -88,5 +91,69 @@ describe("reporteSchema — HU-13 (datos mínimos obligatorios)", () => {
       tipo: "OTRO",
     });
     expect(resultado.success).toBe(false);
+  });
+
+  it("interpreta 'false' enviado por FormData como no anónimo", () => {
+    const resultado = reporteSchema.safeParse({
+      ...datosBasePerdida,
+      reportanteAnonimo: "false",
+    });
+    expect(resultado.success && resultado.data.reportanteAnonimo).toBe(false);
+  });
+
+  it("interpreta 'true' enviado por FormData como anónimo", () => {
+    const resultado = reporteSchema.safeParse({
+      ...datosBaseEncontrada,
+      reportanteAnonimo: "true",
+    });
+    expect(resultado.success && resultado.data.reportanteAnonimo).toBe(true);
+  });
+
+  it("exige la hora aproximada", () => {
+    const { hora, ...sinHora } = datosBasePerdida;
+    const resultado = reporteSchema.safeParse(sinHora);
+    expect(resultado.success).toBe(false);
+    if (!resultado.success) {
+      expect(primerErrorPorCampo(resultado.error).hora).toBeDefined();
+    }
+  });
+
+  it("rechaza una hora con formato inválido", () => {
+    const resultado = reporteSchema.safeParse({ ...datosBasePerdida, hora: "25:00" });
+    expect(resultado.success).toBe(false);
+  });
+
+  it("rechaza una hora futura del día de hoy", () => {
+    const enDosHoras = new Date(Date.now() + 2 * 60 * 60 * 1000);
+    const resultado = reporteSchema.safeParse({
+      ...datosBasePerdida,
+      fecha: fechaParaInput(enDosHoras),
+      hora: horaParaInput(enDosHoras),
+    });
+    expect(resultado.success).toBe(false);
+  });
+});
+
+describe("mascotaSchema — HU-8 (perfil con QR)", () => {
+  const perfil = {
+    nombre: "Toby",
+    especie: "Perro",
+    color: "Café",
+    tamano: "MEDIANO",
+    contactoNombre: "Samuel",
+    contactoTelefono: "300 123 4567",
+  };
+
+  it("acepta un perfil con los datos mínimos", () => {
+    expect(mascotaSchema.safeParse(perfil).success).toBe(true);
+  });
+
+  it("exige un teléfono válido para que puedan contactar al dueño", () => {
+    expect(mascotaSchema.safeParse({ ...perfil, contactoTelefono: "" }).success).toBe(false);
+    expect(mascotaSchema.safeParse({ ...perfil, contactoTelefono: "llámame" }).success).toBe(false);
+  });
+
+  it("exige el nombre de la mascota", () => {
+    expect(mascotaSchema.safeParse({ ...perfil, nombre: " " }).success).toBe(false);
   });
 });

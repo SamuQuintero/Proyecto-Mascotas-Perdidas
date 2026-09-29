@@ -22,10 +22,52 @@ Fuente oficial de las historias de usuario: [`Product Backlog.xlsx`](./Product%2
 | HU-5 | Reportar una mascota encontrada en el mismo lugar donde se publican las pérdidas | ✅ Implementada |
 | HU-3 | Ubicar en un mapa el punto y la fecha de la última vez vista | ✅ Implementada |
 
-Todas las demás historias del backlog (HU-4, HU-6 a HU-24) quedan **fuera
-de alcance** de este Sprint. Ver detalle en
-[docs/ARQUITECTURA.md](./docs/ARQUITECTURA.md) y en la sección
-"Historias futuras" más abajo.
+## Sprint 3
+
+> **Sprint Goal:** Avisar al dueño cuando aparece una mascota que puede ser
+> la suya y darle una placa con QR para prevenir pérdidas.
+
+El backlog vigente tiene 8 historias (ver
+[docs/DISENO_PRODUCTO.md](./docs/DISENO_PRODUCTO.md#5-historias-de-usuario-backlog-vigente)).
+Con este sprint quedan **todas implementadas**.
+
+| ID | Historia | Estado |
+|---|---|---|
+| HU-4 | Alerta cuando se publica un reporte que coincide con las características de la mascota | ✅ Implementada |
+| HU-7 | Notificación cuando hay un hallazgo cerca (a menos de 2 km) del lugar donde se perdió | ✅ Implementada |
+| HU-8 | Perfil digital de la mascota con código QR imprimible | ✅ Implementada |
+
+Además:
+- Cada reporte pide la **fecha y hora** en que se perdió o se encontró la
+  mascota, y muestra la fecha y hora de publicación.
+- El mapa arranca centrado en **Pasto**.
+
+**Cómo llegan las alertas sin cuentas:** el navegador recuerda los reportes
+que se publicaron desde él. La campana 🔔 del navbar revisa cada minuto si
+hay coincidencias o hallazgos cercanos, y el detalle de cada reporte muestra
+sus alertas.
+
+## Sprint 2
+
+| ID | Historia | Estado |
+|---|---|---|
+| HU-6 | Filtrar reportes por zona, especie, color, tamaño y rango de fechas | ✅ Implementada |
+| — | Editar reporte y marcarlo como "reencontrada" (solo administrador) | ✅ Implementada |
+
+**Acceso de administrador.** La aplicación se sigue usando sin cuenta. El
+botón **Admin** del navbar abre `/admin/login`; tras iniciar sesión, el
+administrador tiene un panel (`/admin`) con todos los reportes y puede
+editarlos y marcarlos como reencontrados. Las credenciales se definen en
+`.env` (`ADMIN_USUARIO`, `ADMIN_CONTRASENA`, `ADMIN_SECRETO`; ver
+`.env.example`) y nunca se suben al repositorio.
+
+**Correcciones del Sprint 1 incluidas:**
+- Todos los reportes se guardaban como anónimos (FormData envía `"false"`
+  como texto y `z.coerce.boolean` lo convertía en `true`), así que el
+  contacto del dueño no se mostraba. Se corrigió la validación y los
+  reportes existentes con teléfono o correo.
+- Las fechas se mostraban un día antes por la zona horaria (UTC vs.
+  Colombia).
 
 ## Tecnologías
 
@@ -138,26 +180,16 @@ PetMatch/
 └─ README.md
 ```
 
-## Historias futuras (explícitamente fuera de este Sprint)
+## Posibles mejoras futuras
 
-No implementadas — quedan en el backlog para sprints posteriores:
-
-- HU-4 — Alertas automáticas de coincidencia.
-- HU-6 — Filtros avanzados (zona, especie, color, tamaño, fechas).
-- HU-7 / HU-10 — Comparación e IA sobre fotografías.
-- HU-8 / HU-9 — Perfil digital con código QR.
-- HU-11 — Chat interno entre dueño y hallador.
-- HU-12 — Marcar reporte como "reencontrada".
-- HU-14 a HU-24 — Refugios, veterinarias, microchip, redes sociales,
-  reactivación de reportes, dashboard administrativo, señas específicas de
-  felinos, etc.
-
-**Posible mejora futura** (no es una historia del Excel, es una nota del
-equipo): agregar paginación al listado de reportes cuando el volumen de
-datos crezca.
+Notas del equipo (no son historias del backlog): notificaciones por correo
+o push además de la campana dentro de la app, cuentas de usuario para que
+las alertas lleguen en cualquier dispositivo, y paginación del listado de
+reportes cuando crezca el volumen de datos.
 
 ## Estado del Sprint
 
-**Completado.** Las 5 historias planeadas (HU-1, HU-13, HU-2, HU-5, HU-3)
-están implementadas, el proyecto compila (`npm run build`), corre
-(`npm run dev`) y las pruebas automatizadas pasan (`npm test`).
+**Sprint 1 completado** (HU-1, HU-13, HU-2, HU-5, HU-3).
+**Sprint 2 completado** (HU-6, edición y estado "reencontrada").
+**Sprint 3 completado** (HU-4, HU-7, HU-8): el proyecto compila
+(`npm run build`) y las 60 pruebas automatizadas pasan (`npm test`).

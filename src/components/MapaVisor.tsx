@@ -15,15 +15,15 @@ export default function MapaVisor({ lat, lng, color }: Props) {
     () =>
       L.divIcon({
         className: "",
-        html: `<div style="width:28px;height:28px;border-radius:50% 50% 50% 0;background:${color};transform:rotate(-45deg);border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 28],
+        html: `<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;background:${color};transform:rotate(-45deg);border:3px solid white;box-shadow:0 6px 14px rgba(28,24,41,0.35)"></div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
       }),
     [color]
   );
 
   return (
-    <div className="h-64 w-full overflow-hidden rounded-xl border border-slate-200">
+    <div className="h-64 w-full overflow-hidden rounded-2xl border border-tinta-200">
       <MapContainer
         center={[lat, lng]}
         zoom={15}

@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import {
   FOTO_TAMANO_MAXIMO_BYTES,
@@ -37,4 +37,14 @@ export async function guardarFotoReporte(archivo: File): Promise<string> {
   await writeFile(rutaCompleta, buffer);
 
   return `/uploads/${nombreArchivo}`;
+}
+
+// Borra una foto reemplazada al editar un reporte (HU-25). Solo acepta
+// rutas generadas por guardarFotoReporte (/uploads/<nombre>), así una URL
+// manipulada no puede apuntar fuera de la carpeta de fotos. Si el archivo
+// ya no existe no es un error: el reporte igual queda con la foto nueva.
+export async function eliminarFotoReporte(url: string): Promise<void> {
+  const nombre = url.startsWith("/uploads/") ? url.slice("/uploads/".length) : "";
+  if (!/^[\w-]+\.(jpg|png|webp)$/.test(nombre)) return;
+  await unlink(path.join(CARPETA_DESTINO, nombre)).catch(() => {});
 }

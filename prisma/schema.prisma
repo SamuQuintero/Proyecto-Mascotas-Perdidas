@@ -1,5 +1,7 @@
-// Modelo de datos del Sprint 1: un único reporte que representa tanto
-// mascotas perdidas (HU-1, HU-13, HU-3) como mascotas encontradas (HU-2, HU-5).
+// Modelo de datos: un único reporte que representa tanto mascotas perdidas
+// (HU-1, HU-13, HU-3) como mascotas encontradas (HU-2, HU-5). En el Sprint 2
+// se agregan el estado REENCONTRADA (HU-12) y la fecha de última edición
+// (HU-25), e índices para los filtros del listado (HU-6).
 // El campo `tipo` diferencia el caso de uso sin duplicar el modelo.
 //
 // Base de datos: PostgreSQL alojado en Supabase.
@@ -29,10 +31,11 @@ enum Tamano {
   GRANDE
 }
 
-// Único valor activo en el Sprint 1. El campo existe para no romper el
-// modelo cuando en un sprint futuro se implemente HU-12 (marcar reencontrada).
+// ACTIVO: el caso sigue abierto. REENCONTRADA (HU-12): la mascota volvió
+// a casa y el reporte deja de aparecer como pendiente.
 enum EstadoReporte {
   ACTIVO
+  REENCONTRADA
 }
 
 model Reporte {
@@ -44,6 +47,9 @@ model Reporte {
   color   String
   tamano  Tamano
   zona    String
+  // Fecha y hora (hora de Colombia) en que se perdió o se encontró la
+  // mascota. Los reportes anteriores a este cambio solo tenían fecha y
+  // quedaron a las 00:00 de ese día.
   fecha   DateTime
 
   // Datos opcionales de la mascota
@@ -67,8 +73,31 @@ model Reporte {
   // HU-2: permite registrar un hallazgo sin crear cuenta
   reportanteAnonimo Boolean @default(false)
 
-  estado   EstadoReporte @default(ACTIVO)
-  creadoEn DateTime      @default(now())
+  estado         EstadoReporte @default(ACTIVO)
+  reencontradaEn DateTime?
+  creadoEn       DateTime      @default(now())
+  actualizadoEn  DateTime      @default(now()) @updatedAt
 
   @@index([tipo])
+  @@index([estado])
+  @@index([fecha])
+  @@index([especie])
+}
+
+// HU-8: perfil digital de una mascota con código QR imprimible. Es
+// independiente de los reportes: se crea antes de que la mascota se pierda,
+// y el QR de su placa lleva a este perfil con los datos de contacto.
+model Mascota {
+  id                String   @id @default(cuid())
+  nombre            String
+  especie           String
+  raza              String?
+  color             String
+  tamano            Tamano
+  senasParticulares String?
+  fotoUrl           String
+  contactoNombre    String
+  contactoTelefono  String
+  contactoEmail     String?
+  creadoEn          DateTime @default(now())
 }

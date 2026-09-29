@@ -1,7 +1,11 @@
 import { existsSync } from "fs";
 import path from "path";
 import { afterAll, describe, expect, it } from "vitest";
-import { ErrorArchivoInvalido, guardarFotoReporte } from "./almacenamiento";
+import {
+  ErrorArchivoInvalido,
+  eliminarFotoReporte,
+  guardarFotoReporte,
+} from "./almacenamiento";
 
 const archivosGenerados: string[] = [];
 
@@ -37,6 +41,21 @@ describe("guardarFotoReporte — almacenamiento de fotografías", () => {
     await expect(guardarFotoReporte(archivo)).rejects.toThrow(
       ErrorArchivoInvalido
     );
+  });
+
+  it("elimina una foto reemplazada al editar (HU-25)", async () => {
+    const archivo = crearArchivoFalso("vieja.png", "image/png", 512);
+    const url = await guardarFotoReporte(archivo);
+    const rutaDisco = path.join(process.cwd(), "public", url);
+    expect(existsSync(rutaDisco)).toBe(true);
+
+    await eliminarFotoReporte(url);
+    expect(existsSync(rutaDisco)).toBe(false);
+  });
+
+  it("no borra nada fuera de la carpeta de fotos", async () => {
+    await eliminarFotoReporte("/uploads/../../package.json");
+    expect(existsSync(path.join(process.cwd(), "package.json"))).toBe(true);
   });
 
   afterAll(async () => {

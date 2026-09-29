@@ -143,41 +143,54 @@ flowchart LR
 - Pantalla de perfil de mascota + QR (HU-8/9): nueva sección `/mascotas/`, fuera del flujo de reportes.
 - Sesión/cuenta (header): solo aparece cuando el backlog lo requiera (sección 5).
 
-## 5. Historias de usuario: usadas y por usar — roadmap por sprint
+## 5. Historias de usuario (backlog vigente)
 
-Se re-verificaron las 24 historias directamente en `Product Backlog.xlsx` (sin modificar ninguna). La priorización de Sprint 1 combinó el score de **Prioridad** con las **dependencias reales** entre historias (p. ej. HU-13 se adelantó pese a tener menor score porque HU-1/HU-2/HU-5 la necesitan). Este roadmap aplica la misma lógica a las 19 historias restantes: prioridad como señal principal, pero agrupando por dependencia técnica y por si comparten la misma infraestructura, para que cada sprint entregue un incremento coherente y demostrable.
+El backlog se redujo a 8 historias. HU-7 cambió: la comparación automática
+de fotos se reemplazó por una notificación de hallazgos cercanos al lugar de
+la pérdida.
 
-| Sprint | HU | Historia (resumen) | Prioridad | Complejidad | Por qué va en este sprint |
-|---|---|---|---|---|---|
-| **1** ✅ | HU-1 | Registrar reporte de mascota perdida | 72 | 5 | Núcleo del producto |
-| **1** ✅ | HU-2 | Registrar hallazgo sin cuenta | 72 | 4 | Núcleo del producto |
-| **1** ✅ | HU-3 | Ubicar última vez en mapa | 72 | 6 | Núcleo del producto |
-| **1** ✅ | HU-5 | Reportar mascota encontrada | 64 | 5 | Complementa HU-2 |
-| **1** ✅ | HU-13 | Formulario con datos mínimos obligatorios | 42 | 3 | Habilitador técnico de HU-1/2/5 |
-| **2** | HU-6 | Filtrar reportes (zona, especie, color, tamaño, fecha) | 56 | 4 | Hace más fácil encontrar reportes entre las mascotas que ya fueron registradas en el Sprint 1 |
-| **2** | HU-12 | Marcar reporte como "reencontrada" | 48 | 2 | Permite actualizar el estado de una mascota que ya fue encontrada y evitar que el reporte siga apareciendo como pendiente |
-| **2** | HU-21 | Compartir reporte en redes sociales | 20 | 2 | Permite difundir los reportes existentes y aumentar las posibilidades de encontrar una mascota |
-| **2** | HU-25 | Editar reporte | 56 | 4 | Permite corregir o actualizar la información de los reportes que ya fueron registrados |
-| **2** | HU-26 | Eliminar reporte | 30 | 3 | Permite retirar reportes que ya no sean necesarios |
-| **2** | HU-27 | Ordenar reportes por fecha | 30 | 2 | Facilita consultar primero los reportes más recientes |
-| **3** | HU-4 | Alerta de coincidencia automática | 72 | 8 | Empatada en la prioridad más alta del backlog; estaba bloqueada hasta que existieran ambos tipos de reporte (Sprint 1) — ahora es la de mayor valor pendiente |
-| **3** | HU-15 | Advertir posibles reportes duplicados | 30 | 8 | Reutiliza el mismo motor de comparación que construye HU-4 |
-| **3** | HU-19 | Mantener el reporte activo / redifusión | 24 | 5 | Parte del mismo ciclo de vida que alimenta las alertas de HU-4 |
-| **4** | *(RECOMENDACIÓN, no es una historia del Excel)* | Introducir cuentas de usuario (Supabase Auth) | — | — | Habilitador técnico puro: HU-8, HU-9, HU-11 y HU-23 necesitan identidad persistente y ninguna historia oficial la define explícitamente |
-| **4** | HU-23 | Actualizar datos de contacto y fotos | 15 | 2 | La más barata de las que dependen de cuentas; valida el enabler de inmediato |
-| **5** | HU-8 | Perfil digital de mascota con QR imprimible | 48 | 6 | Requiere cuentas (Sprint 4); introduce la entidad "Mascota" persistente |
-| **5** | HU-9 | Escanear QR de la placa | 48 | 5 | Consume directamente lo que crea HU-8 |
-| **6** | HU-11 | Chat interno dueño↔hallador | 48 | 5 | Requiere cuentas; aísla su propia infraestructura (mensajería) de las demás |
-| **7** | HU-7 | Comparación automática de fotos (IA) | 54 | 10 | La complejidad más alta del backlog entero; merece un sprint dedicado |
-| **7** | HU-10 | Buscar por foto | 48 | 8 | Reutiliza el mismo modelo de IA que construye HU-7 |
-| **8** | HU-14 | Listado unificado de refugios/comunidades | 35 | 5 | Introduce la entidad "Organización" (refugio/veterinaria) |
-| **8** | HU-17 | Veterinaria vincula microchip | 24 | 6 | Comparte la entidad "Organización" de HU-14 |
-| **8** | HU-18 | Ver refugios/veterinarias cercanas | 24 | 5 | Comparte la entidad "Organización" de HU-14 |
-| **8** | HU-20 | Refugios publican mascotas bajo resguardo | 24 | 4 | Comparte la entidad "Organización" de HU-14 |
-| **9** | HU-16 | Avisos de cercanía a ciudadanos | 30 | 5 | Requiere geolocalización de "seguidores", no solo de reportes |
-| **9** | HU-22 | Dashboard administrativo de indicadores | 18 | 7 | Necesita el volumen de datos acumulado de los sprints anteriores para ser útil |
-| **9** | HU-24 | Señas propias de felinos | 15 | 2 | Muy barata; se deja de relleno en el último sprint planeado |
+| HU | Historia | Valor | Urgencia | Prioridad | Complejidad | Estado |
+|---|---|---|---|---|---|---|
+| HU-1 | **Como** dueño de mascota **quiero** registrar un único reporte de mi mascota perdida con foto, fecha, zona y señas particulares **para** no tener que repetir la misma publicación en varios grupos y redes | 9 | 8 | 72 | 5 | ✅ Implementada |
+| HU-2 | **Como** hallador **quiero** registrar un hallazgo en menos de un minuto y sin crear una cuenta **para** que la falta de tiempo o de registro no me impida reportar | 9 | 8 | 72 | 4 | ✅ Implementada |
+| HU-3 | **Como** dueño de mascota **quiero** ubicar en un mapa el punto y la fecha donde se vio por última vez a mi mascota **para** concentrar la búsqueda en la zona correcta | 9 | 8 | 72 | 6 | ✅ Implementada |
+| HU-4 | **Como** dueño de mascota **quiero** recibir una alerta apenas se publique un reporte que coincida con las características de mi mascota **para** actuar en las primeras horas de la pérdida | 9 | 8 | 72 | 8 | ✅ Implementada |
+| HU-5 | **Como** hallador **quiero** reportar una mascota encontrada en el mismo lugar donde se publican las pérdidas **para** que mi hallazgo llegue directamente a quien la está buscando | 8 | 8 | 64 | 5 | ✅ Implementada |
+| HU-6 | **Como** dueño de mascota **quiero** filtrar los reportes por zona, especie, color, tamaño y rango de fechas **para** revisar solo lo que puede corresponder a mi caso | 8 | 7 | 56 | 4 | ✅ Implementada |
+| HU-7 | **Como** dueño de mascota **quiero** que el sistema me notifique cuando existe un encuentro cerca o en el lugar donde se perdió mi mascota | — | — | *por definir* | *por definir* | ✅ Implementada |
+| HU-8 | **Como** dueño de mascota **quiero** crear un perfil digital de mi mascota con un código QR imprimible **para** que quien la encuentre pueda contactarme aunque no tenga microchip | 8 | 6 | 48 | 6 | ✅ Implementada |
 
-**Nota sobre la fila "RECOMENDACIÓN" del Sprint 4:** no es una historia del Excel — es una necesidad técnica que identifico para poder construir HU-8/HU-9/HU-11/HU-23. Señalada explícitamente como tal, tal como pediste; no se implementará como si fuera una historia oficial del backlog.
+**Mejoras adicionales ya implementadas** (no son historias del backlog
+vigente): editar reportes y marcarlos como "reencontrada" desde un acceso de
+administrador, y la fecha **y hora** de cada pérdida o hallazgo junto con la
+fecha y hora de publicación.
 
-Este roadmap es una propuesta de planeación, no un compromiso — cada sprint futuro debe repetir el mismo ejercicio de esta fase (verificar contra el Excel, confirmar Sprint Goal, esperar aprobación) antes de implementarse.
+### 5.1 Cómo se implementaron HU-4 y HU-7 (sin cuentas de usuario)
+
+- **Coincidencias (HU-4):** `src/lib/coincidencias.ts` compara un reporte con
+  los del tipo contrario. Exige la misma especie, fechas compatibles (un
+  hallazgo no puede ser muy anterior a la pérdida) y un color en común; suma
+  puntos por tamaño y cercanía. Los colores escritos libremente se agrupan
+  en familias ("café", "marrón" y "chocolate" cuentan como el mismo color).
+- **Hallazgos cercanos (HU-7):** cualquier hallazgo a menos de 2 km del
+  lugar de la pérdida (distancia real con la fórmula del haversine) genera
+  una alerta, aunque no se parezca, y se muestra en un mapa con el radio.
+- **Notificación:** como no hay cuentas, el navegador recuerda los reportes
+  publicados desde él (`localStorage`). La campana del navbar consulta
+  `GET /api/alertas` cada minuto y muestra cuántas alertas son nuevas. El
+  detalle de cada reporte también muestra sus coincidencias y hallazgos
+  cercanos a cualquier visitante.
+
+### 5.2 Cómo se implementó HU-8
+
+Entidad nueva `Mascota`, independiente de los reportes. El dueño crea el
+perfil en `/mascotas/nueva` (sin cuenta) y recibe una placa imprimible en
+`/mascotas/[id]/placa` con un QR que abre el perfil público
+`/mascotas/[id]`. Ese perfil tiene botones para llamar o escribir por
+WhatsApp. Para que el QR funcione desde otros celulares, la variable
+`URL_PUBLICA` debe apuntar al dominio donde se publique la aplicación.
+
+### 5.3 Mapa
+
+Todos los mapas para marcar ubicación arrancan centrados en **Pasto
+(Nariño)**.

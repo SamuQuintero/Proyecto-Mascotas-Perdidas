@@ -2,20 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { primerErrorPorCampo, reporteSchema } from "@/lib/validacion";
 import { ErrorArchivoInvalido, guardarFotoReporte } from "@/lib/almacenamiento";
+import { buscarReportes } from "@/lib/busqueda";
+import { leerFiltros } from "@/lib/filtros";
+import { camposParaGuardar } from "@/lib/reportes";
 
+// GET acepta los mismos filtros que la página /reportes (HU-6):
+// tipo, estado, especie, tamano, zona, color, desde, hasta.
 export async function GET(request: NextRequest) {
-  const tipo = request.nextUrl.searchParams.get("tipo");
+  const filtros = leerFiltros(
+    Object.fromEntries(request.nextUrl.searchParams.entries())
+  );
 
-  const reportes = await prisma.reporte.findMany({
-    where: tipo === "PERDIDA" || tipo === "ENCONTRADA" ? { tipo } : undefined,
-    orderBy: { creadoEn: "desc" },
-  });
+  const reportes = await buscarReportes(filtros);
 
-  return NextResponse.json({ reportes });
+  return NextResponse.json({ reportes, filtros });
 }
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
+  const formData = await request.formData().catch(() => null);
+  if (!formData) {
+    return NextResponse.json(
+      { error: "Envía los datos del reporte como multipart/form-data." },
+      { status: 400 }
+    );
+  }
   const foto = formData.get("foto");
 
   if (!(foto instanceof File) || foto.size === 0) {
@@ -51,32 +61,11 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  const datos = resultado.data;
-
   const reporte = await prisma.reporte.create({
     data: {
-      tipo: datos.tipo,
-      especie: datos.especie,
-      color: datos.color,
-      tamano: datos.tamano,
-      zona: datos.zona,
-      fecha: new Date(datos.fecha),
-      raza: datos.raza || null,
-      nombre: datos.nombre || null,
-      tieneCollar:
-        datos.tieneCollar === "SI"
-          ? true
-          : datos.tieneCollar === "NO"
-            ? false
-            : null,
-      senasParticulares: datos.senasParticulares || null,
+      tipo: resultado.data.tipo,
+      ...camposParaGuardar(resultado.data),
       fotoUrl,
-      latitud: datos.latitud,
-      longitud: datos.longitud,
-      contactoNombre: datos.contactoNombre || null,
-      contactoTelefono: datos.contactoTelefono || null,
-      contactoEmail: datos.contactoEmail || null,
-      reportanteAnonimo: datos.reportanteAnonimo ?? false,
     },
   });
 
