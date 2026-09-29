@@ -154,16 +154,12 @@ Se re-verificaron las 24 historias directamente en `Product Backlog.xlsx` (sin m
 | **1** ✅ | HU-3 | Ubicar última vez en mapa | 72 | 6 | Núcleo del producto |
 | **1** ✅ | HU-5 | Reportar mascota encontrada | 64 | 5 | Complementa HU-2 |
 | **1** ✅ | HU-13 | Formulario con datos mínimos obligatorios | 42 | 3 | Habilitador técnico de HU-1/2/5 |
-
-| Sprint | HU | Historia (resumen) | Prioridad | Complejidad | Por qué va en este sprint |
-|---|---|---|---|---|---|
-| **2**  | HU-6  | Filtrar reportes (zona, especie, color, tamaño, fecha) |        56 |           4 | Hace más fácil encontrar reportes entre las mascotas que ya fueron registradas en el Sprint 1                             |
-| **2**  | HU-12 | Marcar reporte como "reencontrada"                     |        48 |           2 | Permite actualizar el estado de una mascota que ya fue encontrada y evitar que el reporte siga apareciendo como pendiente |
-| **2**  | HU-21 | Compartir reporte en redes sociales                    |        20 |           2 | Permite difundir los reportes existentes y aumentar las posibilidades de encontrar una mascota                            |
-| **2**  | HU-25 | Editar reporte                                         |        56 |           4 | Permite corregir o actualizar la información de los reportes que ya fueron registrados                                    |
-| **2**  | HU-26 | Eliminar reporte                                       |        30 |           3 | Permite retirar reportes que ya no sean necesarios                                                                        |
-| **2**  | HU-27 | Ordenar reportes por fecha                             |        30 |           2 | Facilita consultar primero los reportes más recientes                                                                     |
-
+| **2** | HU-6 | Filtrar reportes (zona, especie, color, tamaño, fecha) | 56 | 4 | Hace más fácil encontrar reportes entre las mascotas que ya fueron registradas en el Sprint 1 |
+| **2** | HU-12 | Marcar reporte como "reencontrada" | 48 | 2 | Permite actualizar el estado de una mascota que ya fue encontrada y evitar que el reporte siga apareciendo como pendiente |
+| **2** | HU-21 | Compartir reporte en redes sociales | 20 | 2 | Permite difundir los reportes existentes y aumentar las posibilidades de encontrar una mascota |
+| **2** | HU-25 | Editar reporte | 56 | 4 | Permite corregir o actualizar la información de los reportes que ya fueron registrados |
+| **2** | HU-26 | Eliminar reporte | 30 | 3 | Permite retirar reportes que ya no sean necesarios |
+| **2** | HU-27 | Ordenar reportes por fecha | 30 | 2 | Facilita consultar primero los reportes más recientes |
 | **3** | HU-4 | Alerta de coincidencia automática | 72 | 8 | Empatada en la prioridad más alta del backlog; estaba bloqueada hasta que existieran ambos tipos de reporte (Sprint 1) — ahora es la de mayor valor pendiente |
 | **3** | HU-15 | Advertir posibles reportes duplicados | 30 | 8 | Reutiliza el mismo motor de comparación que construye HU-4 |
 | **3** | HU-19 | Mantener el reporte activo / redifusión | 24 | 5 | Parte del mismo ciclo de vida que alimenta las alertas de HU-4 |
