@@ -4,13 +4,17 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  Camera,
   LayoutDashboard,
   LockKeyhole,
   LogOut,
   Menu,
   Plus,
   QrCode,
+  Radar,
   Search,
+  Stethoscope,
+  UserCircle2,
   X,
 } from "lucide-react";
 import CampanaAlertas from "@/components/CampanaAlertas";
@@ -21,13 +25,26 @@ const ENLACES = [
   { href: "/reportes", etiqueta: "Reportes" },
   { href: "/perdida/nuevo", etiqueta: "Perdí mi mascota" },
   { href: "/encontrada/nuevo", etiqueta: "Encontré una" },
+  { href: "/buscar-por-foto", etiqueta: "Buscar por foto" },
   { href: "/mascotas", etiqueta: "Placa QR" },
 ];
 
-// Navbar global. El botón "Admin" es opcional: nadie necesita iniciar
-// sesión para usar la aplicación, solo el administrador para gestionar
-// reportes (editar, marcar reencontrada).
-export default function Navbar({ admin }: { admin: string | null }) {
+export interface UsuarioNavbar {
+  nombre: string;
+  rol: "CIUDADANO" | "VETERINARIA";
+}
+
+// Navbar global. "Admin" y "Cuenta" son opcionales: nadie necesita iniciar
+// sesión para usar la aplicación. Admin gestiona reportes; Cuenta es para
+// ciudadanos que quieren avisos de cercanía (HU-16) o veterinarias que
+// vinculan microchips (HU-17) — son sistemas de sesión independientes.
+export default function Navbar({
+  admin,
+  usuario,
+}: {
+  admin: string | null;
+  usuario: UsuarioNavbar | null;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuAbierto, setMenuAbierto] = useState(false);
@@ -47,6 +64,14 @@ export default function Navbar({ admin }: { admin: string | null }) {
     router.push("/");
     router.refresh();
   }
+
+  async function cerrarSesionCuenta() {
+    await fetch("/api/cuenta/sesion", { method: "DELETE" });
+    router.push("/");
+    router.refresh();
+  }
+
+  const rutaCuenta = usuario?.rol === "VETERINARIA" ? "/veterinaria" : "/cuenta";
 
   function activo(href: string) {
     return href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -84,6 +109,37 @@ export default function Navbar({ admin }: { admin: string | null }) {
 
         <div className="flex items-center gap-2">
           <CampanaAlertas />
+          {usuario ? (
+            <div className="hidden items-center gap-1 rounded-full border border-tinta-200 bg-white/80 p-1 lg:flex">
+              <Link
+                href={rutaCuenta}
+                className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold text-tinta-700 transition hover:bg-tinta-100"
+              >
+                {usuario.rol === "VETERINARIA" ? (
+                  <Stethoscope className="h-4 w-4 text-encontrada-600" />
+                ) : (
+                  <Radar className="h-4 w-4 text-reencontrada-600" />
+                )}
+                {usuario.nombre}
+              </Link>
+              <button
+                onClick={cerrarSesionCuenta}
+                className="rounded-full p-2 text-tinta-400 transition hover:bg-tinta-100 hover:text-tinta-700"
+                aria-label="Cerrar sesión"
+                title="Cerrar sesión"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/cuenta/login"
+              className="hidden items-center gap-2 rounded-full border border-tinta-200 bg-white/80 px-4 py-2 text-sm font-semibold text-tinta-700 shadow-sm transition hover:-translate-y-0.5 hover:border-tinta-300 hover:shadow-suave lg:inline-flex"
+            >
+              <UserCircle2 className="h-4 w-4" />
+              Cuenta
+            </Link>
+          )}
           {admin ? (
             <div className="hidden items-center gap-1 rounded-full border border-reencontrada-200 bg-reencontrada-50 p-1 lg:flex">
               <Link
@@ -142,6 +198,8 @@ export default function Navbar({ admin }: { admin: string | null }) {
                     <Search className="h-4 w-4" />
                   ) : enlace.href === "/mascotas" ? (
                     <QrCode className="h-4 w-4" />
+                  ) : enlace.href === "/buscar-por-foto" ? (
+                    <Camera className="h-4 w-4" />
                   ) : enlace.href === "/" ? null : (
                     <Plus className="h-4 w-4" />
                   )}
@@ -150,7 +208,37 @@ export default function Navbar({ admin }: { admin: string | null }) {
               </li>
             ))}
           </ul>
-          <div className="mt-3 border-t border-tinta-200/70 pt-3">
+          <div className="mt-3 space-y-2 border-t border-tinta-200/70 pt-3">
+            {usuario ? (
+              <div className="flex gap-2">
+                <Link
+                  href={rutaCuenta}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-tinta-900 px-4 py-3 font-semibold text-white"
+                >
+                  {usuario.rol === "VETERINARIA" ? (
+                    <Stethoscope className="h-4 w-4" />
+                  ) : (
+                    <Radar className="h-4 w-4" />
+                  )}
+                  {usuario.nombre}
+                </Link>
+                <button
+                  onClick={cerrarSesionCuenta}
+                  className="flex items-center gap-2 rounded-2xl border border-tinta-200 bg-white px-4 py-3 font-semibold text-tinta-700"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Salir
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/cuenta/login"
+                className="flex items-center justify-center gap-2 rounded-2xl border border-tinta-200 bg-white px-4 py-3 font-semibold text-tinta-700"
+              >
+                <UserCircle2 className="h-4 w-4" />
+                Iniciar sesión / Crear cuenta
+              </Link>
+            )}
             {admin ? (
               <div className="flex gap-2">
                 <Link

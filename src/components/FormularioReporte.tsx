@@ -16,6 +16,7 @@ import {
   Phone,
   Search,
   Send,
+  TriangleAlert,
 } from "lucide-react";
 import CampoColor from "@/components/CampoColor";
 import CampoImagen from "@/components/CampoImagen";
@@ -50,6 +51,15 @@ const MapaVisor = dynamic(() => import("@/components/MapaVisor"), {
 });
 
 type Paso = "formulario" | "confirmacion";
+
+interface DuplicadoItem {
+  id: string;
+  titulo: string;
+  color: string;
+  zona: string;
+  fotoUrl: string;
+  razones: string[];
+}
 
 interface Props {
   tipo: "PERDIDA" | "ENCONTRADA";
@@ -154,6 +164,10 @@ export default function FormularioReporte({ tipo, reporteInicial }: Props) {
   const [paso, setPaso] = useState<Paso>("formulario");
   const [enviando, setEnviando] = useState(false);
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
+  // HU-15: posibles reportes duplicados del mismo tipo, detectados justo
+  // antes de publicar. Es una advertencia, no un bloqueo: la persona decide.
+  const [duplicados, setDuplicados] = useState<DuplicadoItem[]>([]);
+  const [revisandoDuplicados, setRevisandoDuplicados] = useState(false);
 
   // Quien encontró una mascota casi siempre la reporta en el momento: se
   // prellenan la fecha y hora actuales (en el cliente, para no desfasar el
@@ -228,15 +242,38 @@ export default function FormularioReporte({ tipo, reporteInicial }: Props) {
     return true;
   }
 
-  function alEnviar(evento: React.FormEvent) {
+  async function alEnviar(evento: React.FormEvent) {
     evento.preventDefault();
     if (!validar()) return;
 
     if (editando) {
       guardar();
-    } else {
-      setPaso("confirmacion");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    setPaso("confirmacion");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // HU-15: revisar duplicados posibles justo al entrar a la confirmación.
+    // No bloquea el paso: si falla o tarda, simplemente no se muestra aviso.
+    if (ubicacion) {
+      setRevisandoDuplicados(true);
+      try {
+        const parametros = new URLSearchParams({
+          tipo,
+          especie: campos.especie,
+          color: campos.color,
+          fecha: campos.fecha,
+          latitud: String(ubicacion.lat),
+          longitud: String(ubicacion.lng),
+        });
+        const respuesta = await fetch(`/api/reportes/duplicados?${parametros}`);
+        if (respuesta.ok) setDuplicados((await respuesta.json()).duplicados);
+      } catch {
+        // silencioso: es solo una advertencia, no algo crítico
+      } finally {
+        setRevisandoDuplicados(false);
+      }
     }
   }
 
@@ -313,6 +350,51 @@ export default function FormularioReporte({ tipo, reporteInicial }: Props) {
             Así verán tu reporte las demás personas.
           </p>
         </div>
+
+        {revisandoDuplicados && (
+          <p className="flex items-center gap-2 text-sm text-tinta-400">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            Revisando si ya existe un reporte parecido…
+          </p>
+        )}
+
+        {duplicados.length > 0 && (
+          <div className="animate-aparecer space-y-3 rounded-2xl border border-sol-300 bg-sol-100 p-4">
+            <p className="flex items-start gap-2 text-sm font-semibold text-tinta-800">
+              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-sol-500" aria-hidden="true" />
+              Encontramos {duplicados.length === 1 ? "un reporte parecido" : "reportes parecidos"} al
+              tuyo. Revísalo antes de publicar, por si ya existe:
+            </p>
+            <ul className="space-y-2">
+              {duplicados.map((d) => (
+                <li key={d.id}>
+                  <Link
+                    href={`/reportes/${d.id}`}
+                    target="_blank"
+                    className="flex items-center gap-3 rounded-xl bg-white/70 p-2.5 transition hover:bg-white"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={d.fotoUrl}
+                      alt=""
+                      className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-tinta-900">{d.titulo}</p>
+                      <p className="truncate text-xs text-tinta-500">
+                        {d.zona} · {d.razones.join(" · ")}
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-tinta-600">
+              Si es la misma mascota, no hace falta publicar de nuevo. Si no lo es, puedes
+              seguir y publicar tu reporte igual.
+            </p>
+          </div>
+        )}
 
         <div className="tarjeta animate-aparecer space-y-5 overflow-hidden p-0">
           {urlFotoNueva && (

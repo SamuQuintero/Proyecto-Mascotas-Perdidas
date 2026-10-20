@@ -78,10 +78,63 @@ model Reporte {
   creadoEn       DateTime      @default(now())
   actualizadoEn  DateTime      @default(now()) @updatedAt
 
+  // HU-17: número de microchip confirmado por una veterinaria. Solo lo
+  // escribe un usuario con rol VETERINARIA; se muestra en el detalle del
+  // reporte como una verificación de identidad adicional.
+  microchip          String?
+  microchipVerificadoPor String?
+  microchipVerificadoEn  DateTime?
+
+  mensajes Mensaje[]
+
   @@index([tipo])
   @@index([estado])
   @@index([fecha])
   @@index([especie])
+}
+
+// HU-11: mensajes dentro de la plataforma, ligados a un reporte en lugar de
+// a una cuenta de usuario (ni el dueño ni el hallador necesitan cuenta). El
+// hilo vive en la propia página pública del reporte: no expone teléfono ni
+// dirección, solo texto.
+model Mensaje {
+  id        String   @id @default(cuid())
+  reporteId String
+  reporte   Reporte  @relation(fields: [reporteId], references: [id], onDelete: Cascade)
+  autor     String // nombre libre de quien escribe ("Dueño", "Anónimo", etc.)
+  texto     String
+  creadoEn  DateTime @default(now())
+
+  @@index([reporteId])
+}
+
+// HU-16 / HU-17: cuentas reales, separadas del admin único (que sigue
+// viviendo en variables de entorno). CIUDADANO se suscribe a avisos de
+// cercanía; VETERINARIA vincula microchips a reportes.
+enum RolUsuario {
+  CIUDADANO
+  VETERINARIA
+}
+
+model Usuario {
+  id             String     @id @default(cuid())
+  nombre         String
+  email          String     @unique
+  contrasenaHash String
+  rol            RolUsuario
+
+  // CIUDADANO (HU-16): punto de referencia y radio para los avisos de
+  // cercanía de mascotas perdidas. Null hasta que configura su suscripción.
+  avisoLatitud  Float?
+  avisoLongitud Float?
+  avisoRadioKm  Int?
+
+  // VETERINARIA (HU-17)
+  nombreClinica String?
+
+  creadoEn DateTime @default(now())
+
+  @@index([rol])
 }
 
 // HU-8: perfil digital de una mascota con código QR imprimible. Es

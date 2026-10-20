@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   RADIO_CERCANIA_KM,
+  RADIO_DUPLICADO_KM,
   calcularAlertas,
+  calcularDuplicados,
+  compararDuplicados,
   compararReportes,
   distanciaKm,
   familiasDeColor,
@@ -129,5 +132,63 @@ describe("formatearDistancia", () => {
   it("usa metros por debajo de 1 km y kilómetros con coma decimal", () => {
     expect(formatearDistancia(0.456)).toBe("460 m");
     expect(formatearDistancia(1.25)).toBe("1,3 km");
+  });
+});
+
+describe("compararDuplicados — HU-15", () => {
+  const original: ReporteComparable = {
+    id: "original",
+    tipo: "PERDIDA",
+    especie: "Perro",
+    color: "Café con blanco",
+    tamano: "MEDIANO",
+    fecha: "2026-09-10T15:00:00-05:00",
+    ...PASTO,
+  };
+
+  function otraPublicacion(cambios: Partial<ReporteComparable> = {}): ReporteComparable {
+    return {
+      id: "otra",
+      tipo: "PERDIDA",
+      especie: "Perro",
+      color: "Marrón",
+      tamano: "GRANDE", // el tamaño no decide duplicado, solo especie/color/distancia/fecha
+      fecha: "2026-09-11T09:00:00-05:00",
+      ...aKm(0.3),
+      ...cambios,
+    };
+  }
+
+  it("detecta una publicación repetida: mismo tipo, color parecido, cerca y en pocos días", () => {
+    const resultado = compararDuplicados(original, otraPublicacion());
+    expect(resultado).not.toBeNull();
+    expect(resultado?.razones.some((r) => r.includes("especie"))).toBe(true);
+  });
+
+  it("no compara reportes de distinto tipo (eso es HU-4, no HU-15)", () => {
+    expect(compararDuplicados(original, otraPublicacion({ tipo: "ENCONTRADA" }))).toBeNull();
+  });
+
+  it(`a más de ${RADIO_DUPLICADO_KM} km no se considera duplicado`, () => {
+    expect(compararDuplicados(original, otraPublicacion({ ...aKm(3) }))).toBeNull();
+  });
+
+  it("sin color en común no se considera duplicado", () => {
+    expect(compararDuplicados(original, otraPublicacion({ color: "Negro" }))).toBeNull();
+  });
+
+  it("con más de 5 días de diferencia no se considera duplicado", () => {
+    expect(
+      compararDuplicados(original, otraPublicacion({ fecha: "2026-09-20T09:00:00-05:00" }))
+    ).toBeNull();
+  });
+
+  it("calcularDuplicados ordena por cercanía y descarta al propio reporte", () => {
+    const resultado = calcularDuplicados(original, [
+      otraPublicacion({ id: "lejos", ...aKm(0.8) }),
+      original, // no debe compararse consigo mismo
+      otraPublicacion({ id: "cerca", ...aKm(0.1) }),
+    ]);
+    expect(resultado.map((d) => d.reporte.id)).toEqual(["cerca", "lejos"]);
   });
 });

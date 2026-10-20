@@ -25,6 +25,10 @@ export interface Reporte {
   reencontradaEn: string | null;
   creadoEn: string;
   actualizadoEn: string;
+  // HU-17: microchip confirmado por una veterinaria.
+  microchip: string | null;
+  microchipVerificadoPor: string | null;
+  microchipVerificadoEn: string | null;
 }
 
 export const ETIQUETA_TAMANO: Record<Tamano, string> = {
@@ -41,6 +45,7 @@ export function serializarReporte(reporte: {
   creadoEn: Date;
   actualizadoEn: Date;
   reencontradaEn: Date | null;
+  microchipVerificadoEn?: Date | null;
   [clave: string]: unknown;
 }): Reporte {
   return {
@@ -49,5 +54,6 @@ export function serializarReporte(reporte: {
     creadoEn: reporte.creadoEn.toISOString(),
     actualizadoEn: reporte.actualizadoEn.toISOString(),
     reencontradaEn: reporte.reencontradaEn?.toISOString() ?? null,
+    microchipVerificadoEn: reporte.microchipVerificadoEn?.toISOString() ?? null,
   } as Reporte;
 }
