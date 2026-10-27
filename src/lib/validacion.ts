@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { COLORES_OJOS, LARGOS_PELAJE, PATRONES_PELAJE } from "@/lib/felinos";
 import { instanteColombia } from "@/lib/formato";
 
 // Esquema único de validación para los datos mínimos obligatorios (HU-13),
@@ -55,6 +56,11 @@ const camposComunes = {
   nombre: z.string().trim().max(60).optional().or(z.literal("")),
   tieneCollar: z.enum(["SI", "NO", "NO_SE"]).optional(),
   senasParticulares: z.string().trim().max(500).optional().or(z.literal("")),
+  // HU-24: señas propias de los gatos (se ignoran si la especie no es Gato).
+  patronPelaje: z.enum(PATRONES_PELAJE).optional().or(z.literal("")),
+  largoPelaje: z.enum(LARGOS_PELAJE).optional().or(z.literal("")),
+  colorOjos: z.enum(COLORES_OJOS).optional().or(z.literal("")),
+  esDeInterior: z.enum(["SI", "NO", "NO_SE"]).optional().or(z.literal("")),
   latitud: z.coerce
     .number({ invalid_type_error: "Selecciona un punto en el mapa." })
     .min(-90)
@@ -138,6 +144,10 @@ export const mascotaSchema = z.object({
   color: camposComunes.color,
   tamano: camposComunes.tamano,
   senasParticulares: camposComunes.senasParticulares,
+  patronPelaje: camposComunes.patronPelaje,
+  largoPelaje: camposComunes.largoPelaje,
+  colorOjos: camposComunes.colorOjos,
+  esDeInterior: camposComunes.esDeInterior,
   contactoNombre: z
     .string({ required_error: "Tu nombre es obligatorio." })
     .trim()

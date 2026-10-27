@@ -1,3 +1,4 @@
+import { senasFelinasParaGuardar } from "@/lib/felinos";
 import { instanteColombia } from "@/lib/formato";
 import type { ReporteFormData } from "@/lib/validacion";
 
@@ -22,6 +23,7 @@ export function camposParaGuardar(datos: ReporteFormData) {
           ? false
           : null,
     senasParticulares: datos.senasParticulares || null,
+    ...senasFelinasParaGuardar(datos),
     latitud: datos.latitud,
     longitud: datos.longitud,
     // Un reporte anónimo no guarda contacto aunque el formulario lo traiga

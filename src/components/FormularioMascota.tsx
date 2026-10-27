@@ -6,6 +6,7 @@ import { Camera, Loader2, PawPrint, Pencil, Phone, QrCode } from "lucide-react";
 import CampoColor from "@/components/CampoColor";
 import CampoImagen from "@/components/CampoImagen";
 import { Alerta, Campo, Seccion } from "@/components/CamposFormulario";
+import CamposFelinos from "@/components/CamposFelinos";
 import { recordarMascota } from "@/lib/dispositivo";
 import type { Tamano } from "@/lib/tipos";
 import {
@@ -23,6 +24,11 @@ const VACIO = {
   color: "",
   tamano: "" as Tamano | "",
   senasParticulares: "",
+  // HU-24: señas de gato
+  patronPelaje: "",
+  largoPelaje: "",
+  colorOjos: "",
+  esDeInterior: "",
   contactoNombre: "",
   contactoTelefono: "",
   contactoEmail: "",
@@ -36,6 +42,10 @@ export interface MascotaEditable {
   color: string;
   tamano: Tamano;
   senasParticulares: string | null;
+  patronPelaje: string | null;
+  largoPelaje: string | null;
+  colorOjos: string | null;
+  esDeInterior: boolean | null;
   fotoUrl: string;
   contactoNombre: string;
   contactoTelefono: string;
@@ -50,6 +60,10 @@ function camposDesde(mascota: MascotaEditable): typeof VACIO {
     color: mascota.color,
     tamano: mascota.tamano,
     senasParticulares: mascota.senasParticulares ?? "",
+    patronPelaje: mascota.patronPelaje ?? "",
+    largoPelaje: mascota.largoPelaje ?? "",
+    colorOjos: mascota.colorOjos ?? "",
+    esDeInterior: mascota.esDeInterior === true ? "SI" : mascota.esDeInterior === false ? "NO" : "",
     contactoNombre: mascota.contactoNombre,
     contactoTelefono: mascota.contactoTelefono,
     contactoEmail: mascota.contactoEmail ?? "",
@@ -205,6 +219,9 @@ export default function FormularioMascota({ mascotaInicial }: { mascotaInicial?:
             </select>
           </Campo>
         </div>
+        {campos.especie === "Gato" && (
+          <CamposFelinos valores={campos} errores={errores} onCambiar={actualizar} />
+        )}
         <Campo etiqueta="Señas particulares o cuidados" error={errores.senasParticulares}>
           <textarea
             value={campos.senasParticulares}

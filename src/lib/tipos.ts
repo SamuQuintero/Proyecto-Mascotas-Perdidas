@@ -14,6 +14,11 @@ export interface Reporte {
   nombre: string | null;
   tieneCollar: boolean | null;
   senasParticulares: string | null;
+  // HU-24: solo para gatos.
+  patronPelaje: string | null;
+  largoPelaje: string | null;
+  colorOjos: string | null;
+  esDeInterior: boolean | null;
   fotoUrl: string;
   latitud: number;
   longitud: number;

@@ -21,6 +21,8 @@ import {
 import CampoColor from "@/components/CampoColor";
 import CampoImagen from "@/components/CampoImagen";
 import { Alerta, Campo, Seccion } from "@/components/CamposFormulario";
+import CamposFelinos from "@/components/CamposFelinos";
+import { resumenSenasFelinas } from "@/lib/felinos";
 import { recordarReporte } from "@/lib/dispositivo";
 import {
   fechaParaInput,
@@ -102,6 +104,11 @@ interface EstadoFormulario {
   nombre: string;
   tieneCollar: "SI" | "NO" | "NO_SE" | "";
   senasParticulares: string;
+  // HU-24: señas de gato
+  patronPelaje: string;
+  largoPelaje: string;
+  colorOjos: string;
+  esDeInterior: string;
   fecha: string;
   hora: string;
   zona: string;
@@ -119,6 +126,10 @@ const ESTADO_INICIAL: EstadoFormulario = {
   nombre: "",
   tieneCollar: "",
   senasParticulares: "",
+  patronPelaje: "",
+  largoPelaje: "",
+  colorOjos: "",
+  esDeInterior: "",
   fecha: "",
   hora: "",
   zona: "",
@@ -138,6 +149,11 @@ function estadoDesdeReporte(reporte: Reporte): EstadoFormulario {
     tieneCollar:
       reporte.tieneCollar === true ? "SI" : reporte.tieneCollar === false ? "NO" : "",
     senasParticulares: reporte.senasParticulares ?? "",
+    patronPelaje: reporte.patronPelaje ?? "",
+    largoPelaje: reporte.largoPelaje ?? "",
+    colorOjos: reporte.colorOjos ?? "",
+    esDeInterior:
+      reporte.esDeInterior === true ? "SI" : reporte.esDeInterior === false ? "NO" : "",
     fecha: fechaParaInput(reporte.fecha),
     hora: horaParaInput(reporte.fecha),
     zona: reporte.zona,
@@ -207,6 +223,10 @@ export default function FormularioReporte({ tipo, reporteInicial, conSesion }: P
       nombre: tipo === "PERDIDA" ? campos.nombre : "",
       tieneCollar: campos.tieneCollar || undefined,
       senasParticulares: campos.senasParticulares,
+      patronPelaje: campos.patronPelaje,
+      largoPelaje: campos.largoPelaje,
+      colorOjos: campos.colorOjos,
+      esDeInterior: campos.esDeInterior,
       fecha: campos.fecha,
       hora: campos.hora,
       zona: campos.zona,
@@ -430,6 +450,16 @@ export default function FormularioReporte({ tipo, reporteInicial, conSesion }: P
                       : "No sabe"
                 }
               />
+              {resumenSenasFelinas({
+                especie: campos.especie,
+                patronPelaje: campos.patronPelaje,
+                largoPelaje: campos.largoPelaje,
+                colorOjos: campos.colorOjos,
+                esDeInterior:
+                  campos.esDeInterior === "SI" ? true : campos.esDeInterior === "NO" ? false : null,
+              }).map(([etiqueta, valor]) => (
+                <Dato key={etiqueta} etiqueta={etiqueta} valor={valor} />
+              ))}
               <Dato
                 etiqueta={tipo === "PERDIDA" ? "Se perdió" : "Se encontró"}
                 valor={formatearFechaHora(instanteColombia(campos.fecha, campos.hora), "corta")}
@@ -635,6 +665,14 @@ export default function FormularioReporte({ tipo, reporteInicial, conSesion }: P
             </select>
           </Campo>
         </div>
+
+        {campos.especie === "Gato" && (
+          <CamposFelinos
+            valores={campos}
+            errores={errores}
+            onCambiar={(campo, valor) => actualizarCampo(campo, valor)}
+          />
+        )}
 
         <Campo etiqueta="Señas particulares" error={errores.senasParticulares}>
           <textarea

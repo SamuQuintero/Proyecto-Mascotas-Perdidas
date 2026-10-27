@@ -24,6 +24,7 @@ import PanelAlertas from "@/components/PanelAlertas";
 import type { AlertaReporte } from "@/lib/alertas";
 import { ESTILO_TIPO, EtiquetaEstado, EtiquetaTipo } from "@/components/Etiquetas";
 import { formatearFecha, formatearFechaHora, formatearHora, haceCuanto } from "@/lib/formato";
+import { resumenSenasFelinas } from "@/lib/felinos";
 import { ETIQUETA_TAMANO, type Reporte } from "@/lib/tipos";
 
 const MapaVisor = dynamic(() => import("@/components/MapaVisor"), {
@@ -149,6 +150,9 @@ export default function DetalleReporte({
                       : "No se sabe"
                 }
               />
+              {resumenSenasFelinas(reporte).map(([etiqueta, valor]) => (
+                <Dato key={etiqueta} etiqueta={etiqueta} valor={valor} />
+              ))}
               <Dato
                 etiqueta="Publicado"
                 valor={formatearFechaHora(reporte.creadoEn, "corta")}

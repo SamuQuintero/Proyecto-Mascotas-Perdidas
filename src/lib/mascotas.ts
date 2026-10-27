@@ -1,3 +1,4 @@
+import { senasFelinasParaGuardar } from "@/lib/felinos";
 import type { MascotaFormData } from "@/lib/validacion";
 
 // Convierte los datos ya validados del perfil de mascota en los campos que
@@ -11,6 +12,7 @@ export function camposMascotaParaGuardar(datos: MascotaFormData) {
     color: datos.color,
     tamano: datos.tamano,
     senasParticulares: datos.senasParticulares || null,
+    ...senasFelinasParaGuardar(datos),
     contactoNombre: datos.contactoNombre,
     contactoTelefono: datos.contactoTelefono,
     contactoEmail: datos.contactoEmail || null,

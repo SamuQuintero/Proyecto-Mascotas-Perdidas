@@ -5,6 +5,7 @@ import { sesionGestion } from "@/lib/cuenta";
 import { prisma } from "@/lib/db";
 import { puedeGestionar } from "@/lib/propiedad";
 import { enlaceTelefono, enlaceWhatsApp } from "@/lib/contacto";
+import { resumenSenasFelinas } from "@/lib/felinos";
 import { formatearFecha } from "@/lib/formato";
 import { ETIQUETA_TAMANO } from "@/lib/tipos";
 
@@ -106,6 +107,9 @@ export default async function PerfilMascotaPage({ params }: { params: { id: stri
           <Dato etiqueta="Raza" valor={mascota.raza || "—"} />
           <Dato etiqueta="Color" valor={mascota.color} />
           <Dato etiqueta="Tamaño" valor={ETIQUETA_TAMANO[mascota.tamano]} />
+          {resumenSenasFelinas(mascota).map(([etiqueta, valor]) => (
+            <Dato key={etiqueta} etiqueta={etiqueta} valor={valor} />
+          ))}
         </dl>
         {mascota.senasParticulares && (
           <div className="mt-4 rounded-2xl bg-crema-100 p-4">

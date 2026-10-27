@@ -6,10 +6,11 @@
 // Funciona en ambos sentidos: para una mascota perdida busca hallazgos, y
 // para un hallazgo busca mascotas perdidas.
 
+import { ajusteFelino, type SenasFelinas } from "@/lib/felinos";
 import { normalizarTexto } from "@/lib/texto";
 import type { Tamano, TipoReporte } from "@/lib/tipos";
 
-export interface ReporteComparable {
+export interface ReporteComparable extends Omit<SenasFelinas, "esDeInterior"> {
   id: string;
   tipo: TipoReporte;
   especie: string;
@@ -140,6 +141,11 @@ export function compararReportes<R extends ReporteComparable>(
   else if (distancia <= RADIO_CERCANIA_KM) puntaje += 10;
   else if (distancia <= 10) puntaje += 5;
 
+  // HU-24: en gatos, las señas propias afinan el parecido.
+  const felino = ajusteFelino(base, otro);
+  puntaje += felino.puntos;
+  razones.push(...felino.razones);
+
   const esCercano = distancia <= RADIO_CERCANIA_KM;
   if (esCercano) {
     razones.push(
@@ -151,7 +157,7 @@ export function compararReportes<R extends ReporteComparable>(
     );
   }
 
-  puntaje = Math.min(100, puntaje);
+  puntaje = Math.max(0, Math.min(100, puntaje));
   // Sin un color en común no se considera la misma mascota, aunque
   // coincidan especie y tamaño (un perro blanco no es un perro negro).
   const esCoincidencia = comunes.length > 0 && puntaje >= PUNTAJE_MINIMO_COINCIDENCIA;
@@ -242,7 +248,7 @@ export function calcularDuplicados<R extends ReporteComparable>(
 // especie, color y tamaño.
 export const PUNTAJE_MINIMO_COINCIDENCIA_MASCOTA = 55;
 
-export interface MascotaComparable {
+export interface MascotaComparable extends Omit<SenasFelinas, "esDeInterior"> {
   id: string;
   especie: string;
   color: string;
@@ -288,7 +294,12 @@ export function compararMascotaConReporte<R extends ReporteComparable>(
     puntaje += 8;
   }
 
-  puntaje = Math.min(100, puntaje);
+  // HU-24: señas propias de los gatos.
+  const felino = ajusteFelino(mascota, reporte);
+  puntaje += felino.puntos;
+  razones.push(...felino.razones);
+
+  puntaje = Math.max(0, Math.min(100, puntaje));
   if (puntaje < PUNTAJE_MINIMO_COINCIDENCIA_MASCOTA) return null;
 
   return { reporte, puntaje, razones };
