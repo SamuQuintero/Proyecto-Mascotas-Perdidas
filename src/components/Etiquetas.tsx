@@ -21,19 +21,29 @@ export const ESTILO_TIPO = {
   },
 } as const;
 
+// `enBusqueda` añade un punto que late: la búsqueda sigue abierta.
 export function EtiquetaTipo({
   tipo,
   larga,
+  enBusqueda,
 }: {
   tipo: TipoReporte;
   larga?: boolean;
+  enBusqueda?: boolean;
 }) {
   const { etiqueta, etiquetaLarga, clase, Icono } = ESTILO_TIPO[tipo];
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${clase}`}
     >
-      <Icono className="h-3.5 w-3.5" aria-hidden="true" />
+      {enBusqueda ? (
+        <span className="relative flex h-2 w-2" aria-hidden="true">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-perdida-400 opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-perdida-500" />
+        </span>
+      ) : (
+        <Icono className="h-3.5 w-3.5" aria-hidden="true" />
+      )}
       {larga ? etiquetaLarga : etiqueta}
     </span>
   );
