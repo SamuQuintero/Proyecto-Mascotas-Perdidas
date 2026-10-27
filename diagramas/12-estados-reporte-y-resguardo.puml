@@ -1,0 +1,45 @@
+@startuml 12-estados-reporte-y-resguardo
+!include estilo.puml
+title Diagramas de estados — Reporte (HU-12, 19) y animal en resguardo (HU-20)
+
+state "Reporte" as Reporte {
+  [*] --> ACTIVO : publicar\n(con o sin cuenta)
+
+  state ACTIVO {
+    [*] --> Difundido
+    Difundido --> SinConfirmar : pasan 7 días\nsin renovar (solo pérdidas)
+    SinConfirmar --> Difundido : renovar\n(la campana pregunta "¿sigue perdida?")
+    Difundido --> Difundido : renovar\n(máx. una vez cada 24 h)
+  }
+
+  ACTIVO --> REENCONTRADA : "¡Ya apareció!"\ndueño o administrador
+  REENCONTRADA --> ACTIVO : reabrir\nsolo administrador
+}
+
+note right of ACTIVO
+  Renovar sube el reporte en /reportes
+  y lo vuelve a avisar a quienes están
+  suscritos a su zona (HU-16).
+  Un reporte publicado sin cuenta no tiene
+  dueño: solo el administrador lo renueva.
+end note
+
+note right of REENCONTRADA
+  Deja de generar alertas, deja de ser
+  candidato de otras comparaciones y
+  muestra el banner de celebración.
+end note
+
+state "Animal en resguardo" as Animal {
+  [*] --> EN_RESGUARDO : refugio publica
+  EN_RESGUARDO --> ENTREGADO : marcar entregado\n(a su dueño o adoptado)
+  EN_RESGUARDO --> [*] : borrar\n(publicación por error)
+  ENTREGADO --> [*] : borrar
+}
+
+note right of EN_RESGUARDO
+  Solo en este estado aparece en
+  /resguardo y genera alertas contra
+  pérdidas parecidas.
+end note
+@enduml

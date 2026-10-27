@@ -1,0 +1,56 @@
+@startuml 10-secuencia-alertas-coincidencia
+!include estilo.puml
+title Secuencia — Alertas de coincidencia en la campana (HU-4, 7, 10, 20)
+autonumber
+
+actor Persona
+participant "CampanaAlertas\n(navegador)" as Campana
+participant "dispositivo.ts\n(localStorage)" as Disp
+participant "GET /api/alertas\n?ids=…" as Api
+database "Supabase" as DB
+participant "Caché\nreportesActivosDeTipo" as Cache
+participant "calcularAlertas()" as Calc
+participant "puntuar(criterios)" as Motor
+
+Persona -> Campana : abre cualquier página
+note right of Campana
+  Espera 1,5 s para no competir con la página
+  por la conexión, y consulta cada 2 min
+  (y no consulta con la pestaña oculta).
+end note
+Campana -> Disp : misReportes()
+Disp --> Campana : ids de los reportes creados aquí
+Campana -> Api : /api/alertas?ids=a,b,c
+activate Api
+Api -> DB : SELECT Reporte WHERE id IN (…)
+DB --> Api : mis reportes
+
+Api -> Cache : reportesActivosDeTipo(tipo contrario)
+alt caché fría o invalidada
+  Cache -> DB : SELECT Reporte WHERE estado=ACTIVO AND tipo=…
+  DB --> Cache : candidatos
+end
+Cache --> Api : candidatos serializados
+
+loop por cada reporte propio y cada candidato
+  Api -> Calc : compararReportes(base, otro)
+  Calc -> Calc : reglas previas\n(tipo distinto · especie compatible · fecha)
+  Calc -> Motor : puntuar([especie, color, tamaño,\ndistancia, felino], base, otro)
+  loop por cada criterio
+    Motor -> Motor : criterio.evaluar(a, b)\n→ puntos, razones, ¿descarta?
+  end
+  Motor --> Calc : { puntaje 0–100, razones, cumplidos }
+  Calc -> Calc : esCoincidencia = color cumplido\n&& puntaje ≥ 60\nesCercano = distancia ≤ 2 km
+end
+
+Calc --> Api : alertas ordenadas\n(coincidencias primero)
+Api --> Campana : JSON
+deactivate Api
+Campana -> Campana : cuenta las no vistas\n(marcarAlertasVistas)
+Campana --> Persona : campana con contador y detalle
+
+== Otras fuentes de la misma campana ==
+Campana -> Campana : /api/alertas-mascotas (HU-10: perfil QR ↔ hallazgos)
+Campana -> Campana : /api/alertas-resguardo (HU-20: pérdida ↔ animales en refugios)
+Campana -> Campana : /api/alertas-cercania + /api/cuenta/recordatorios (con sesión)
+@enduml

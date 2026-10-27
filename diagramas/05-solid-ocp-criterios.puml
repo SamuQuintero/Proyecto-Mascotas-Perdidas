@@ -1,0 +1,79 @@
+@startuml 05-solid-ocp-criterios
+!include estilo.puml
+set separator none
+title SOLID · O — Abierto/cerrado: criterios de puntuación intercambiables (patrón Strategy)
+hide empty members
+skinparam classAttributeIconSize 0
+
+package "Comparaciones: cada una es una LISTA de criterios con sus pesos" as CMP {
+  class "reportes · HU-4 / HU-7\nespecie 30 · color 35\ntamaño 20/5 · distancia · felino" as CmpReportes
+  class "mascotas · HU-10\nespecie 35 · color 40 (obligatorio)\ntamaño 25/8 · felino" as CmpMascotas
+  class "resguardo · HU-20\nespecie 35 · color 40 (obligatorio)\ntamaño 25/8" as CmpResguardo
+}
+
+class "puntuar(criterios, a, b)" as Motor <<motor: cerrado a modificación>> {
+  suma los aportes de cada criterio
+  limita el puntaje a 0–100
+  devuelve null si un criterio descarta
+}
+
+interface "Criterio<A, B>" as Criterio <<estrategia>> {
+  +nombre : string
+  +evaluar(a, b) : Aporte
+}
+
+class Aporte <<valor>> {
+  +puntos : number
+  +razones : string[]
+  +cumple : boolean
+  +descarta : boolean
+}
+
+class Puntuacion <<valor>> {
+  +puntaje : number
+  +razones : string[]
+  +cumplidos : Set
+}
+
+package "Criterios reutilizables: abiertos a extensión" as CRI {
+  class criterioEspecie <<fábrica de peso>>
+  class criterioColor <<fábrica de peso>>
+  class criterioTamano <<fábrica de pesos>>
+  class criterioDistancia
+  class criterioFelino
+  class "criterioEdad\n(ejemplo de extensión)" as criterioEdad
+}
+
+CmpReportes ..> Motor
+CmpMascotas ..> Motor
+CmpResguardo ..> Motor
+CmpReportes ..> Criterio : lista de
+CmpMascotas ..> Criterio : lista de
+CmpResguardo ..> Criterio : lista de
+
+Motor ..> Criterio : recorre
+Motor ..> Puntuacion : devuelve
+Criterio ..> Aporte : devuelve
+
+Criterio <|.. criterioEspecie
+Criterio <|.. criterioColor
+Criterio <|.. criterioTamano
+Criterio <|.. criterioDistancia
+Criterio <|.. criterioFelino
+Criterio <|.. criterioEdad
+
+note right of criterioEdad
+  Para sumar una característica nueva:
+  1. escribir un objeto Criterio
+  2. agregarlo a la lista de la comparación
+     que lo necesite
+  El motor y las demás comparaciones
+  NO se modifican (lo prueba puntuacion.test.ts).
+end note
+
+note right of Motor
+  Antes: tres funciones repetían el mismo
+  bloque de "sumar puntos" con pesos distintos.
+  Ahora los pesos son datos.
+end note
+@enduml
