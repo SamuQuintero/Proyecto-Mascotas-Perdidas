@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { HeartHandshake, Mail, MessageCircle, Phone, QrCode } from "lucide-react";
+import { HeartHandshake, Mail, MessageCircle, Phone, QrCode, Syringe } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { enlaceTelefono, enlaceWhatsApp } from "@/lib/contacto";
+import { formatearFecha } from "@/lib/formato";
 import { ETIQUETA_TAMANO } from "@/lib/tipos";
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
@@ -16,7 +17,10 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 // HU-8: perfil público de la mascota. Es la página que abre el QR de su
 // placa, pensada para quien la encontró y la está viendo desde el celular.
 export default async function PerfilMascotaPage({ params }: { params: { id: string } }) {
-  const mascota = await prisma.mascota.findUnique({ where: { id: params.id } });
+  const mascota = await prisma.mascota.findUnique({
+    where: { id: params.id },
+    include: { vacunas: { orderBy: { fecha: "desc" } } },
+  });
   if (!mascota) notFound();
 
   const whatsapp = enlaceWhatsApp(mascota.contactoTelefono);
@@ -102,6 +106,33 @@ export default async function PerfilMascotaPage({ params }: { params: { id: stri
           </div>
         )}
       </section>
+
+      {mascota.vacunas.length > 0 && (
+        <section className="tarjeta p-6">
+          <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold">
+            <Syringe className="h-5 w-5 text-encontrada-600" aria-hidden="true" />
+            Carnet de vacunas
+          </h2>
+          <ul className="space-y-2">
+            {mascota.vacunas.map((vacuna) => (
+              <li
+                key={vacuna.id}
+                className="flex items-center justify-between gap-3 rounded-2xl bg-crema-100 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-tinta-800">{vacuna.nombre}</p>
+                  <p className="truncate text-xs text-tinta-500">
+                    Aplicada por {vacuna.veterinaria}
+                  </p>
+                </div>
+                <span className="shrink-0 text-sm font-bold text-tinta-700">
+                  {formatearFecha(vacuna.fecha, "larga")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="flex flex-col items-center gap-3 text-center text-sm text-tinta-500">
         <p>¿No puedes contactar a su familia?</p>

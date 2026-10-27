@@ -234,6 +234,76 @@ export function calcularDuplicados<R extends ReporteComparable>(
     .sort((a, b) => a.distanciaKm - b.distanciaKm);
 }
 
+// HU-10: alerta al dueño cuando se publica un hallazgo con las mismas
+// características que una mascota suya con perfil QR (HU-8) — aunque esa
+// mascota todavía no esté reportada como perdida. Es la misma idea de HU-4
+// (comparar características), pero aplicada a un perfil en vez de a un
+// reporte propio: no tiene ubicación ni fecha con qué comparar, solo
+// especie, color y tamaño.
+export const PUNTAJE_MINIMO_COINCIDENCIA_MASCOTA = 55;
+
+export interface MascotaComparable {
+  id: string;
+  especie: string;
+  color: string;
+  tamano: Tamano;
+}
+
+export interface AlertaMascota<R extends ReporteComparable = ReporteComparable> {
+  reporte: R;
+  puntaje: number;
+  razones: string[];
+}
+
+export function compararMascotaConReporte<R extends ReporteComparable>(
+  mascota: MascotaComparable,
+  reporte: R
+): AlertaMascota<R> | null {
+  // Solo interesan los hallazgos: es ahí donde "alguien reportó las mismas
+  // características que tiene mi mascota" tiene sentido accionable.
+  if (reporte.tipo !== "ENCONTRADA") return null;
+  if (!especiesCompatibles(mascota.especie, reporte.especie)) return null;
+
+  const razones: string[] = [];
+  let puntaje = 0;
+
+  if (mascota.especie === reporte.especie && mascota.especie !== "Otro") {
+    puntaje += 35;
+    razones.push(`Misma especie (${mascota.especie.toLowerCase()})`);
+  }
+
+  const coloresMascota = familiasDeColor(mascota.color);
+  const coloresReporte = familiasDeColor(reporte.color);
+  const comunes = Array.from(coloresMascota).filter((c) => coloresReporte.has(c));
+  if (comunes.length === 0) return null; // sin color en común no es la misma mascota
+  const menor = Math.min(coloresMascota.size, coloresReporte.size);
+  puntaje += Math.round(40 * (comunes.length / menor));
+  razones.push(`Color parecido (${reporte.color.toLowerCase()})`);
+
+  const diferenciaTamano = Math.abs(ORDEN_TAMANO[mascota.tamano] - ORDEN_TAMANO[reporte.tamano]);
+  if (diferenciaTamano === 0) {
+    puntaje += 25;
+    razones.push("Mismo tamaño");
+  } else if (diferenciaTamano === 1) {
+    puntaje += 8;
+  }
+
+  puntaje = Math.min(100, puntaje);
+  if (puntaje < PUNTAJE_MINIMO_COINCIDENCIA_MASCOTA) return null;
+
+  return { reporte, puntaje, razones };
+}
+
+export function calcularAlertasMascota<R extends ReporteComparable>(
+  mascota: MascotaComparable,
+  candidatos: R[]
+): AlertaMascota<R>[] {
+  return candidatos
+    .map((candidato) => compararMascotaConReporte(mascota, candidato))
+    .filter((a): a is AlertaMascota<R> => a !== null)
+    .sort((a, b) => b.puntaje - a.puntaje);
+}
+
 export function formatearDistancia(km: number): string {
   if (km < 1) return `${Math.max(10, Math.round((km * 1000) / 10) * 10)} m`;
   return `${km.toFixed(1).replace(".", ",")} km`;

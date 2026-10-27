@@ -3,12 +3,15 @@ import {
   RADIO_CERCANIA_KM,
   RADIO_DUPLICADO_KM,
   calcularAlertas,
+  calcularAlertasMascota,
   calcularDuplicados,
   compararDuplicados,
+  compararMascotaConReporte,
   compararReportes,
   distanciaKm,
   familiasDeColor,
   formatearDistancia,
+  type MascotaComparable,
   type ReporteComparable,
 } from "./coincidencias";
 
@@ -190,5 +193,60 @@ describe("compararDuplicados — HU-15", () => {
       otraPublicacion({ id: "cerca", ...aKm(0.1) }),
     ]);
     expect(resultado.map((d) => d.reporte.id)).toEqual(["cerca", "lejos"]);
+  });
+});
+
+describe("compararMascotaConReporte — HU-10 (alerta por características a una mascota con perfil QR)", () => {
+  const miMascota: MascotaComparable = {
+    id: "mascota-1",
+    especie: "Perro",
+    color: "Café con blanco",
+    tamano: "MEDIANO",
+  };
+
+  function hallazgoParecido(cambios: Partial<ReporteComparable> = {}): ReporteComparable {
+    return {
+      id: "hallazgo",
+      tipo: "ENCONTRADA",
+      especie: "Perro",
+      color: "Marrón y blanco",
+      tamano: "MEDIANO",
+      fecha: "2026-09-11T09:00:00-05:00",
+      ...aKm(2),
+      ...cambios,
+    };
+  }
+
+  it("alerta cuando un hallazgo coincide en especie, color y tamaño", () => {
+    const alerta = compararMascotaConReporte(miMascota, hallazgoParecido());
+    expect(alerta).not.toBeNull();
+    expect(alerta?.puntaje).toBeGreaterThanOrEqual(80);
+    expect(alerta?.razones.some((r) => r.includes("especie"))).toBe(true);
+  });
+
+  it("no alerta con un reporte de tipo PERDIDA (solo interesan los hallazgos)", () => {
+    expect(compararMascotaConReporte(miMascota, hallazgoParecido({ tipo: "PERDIDA" }))).toBeNull();
+  });
+
+  it("no alerta con otra especie", () => {
+    expect(compararMascotaConReporte(miMascota, hallazgoParecido({ especie: "Gato" }))).toBeNull();
+  });
+
+  it("no alerta sin un color en común", () => {
+    expect(compararMascotaConReporte(miMascota, hallazgoParecido({ color: "Negro" }))).toBeNull();
+  });
+
+  it("no depende de la distancia (la mascota no tiene ubicación propia)", () => {
+    const lejos = compararMascotaConReporte(miMascota, hallazgoParecido({ ...aKm(80) }));
+    expect(lejos).not.toBeNull();
+  });
+
+  it("calcularAlertasMascota ordena por puntaje y descarta los que no coinciden", () => {
+    const resultado = calcularAlertasMascota(miMascota, [
+      hallazgoParecido({ id: "parecido-pero-grande", tamano: "GRANDE" }),
+      hallazgoParecido({ id: "identico" }),
+      hallazgoParecido({ id: "gato", especie: "Gato" }),
+    ]);
+    expect(resultado.map((a) => a.reporte.id)).toEqual(["identico", "parecido-pero-grande"]);
   });
 });

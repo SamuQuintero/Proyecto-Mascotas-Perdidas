@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell, BellRing, MapPin, Sparkles, X } from "lucide-react";
+import { Bell, BellRing, MapPin, PawPrint, Sparkles, X } from "lucide-react";
 import { formatearDistancia } from "@/lib/coincidencias";
 import { haceCuanto } from "@/lib/formato";
 import {
@@ -11,6 +11,7 @@ import {
   alertasVistas,
   claveAlerta,
   marcarAlertasVistas,
+  misMascotas,
   misReportes,
 } from "@/lib/dispositivo";
 import type { EstadoReporte, TipoReporte } from "@/lib/tipos";
@@ -35,13 +36,33 @@ interface ReporteApi {
   alertas: AlertaApi[];
 }
 
+interface AlertaMascotaApi {
+  id: string;
+  titulo: string;
+  color: string;
+  zona: string;
+  fotoUrl: string;
+  creadoEn: string;
+  puntaje: number;
+}
+
+interface MascotaApi {
+  id: string;
+  nombre: string;
+  alertas: AlertaMascotaApi[];
+}
+
 const INTERVALO_MS = 60 * 1000;
 
-// Campana de notificaciones (HU-4 y HU-7). Consulta las alertas de los
-// reportes publicados desde este dispositivo y muestra cuántas son nuevas.
+// Campana de notificaciones. Combina tres avisos: HU-4/HU-7 (coincidencias
+// y cercanía de los reportes publicados desde este dispositivo) y HU-10
+// (alguien publicó un hallazgo con las mismas características que una
+// mascota con perfil QR registrada desde este dispositivo, aunque nunca se
+// haya reportado como perdida).
 export default function CampanaAlertas() {
   const pathname = usePathname();
   const [reportes, setReportes] = useState<ReporteApi[] | null>(null);
+  const [mascotas, setMascotas] = useState<MascotaApi[] | null>(null);
   const [vistas, setVistas] = useState<Set<string>>(new Set());
   const [abierta, setAbierta] = useState(false);
   // Alertas que eran nuevas al abrir el panel: siguen resaltadas mientras
@@ -50,17 +71,28 @@ export default function CampanaAlertas() {
   const contenedor = useRef<HTMLDivElement>(null);
 
   const cargar = useCallback(async () => {
-    const ids = misReportes();
+    const idsReportes = misReportes();
+    const idsMascotas = misMascotas();
     setVistas(alertasVistas());
-    if (ids.length === 0) {
-      setReportes([]);
-      return;
-    }
+
     try {
-      const respuesta = await fetch(`/api/alertas?ids=${ids.join(",")}`, {
-        cache: "no-store",
-      });
-      if (respuesta.ok) setReportes((await respuesta.json()).reportes);
+      if (idsReportes.length === 0) {
+        setReportes([]);
+      } else {
+        const respuesta = await fetch(`/api/alertas?ids=${idsReportes.join(",")}`, {
+          cache: "no-store",
+        });
+        if (respuesta.ok) setReportes((await respuesta.json()).reportes);
+      }
+
+      if (idsMascotas.length === 0) {
+        setMascotas([]);
+      } else {
+        const respuesta = await fetch(`/api/alertas-mascotas?ids=${idsMascotas.join(",")}`, {
+          cache: "no-store",
+        });
+        if (respuesta.ok) setMascotas((await respuesta.json()).mascotas);
+      }
     } catch {
       // Sin conexión: se conserva lo último que se cargó.
     }
@@ -96,8 +128,18 @@ export default function CampanaAlertas() {
   }, [abierta]);
 
   const conAlertas = (reportes ?? []).filter((r) => r.alertas.length > 0);
-  const claves = conAlertas.flatMap((r) => r.alertas.map((a) => claveAlerta(r.id, a.id)));
+  const mascotasConAlertas = (mascotas ?? []).filter((m) => m.alertas.length > 0);
+  const claves = [
+    ...conAlertas.flatMap((r) => r.alertas.map((a) => claveAlerta(r.id, a.id))),
+    ...mascotasConAlertas.flatMap((m) =>
+      m.alertas.map((a) => claveAlerta(`mascota:${m.id}`, a.id))
+    ),
+  ];
   const nuevas = claves.filter((clave) => !vistas.has(clave)).length;
+  const cargando = reportes === null || mascotas === null;
+  const sinNada = conAlertas.length === 0 && mascotasConAlertas.length === 0;
+  const sinNadaRegistrado =
+    !cargando && (reportes ?? []).length === 0 && (mascotas ?? []).length === 0;
 
   function alternar() {
     const abrir = !abierta;
@@ -138,7 +180,7 @@ export default function CampanaAlertas() {
             <div>
               <p className="font-display text-lg font-bold text-tinta-900">Alertas</p>
               <p className="text-xs text-tinta-500">
-                Coincidencias y hallazgos cerca de tus reportes
+                Coincidencias de tus reportes y mascotas registradas
               </p>
             </div>
             <button
@@ -151,14 +193,63 @@ export default function CampanaAlertas() {
           </div>
 
           <div className="max-h-[70vh] overflow-y-auto">
-            {reportes === null ? (
+            {cargando ? (
               <p className="px-5 py-8 text-center text-sm text-tinta-400">Cargando…</p>
-            ) : reportes.length === 0 ? (
-              <Vacio texto="Cuando publiques un reporte desde este dispositivo, aquí te avisaremos si aparece una mascota parecida o cerca del lugar." />
-            ) : conAlertas.length === 0 ? (
-              <Vacio texto="Todavía no hay coincidencias para tus reportes. Revisamos cada minuto: te avisaremos apenas aparezca algo." />
+            ) : sinNadaRegistrado ? (
+              <Vacio texto="Cuando publiques un reporte o crees la placa QR de tu mascota desde este dispositivo, aquí te avisaremos de coincidencias." />
+            ) : sinNada ? (
+              <Vacio texto="Todavía no hay coincidencias. Revisamos cada minuto: te avisaremos apenas aparezca algo." />
             ) : (
-              conAlertas.map((reporte) => (
+              <>
+                {mascotasConAlertas.map((mascota) => (
+                  <section key={`mascota:${mascota.id}`} className="border-b border-tinta-100 last:border-0">
+                    <Link
+                      href={`/mascotas/${mascota.id}`}
+                      className="block bg-reencontrada-50 px-5 py-2 text-xs font-bold uppercase tracking-wider text-reencontrada-700 hover:text-reencontrada-900"
+                    >
+                      <PawPrint className="mr-1 inline h-3 w-3" aria-hidden="true" />
+                      Tu mascota: {mascota.nombre} →
+                    </Link>
+                    <ul>
+                      {mascota.alertas.map((alerta) => {
+                        const nueva = resaltadas.has(claveAlerta(`mascota:${mascota.id}`, alerta.id));
+                        return (
+                          <li key={alerta.id}>
+                            <Link
+                              href={`/reportes/${alerta.id}`}
+                              className={`flex gap-3 px-5 py-3 transition hover:bg-tinta-50 ${
+                                nueva ? "bg-reencontrada-50/60" : ""
+                              }`}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={alerta.fotoUrl}
+                                alt=""
+                                className="h-14 w-14 shrink-0 rounded-2xl object-cover"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold text-tinta-900">
+                                  Alguien encontró a {alerta.titulo} ({alerta.color.toLowerCase()})
+                                </p>
+                                <p className="truncate text-xs text-tinta-500">
+                                  {alerta.zona} · {haceCuanto(alerta.creadoEn)}
+                                </p>
+                                <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-reencontrada-100 px-2 py-0.5 text-[11px] font-bold text-reencontrada-700">
+                                  <Sparkles className="h-3 w-3" aria-hidden="true" />
+                                  {alerta.puntaje}% parecido a {mascota.nombre}
+                                </span>
+                              </div>
+                              {nueva && (
+                                <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-perdida-500" aria-label="Nueva" />
+                              )}
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
+                ))}
+                {conAlertas.map((reporte) => (
                 <section key={reporte.id} className="border-b border-tinta-100 last:border-0">
                   <Link
                     href={`/reportes/${reporte.id}`}
@@ -216,7 +307,8 @@ export default function CampanaAlertas() {
                     })}
                   </ul>
                 </section>
-              ))
+                ))}
+              </>
             )}
           </div>
         </div>

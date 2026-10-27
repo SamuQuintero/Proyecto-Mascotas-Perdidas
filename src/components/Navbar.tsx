@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Camera,
   LayoutDashboard,
   LockKeyhole,
   LogOut,
@@ -25,7 +24,6 @@ const ENLACES = [
   { href: "/reportes", etiqueta: "Reportes" },
   { href: "/perdida/nuevo", etiqueta: "Perdí mi mascota" },
   { href: "/encontrada/nuevo", etiqueta: "Encontré una" },
-  { href: "/buscar-por-foto", etiqueta: "Buscar por foto" },
   { href: "/mascotas", etiqueta: "Placa QR" },
 ];
 
@@ -37,7 +35,8 @@ export interface UsuarioNavbar {
 // Navbar global. "Admin" y "Cuenta" son opcionales: nadie necesita iniciar
 // sesión para usar la aplicación. Admin gestiona reportes; Cuenta es para
 // ciudadanos que quieren avisos de cercanía (HU-16) o veterinarias que
-// vinculan microchips (HU-17) — son sistemas de sesión independientes.
+// consultan reportes y llevan el carnet de vacunas (HU-17) — son sistemas
+// de sesión independientes.
 export default function Navbar({
   admin,
   usuario,
@@ -198,8 +197,6 @@ export default function Navbar({
                     <Search className="h-4 w-4" />
                   ) : enlace.href === "/mascotas" ? (
                     <QrCode className="h-4 w-4" />
-                  ) : enlace.href === "/buscar-por-foto" ? (
-                    <Camera className="h-4 w-4" />
                   ) : enlace.href === "/" ? null : (
                     <Plus className="h-4 w-4" />
                   )}

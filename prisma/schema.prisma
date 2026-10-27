@@ -78,13 +78,6 @@ model Reporte {
   creadoEn       DateTime      @default(now())
   actualizadoEn  DateTime      @default(now()) @updatedAt
 
-  // HU-17: número de microchip confirmado por una veterinaria. Solo lo
-  // escribe un usuario con rol VETERINARIA; se muestra en el detalle del
-  // reporte como una verificación de identidad adicional.
-  microchip          String?
-  microchipVerificadoPor String?
-  microchipVerificadoEn  DateTime?
-
   mensajes Mensaje[]
 
   @@index([tipo])
@@ -110,7 +103,8 @@ model Mensaje {
 
 // HU-16 / HU-17: cuentas reales, separadas del admin único (que sigue
 // viviendo en variables de entorno). CIUDADANO se suscribe a avisos de
-// cercanía; VETERINARIA vincula microchips a reportes.
+// cercanía; VETERINARIA consulta los reportes (sin poder modificarlos) y
+// lleva el carnet de vacunas de las mascotas registradas.
 enum RolUsuario {
   CIUDADANO
   VETERINARIA
@@ -153,4 +147,21 @@ model Mascota {
   contactoTelefono  String
   contactoEmail     String?
   creadoEn          DateTime @default(now())
+
+  vacunas Vacuna[]
+}
+
+// HU-17: carnet de vacunas de una mascota. Lo escribe una veterinaria, y
+// cualquiera con el enlace del perfil (el mismo QR de la placa) lo puede
+// consultar — es el "carnet" físico, pero digital.
+model Vacuna {
+  id          String   @id @default(cuid())
+  mascotaId   String
+  mascota     Mascota  @relation(fields: [mascotaId], references: [id], onDelete: Cascade)
+  nombre      String // p. ej. "Rabia", "Parvovirus", "Moquillo"
+  fecha       DateTime // fecha en que se aplicó
+  veterinaria String // nombre de la clínica que la registró
+  creadoEn    DateTime @default(now())
+
+  @@index([mascotaId])
 }

@@ -10,7 +10,6 @@ import {
   MapPin,
   PartyPopper,
   Phone,
-  ShieldCheck,
   UserRound,
   EyeOff,
 } from "lucide-react";
@@ -151,21 +150,6 @@ export default function DetalleReporte({
               </div>
             )}
 
-            {reporte.microchip && (
-              <div className="mt-6 flex items-center gap-3 rounded-2xl border border-encontrada-200 bg-encontrada-50 p-4">
-                <ShieldCheck className="h-6 w-6 shrink-0 text-encontrada-600" aria-hidden="true" />
-                <div>
-                  <p className="text-sm font-bold text-encontrada-800">
-                    Microchip verificado: {reporte.microchip}
-                  </p>
-                  {reporte.microchipVerificadoPor && (
-                    <p className="text-xs text-encontrada-700">
-                      Confirmado por {reporte.microchipVerificadoPor}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
           </section>
 
           {!reencontrada && <PanelAlertas reporte={reporte} alertas={alertas} />}
