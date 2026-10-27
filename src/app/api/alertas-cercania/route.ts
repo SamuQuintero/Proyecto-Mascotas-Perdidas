@@ -20,7 +20,7 @@ export async function GET() {
   const centro = { latitud: avisoLatitud, longitud: avisoLongitud };
   const perdidas = await prisma.reporte.findMany({
     where: { tipo: "PERDIDA", estado: "ACTIVO" },
-    orderBy: { creadoEn: "desc" },
+    orderBy: { renovadoEn: "desc" },
   });
 
   const cercanos = perdidas
@@ -39,6 +39,9 @@ export async function GET() {
       zona: reporte.zona,
       fotoUrl: reporte.fotoUrl,
       creadoEn: reporte.creadoEn,
+      // HU-19: si el dueño lo renovó, vuelve a avisarse como novedad.
+      renovadoEn: reporte.renovadoEn,
+      renovado: reporte.renovaciones > 0,
       distanciaKm: d,
       distanciaTexto: formatearDistancia(d),
     })),

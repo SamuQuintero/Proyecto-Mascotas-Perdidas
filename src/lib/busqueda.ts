@@ -8,7 +8,8 @@ import { serializarReporte, type Reporte } from "@/lib/tipos";
 export async function buscarReportes(filtros: FiltrosReporte): Promise<Reporte[]> {
   const reportes = await prisma.reporte.findMany({
     where: construirConsulta(filtros),
-    orderBy: { creadoEn: "desc" },
+    // HU-19: un reporte renovado vuelve a aparecer arriba.
+    orderBy: { renovadoEn: "desc" },
   });
   return reportes
     .filter((reporte) => coincideConTexto(reporte, filtros))

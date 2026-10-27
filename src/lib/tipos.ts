@@ -23,6 +23,9 @@ export interface Reporte {
   reportanteAnonimo: boolean;
   estado: EstadoReporte;
   reencontradaEn: string | null;
+  usuarioId: string | null;
+  renovadoEn: string;
+  renovaciones: number;
   creadoEn: string;
   actualizadoEn: string;
 }
@@ -41,6 +44,7 @@ export function serializarReporte(reporte: {
   creadoEn: Date;
   actualizadoEn: Date;
   reencontradaEn: Date | null;
+  renovadoEn: Date;
   [clave: string]: unknown;
 }): Reporte {
   return {
@@ -49,5 +53,6 @@ export function serializarReporte(reporte: {
     creadoEn: reporte.creadoEn.toISOString(),
     actualizadoEn: reporte.actualizadoEn.toISOString(),
     reencontradaEn: reporte.reencontradaEn?.toISOString() ?? null,
+    renovadoEn: reporte.renovadoEn.toISOString(),
   } as Reporte;
 }

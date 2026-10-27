@@ -9,17 +9,19 @@ import {
   Mail,
   MapPin,
   MapPinned,
+  Megaphone,
   PartyPopper,
   Phone,
   UserRound,
   EyeOff,
 } from "lucide-react";
 import AccionesAdmin from "@/components/AccionesAdmin";
+import BotonRenovar from "@/components/BotonRenovar";
 import MensajesReporte from "@/components/MensajesReporte";
 import PanelAlertas from "@/components/PanelAlertas";
 import type { AlertaReporte } from "@/lib/alertas";
 import { ESTILO_TIPO, EtiquetaEstado, EtiquetaTipo } from "@/components/Etiquetas";
-import { formatearFecha, formatearFechaHora, formatearHora } from "@/lib/formato";
+import { formatearFecha, formatearFechaHora, formatearHora, haceCuanto } from "@/lib/formato";
 import { ETIQUETA_TAMANO, type Reporte } from "@/lib/tipos";
 
 const MapaVisor = dynamic(() => import("@/components/MapaVisor"), {
@@ -32,11 +34,16 @@ export default function DetalleReporte({
   aviso,
   esAdmin,
   alertas,
+  puedeGestionar,
+  puedeRenovar,
 }: {
   reporte: Reporte;
   aviso: "nuevo" | "editado" | null;
   esAdmin: boolean;
   alertas: AlertaReporte[];
+  // El dueño (cuenta con la que se publicó) o el admin.
+  puedeGestionar: boolean;
+  puedeRenovar: boolean;
 }) {
   const estilo = ESTILO_TIPO[reporte.tipo];
   const reencontrada = reporte.estado === "REENCONTRADA";
@@ -160,6 +167,29 @@ export default function DetalleReporte({
 
         <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
           {esAdmin && <AccionesAdmin id={reporte.id} estado={reporte.estado} />}
+
+          {puedeGestionar && reporte.estado === "ACTIVO" && (
+            <section className="tarjeta space-y-3 p-5">
+              <h2 className="flex items-center gap-2 font-display text-lg font-bold">
+                <Megaphone className="h-5 w-5 text-perdida-500" aria-hidden="true" />
+                Difusión del caso
+              </h2>
+              <p className="text-sm text-tinta-500">
+                Última difusión: {haceCuanto(reporte.renovadoEn).toLowerCase()}
+                {reporte.renovaciones > 0 &&
+                  ` · renovado ${reporte.renovaciones} ${reporte.renovaciones === 1 ? "vez" : "veces"}`}
+                . Mientras no aparezca, confirma que sigue abierto para que vuelva a subir en el
+                listado y a avisar a quienes viven cerca.
+              </p>
+              {puedeRenovar ? (
+                <BotonRenovar id={reporte.id} />
+              ) : (
+                <p className="rounded-2xl bg-tinta-50 p-3 text-sm text-tinta-500">
+                  Ya se difundió hoy. Podrás renovarlo de nuevo mañana.
+                </p>
+              )}
+            </section>
+          )}
 
           <section className="tarjeta p-5">
             <h2 className="font-display text-lg font-bold">

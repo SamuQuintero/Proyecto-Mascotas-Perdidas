@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { adminActual } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { COOKIE_USUARIO, verificarTokenUsuario } from "@/lib/sesionUsuario";
 
@@ -76,4 +77,11 @@ export async function exigirVeterinaria() {
       { status: 401 }
     ),
   };
+}
+
+// HU-19 / HU-23: quién hace la petición para decidir si puede renovar o
+// editar un reporte o perfil (ver propiedad.ts).
+export async function sesionGestion() {
+  const usuario = await usuarioActual();
+  return { usuarioId: usuario?.id ?? null, esAdmin: adminActual() !== null };
 }

@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LogOut, MapPinned, Radar } from "lucide-react";
+import { MapPinned, Radar, FileText } from "lucide-react";
+import BotonRenovar from "@/components/BotonRenovar";
 import BotonCerrarSesionCuenta from "@/components/BotonCerrarSesionCuenta";
 import ControlSuscripcion from "@/components/ControlSuscripcion";
-import { EtiquetaTipo } from "@/components/Etiquetas";
+import { EtiquetaEstado, EtiquetaTipo } from "@/components/Etiquetas";
 import { usuarioActual } from "@/lib/cuenta";
 import { distanciaKm, formatearDistancia } from "@/lib/coincidencias";
 import { prisma } from "@/lib/db";
 import { rutaPanel } from "@/lib/roles";
-import { formatearFechaHora } from "@/lib/formato";
+import { formatearFechaHora, haceCuanto } from "@/lib/formato";
+import { necesitaRecordatorio, puedeRenovar } from "@/lib/renovacion";
 
 export const metadata = {
   title: "Tu cuenta — PetMatch",
@@ -19,6 +21,12 @@ export default async function CuentaPage() {
   const usuario = await usuarioActual();
   if (!usuario) redirect("/cuenta/login");
   if (usuario.rol !== "CIUDADANO") redirect(rutaPanel(usuario.rol));
+
+  const misReportes = await prisma.reporte.findMany({
+    where: { usuarioId: usuario.id },
+    orderBy: { renovadoEn: "desc" },
+    take: 30,
+  });
 
   const suscrito =
     usuario.avisoLatitud !== null &&
@@ -55,6 +63,53 @@ export default async function CuentaPage() {
         </div>
         <BotonCerrarSesionCuenta />
       </header>
+
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold">
+          <FileText className="h-5 w-5 text-perdida-500" aria-hidden="true" />
+          Mis reportes ({misReportes.length})
+        </h2>
+        {misReportes.length === 0 ? (
+          <div className="tarjeta px-6 py-8 text-center text-sm text-tinta-500">
+            Los reportes que publiques con tu sesión iniciada aparecerán aquí, y podrás
+            renovarlos mientras tu mascota no aparezca.{" "}
+            <Link href="/perdida/nuevo" className="font-semibold text-perdida-600 underline">
+              Reportar una mascota perdida
+            </Link>
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {misReportes.map((reporte) => (
+              <li key={reporte.id} className="tarjeta flex flex-col gap-3 p-3 sm:flex-row sm:items-center">
+                <Link href={`/reportes/${reporte.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={reporte.fotoUrl} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                  <div className="min-w-0">
+                    <p className="truncate font-display font-bold text-tinta-900">
+                      {reporte.nombre || reporte.especie}
+                    </p>
+                    <p className="truncate text-xs text-tinta-500">
+                      Difundido {haceCuanto(reporte.renovadoEn).toLowerCase()}
+                    </p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      <EtiquetaTipo tipo={reporte.tipo} />
+                      <EtiquetaEstado estado={reporte.estado} />
+                      {necesitaRecordatorio(reporte) && (
+                        <span className="rounded-full bg-perdida-100 px-2 py-0.5 text-[11px] font-bold text-perdida-700">
+                          ¿Sigue perdida?
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+                {reporte.tipo === "PERDIDA" && puedeRenovar(reporte) && (
+                  <BotonRenovar id={reporte.id} compacto />
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="tarjeta p-6">
         <h2 className="mb-1 flex items-center gap-2 font-display text-lg font-bold">

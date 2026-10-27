@@ -65,6 +65,8 @@ interface Props {
   tipo: "PERDIDA" | "ENCONTRADA";
   // Si se recibe, el formulario edita ese reporte (HU-25) en lugar de crear uno.
   reporteInicial?: Reporte;
+  // Hay una sesión de cuenta iniciada: el reporte quedará a su nombre.
+  conSesion?: boolean;
 }
 
 const TEXTOS = {
@@ -146,7 +148,7 @@ function estadoDesdeReporte(reporte: Reporte): EstadoFormulario {
   };
 }
 
-export default function FormularioReporte({ tipo, reporteInicial }: Props) {
+export default function FormularioReporte({ tipo, reporteInicial, conSesion }: Props) {
   const router = useRouter();
   const textos = TEXTOS[tipo];
   const editando = reporteInicial !== undefined;
@@ -530,6 +532,20 @@ export default function FormularioReporte({ tipo, reporteInicial }: Props) {
           </p>
         </div>
       </div>
+
+      {!editando && !conSesion && (
+        <p className="rounded-2xl bg-reencontrada-50 p-4 text-sm text-reencontrada-800">
+          ¿Quieres poder renovar o editar este reporte más adelante?{" "}
+          <Link href="/cuenta/login" className="font-bold underline">
+            Inicia sesión
+          </Link>{" "}
+          o{" "}
+          <Link href="/cuenta/registro" className="font-bold underline">
+            crea una cuenta
+          </Link>{" "}
+          antes de publicar. Sin cuenta también puedes publicar.
+        </p>
+      )}
 
       {tipo === "ENCONTRADA" && !editando && (
         <p className="rounded-2xl bg-encontrada-50 p-4 text-sm text-encontrada-800">

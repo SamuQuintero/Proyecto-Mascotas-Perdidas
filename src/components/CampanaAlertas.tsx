@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell, BellRing, MapPin, PawPrint, Sparkles, X } from "lucide-react";
+import { Bell, BellRing, Megaphone, MapPin, PawPrint, Radar, Sparkles, X } from "lucide-react";
 import { formatearDistancia } from "@/lib/coincidencias";
 import { haceCuanto } from "@/lib/formato";
 import {
@@ -52,7 +52,34 @@ interface MascotaApi {
   alertas: AlertaMascotaApi[];
 }
 
+// HU-16 / HU-19: reportes cerca del punto al que está suscrito el ciudadano.
+interface CercaniaApi {
+  id: string;
+  titulo: string;
+  color: string;
+  zona: string;
+  fotoUrl: string;
+  renovadoEn: string;
+  renovado: boolean;
+  distanciaTexto: string;
+}
+
+// HU-19: reportes propios que llevan una semana sin confirmarse.
+interface RecordatorioApi {
+  id: string;
+  titulo: string;
+  fotoUrl: string;
+  dias: number;
+  renovadoEn: string;
+}
+
 const INTERVALO_MS = 60 * 1000;
+const NOVEDAD_CERCANIA_MS = 7 * 24 * 60 * 60 * 1000;
+
+// Una novedad se identifica por el reporte y por su última difusión: si el
+// dueño lo renueva, la clave cambia y vuelve a avisar.
+const claveCercania = (c: CercaniaApi) => claveAlerta("cercania", `${c.id}@${c.renovadoEn}`);
+const claveRecordatorio = (r: RecordatorioApi) => claveAlerta("recordatorio", `${r.id}@${r.renovadoEn}`);
 
 // Campana de notificaciones. Combina tres avisos: HU-4/HU-7 (coincidencias
 // y cercanía de los reportes publicados desde este dispositivo) y HU-10
@@ -63,6 +90,8 @@ export default function CampanaAlertas() {
   const pathname = usePathname();
   const [reportes, setReportes] = useState<ReporteApi[] | null>(null);
   const [mascotas, setMascotas] = useState<MascotaApi[] | null>(null);
+  const [cercania, setCercania] = useState<CercaniaApi[]>([]);
+  const [recordatorios, setRecordatorios] = useState<RecordatorioApi[]>([]);
   const [vistas, setVistas] = useState<Set<string>>(new Set());
   const [abierta, setAbierta] = useState(false);
   // Alertas que eran nuevas al abrir el panel: siguen resaltadas mientras
@@ -76,6 +105,20 @@ export default function CampanaAlertas() {
     setVistas(alertasVistas());
 
     try {
+      // Avisos de la cuenta (sin sesión responden vacío, sin consultar la base).
+      const [respCercania, respRecordatorios] = await Promise.all([
+        fetch("/api/alertas-cercania", { cache: "no-store" }),
+        fetch("/api/cuenta/recordatorios", { cache: "no-store" }),
+      ]);
+      if (respCercania.ok) {
+        // Solo lo que se difundió esta semana: lo anterior ya no es novedad
+        // (la lista completa está en /cuenta).
+        const reportes: CercaniaApi[] = (await respCercania.json()).reportes ?? [];
+        const limite = Date.now() - NOVEDAD_CERCANIA_MS;
+        setCercania(reportes.filter((c) => new Date(c.renovadoEn).getTime() >= limite));
+      }
+      if (respRecordatorios.ok) setRecordatorios((await respRecordatorios.json()).recordatorios ?? []);
+
       if (idsReportes.length === 0) {
         setReportes([]);
       } else {
@@ -130,6 +173,8 @@ export default function CampanaAlertas() {
   const conAlertas = (reportes ?? []).filter((r) => r.alertas.length > 0);
   const mascotasConAlertas = (mascotas ?? []).filter((m) => m.alertas.length > 0);
   const claves = [
+    ...recordatorios.map(claveRecordatorio),
+    ...cercania.map(claveCercania),
     ...conAlertas.flatMap((r) => r.alertas.map((a) => claveAlerta(r.id, a.id))),
     ...mascotasConAlertas.flatMap((m) =>
       m.alertas.map((a) => claveAlerta(`mascota:${m.id}`, a.id))
@@ -137,9 +182,17 @@ export default function CampanaAlertas() {
   ];
   const nuevas = claves.filter((clave) => !vistas.has(clave)).length;
   const cargando = reportes === null || mascotas === null;
-  const sinNada = conAlertas.length === 0 && mascotasConAlertas.length === 0;
+  const sinNada =
+    conAlertas.length === 0 &&
+    mascotasConAlertas.length === 0 &&
+    cercania.length === 0 &&
+    recordatorios.length === 0;
   const sinNadaRegistrado =
-    !cargando && (reportes ?? []).length === 0 && (mascotas ?? []).length === 0;
+    !cargando &&
+    (reportes ?? []).length === 0 &&
+    (mascotas ?? []).length === 0 &&
+    cercania.length === 0 &&
+    recordatorios.length === 0;
 
   function alternar() {
     const abrir = !abierta;
@@ -201,6 +254,75 @@ export default function CampanaAlertas() {
               <Vacio texto="Todavía no hay coincidencias. Revisamos cada minuto: te avisaremos apenas aparezca algo." />
             ) : (
               <>
+                {recordatorios.length > 0 && (
+                  <section className="border-b border-tinta-100">
+                    <p className="bg-perdida-50 px-5 py-2 text-xs font-bold uppercase tracking-wider text-perdida-700">
+                      <Megaphone className="mr-1 inline h-3 w-3" aria-hidden="true" />
+                      ¿Sigue perdida?
+                    </p>
+                    <ul>
+                      {recordatorios.map((r) => (
+                        <li key={r.id}>
+                          <Link
+                            href={`/reportes/${r.id}`}
+                            className={`flex gap-3 px-5 py-3 transition hover:bg-tinta-50 ${
+                              resaltadas.has(claveRecordatorio(r)) ? "bg-perdida-50/60" : ""
+                            }`}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={r.fotoUrl} alt="" className="h-14 w-14 shrink-0 rounded-2xl object-cover" />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-tinta-900">
+                                {r.titulo}: hace {r.dias} días no confirmas el caso
+                              </p>
+                              <p className="text-xs text-tinta-500">
+                                Confírmalo para volver a difundirlo →
+                              </p>
+                            </div>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+                {cercania.length > 0 && (
+                  <section className="border-b border-tinta-100">
+                    <Link
+                      href="/cuenta"
+                      className="block bg-reencontrada-50 px-5 py-2 text-xs font-bold uppercase tracking-wider text-reencontrada-700 hover:text-reencontrada-900"
+                    >
+                      <Radar className="mr-1 inline h-3 w-3" aria-hidden="true" />
+                      Perdidas cerca de ti →
+                    </Link>
+                    <ul>
+                      {cercania.slice(0, 8).map((c) => (
+                        <li key={c.id}>
+                          <Link
+                            href={`/reportes/${c.id}`}
+                            className={`flex gap-3 px-5 py-3 transition hover:bg-tinta-50 ${
+                              resaltadas.has(claveCercania(c)) ? "bg-reencontrada-50/60" : ""
+                            }`}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={c.fotoUrl} alt="" className="h-14 w-14 shrink-0 rounded-2xl object-cover" />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-tinta-900">
+                                {c.renovado ? "Siguen buscando a " : "Se perdió "}
+                                {c.titulo} ({c.color.toLowerCase()})
+                              </p>
+                              <p className="truncate text-xs text-tinta-500">
+                                {c.zona} · {haceCuanto(c.renovadoEn)}
+                              </p>
+                              <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-perdida-100 px-2 py-0.5 text-[11px] font-bold text-perdida-700">
+                                <MapPin className="h-3 w-3" aria-hidden="true" />A {c.distanciaTexto}
+                              </span>
+                            </div>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
                 {mascotasConAlertas.map((mascota) => (
                   <section key={`mascota:${mascota.id}`} className="border-b border-tinta-100 last:border-0">
                     <Link

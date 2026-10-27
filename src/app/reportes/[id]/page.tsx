@@ -3,6 +3,9 @@ import { prisma } from "@/lib/db";
 import DetalleReporte from "@/components/DetalleReporte";
 import { adminActual } from "@/lib/admin";
 import { alertasDeReporte } from "@/lib/alertas";
+import { sesionGestion } from "@/lib/cuenta";
+import { puedeGestionar } from "@/lib/propiedad";
+import { puedeRenovar } from "@/lib/renovacion";
 import { serializarReporte } from "@/lib/tipos";
 
 export default async function DetalleReportePage({
@@ -22,6 +25,7 @@ export default async function DetalleReportePage({
 
   const serializado = serializarReporte(reporte);
   const alertas = await alertasDeReporte(serializado);
+  const gestiona = puedeGestionar(reporte, await sesionGestion());
 
   return (
     <DetalleReporte
@@ -35,6 +39,8 @@ export default async function DetalleReportePage({
             : null
       }
       esAdmin={adminActual() !== null}
+      puedeGestionar={gestiona}
+      puedeRenovar={puedeRenovar(reporte)}
     />
   );
 }
