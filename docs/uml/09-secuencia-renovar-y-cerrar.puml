@@ -1,0 +1,74 @@
+@startuml 09-secuencia-renovar-y-cerrar
+title Secuencia — Renovar un reporte (HU-19) y cerrarlo con "¡Ya apareció!" (HU-12)
+skinparam shadowing false
+autonumber
+
+actor "Dueño\n(ciudadano)" as Dueno
+participant "BotonRenovar /\nBotonYaAparecio" as Boton
+participant "POST .../renovar\nPATCH .../estado" as Ruta
+participant "sesionGestion()" as Sesion
+participant "ServicioReportes" as Srv
+participant "propiedad.ts /\nrenovacion.ts" as Reglas
+participant "RepositorioReportes" as Repo
+participant "NotificadorCambios" as Notif
+
+== Renovar (volver a difundir) ==
+Dueno -> Boton : "Sigue perdida: volver a difundir"
+Boton -> Ruta : POST /api/reportes/{id}/renovar
+Ruta -> Sesion : ¿quién es?
+Sesion --> Ruta : { usuarioId, esAdmin }\n(solo la cookie firmada, sin consultar la base)
+Ruta -> Srv : renovar({ id, sesion })
+Srv -> Repo : buscarPorId(id)
+Repo --> Srv : Reporte | null
+
+alt no existe
+  Srv --> Ruta : Falla NO_ENCONTRADO
+  Ruta --> Boton : 404
+else existe
+  Srv -> Reglas : puedeGestionar(reporte, sesion)
+  alt no es el dueño ni el admin
+    Srv --> Ruta : Falla PROHIBIDO
+    Ruta --> Boton : 403
+  else tiene permiso
+    alt el caso ya está cerrado
+      Srv --> Ruta : Falla CONFLICTO
+      Ruta --> Boton : 409
+    else caso abierto
+      Srv -> Reglas : puedeRenovar(reporte, ahora)\n(≥ 24 h desde la última)
+      alt renovó hace menos de un día
+        Srv --> Ruta : Falla DEMASIADO_PRONTO
+        Ruta --> Boton : 429
+      else puede renovar
+        Srv -> Repo : renovar(id, ahora)
+        Repo --> Srv : Reporte (renovadoEn, renovaciones + 1)
+        Srv -> Notif : reportesCambiaron()
+        Srv --> Ruta : ok
+        Ruta --> Boton : 200
+        note right of Boton
+          El reporte sube en /reportes y vuelve a
+          aparecer en los avisos de cercanía.
+        end note
+      end
+    end
+  end
+end
+
+== Cerrar el caso ==
+Dueno -> Boton : "¡Ya apareció!" (confirma)
+Boton -> Ruta : PATCH /api/reportes/{id}/estado\n{ estado: "REENCONTRADA" }
+Ruta -> Srv : cambiarEstado({ id, estado, sesion })
+Srv -> Reglas : puedeCambiarEstado(reporte, sesion, estado)
+note right of Reglas
+  admin → cualquier estado
+  dueño → solo REENCONTRADA
+  (reabrir es del administrador)
+end note
+alt permitido
+  Srv -> Repo : cambiarEstado(id, "REENCONTRADA", ahora)
+  Srv -> Notif : reportesCambiaron()
+  Srv --> Ruta : ok
+  Ruta --> Boton : 200
+else no permitido
+  Srv --> Ruta : Falla SIN_SESION (401) o PROHIBIDO (403)
+end
+@enduml

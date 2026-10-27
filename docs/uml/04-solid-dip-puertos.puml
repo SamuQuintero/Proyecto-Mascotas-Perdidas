@@ -1,0 +1,131 @@
+@startuml 04-solid-dip-puertos
+!pragma layout smetana
+title SOLID · D — Inversión de dependencias: servicios, puertos y adaptadores
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor #FFFBF5
+  BorderColor #3A344F
+}
+skinparam stereotypeCBackgroundColor #EAE4FF
+
+package "Entrada HTTP" {
+  class "POST /api/reportes\nPATCH /api/reportes/[id]\nPOST .../renovar · PATCH .../estado" as RutaReportes
+  class "POST /api/mascotas\nPATCH /api/mascotas/[id]" as RutaMascotas
+  class "POST /api/resguardo\nPATCH · DELETE /api/resguardo/[id]" as RutaResguardo
+}
+
+package "Casos de uso (src/servicios) — dependen SOLO de interfaces" {
+  class ServicioReportes {
+    +publicar(datos, foto, usuarioId) : Resultado
+    +editar(id, datos, foto, sesion) : Resultado
+    +cambiarEstado(id, estado, sesion) : Resultado
+    +renovar(id, sesion) : Resultado
+  }
+  class ServicioMascotas {
+    +crear(datos, foto, usuarioId) : Resultado
+    +editar(id, datos, foto, sesion) : Resultado
+  }
+  class ServicioResguardo {
+    +publicar(refugioId, datos, foto) : Resultado
+    +marcarEntregado(id, refugioId) : Resultado
+    +eliminar(id, refugioId) : Resultado
+  }
+}
+
+package "Puertos (src/lib/puertos.ts)" {
+  interface AlmacenFotos <<puerto>> {
+    +guardar(archivo) : Promise<String>
+    +eliminar(url) : Promise<void>
+  }
+  interface RepositorioReportes <<puerto>> {
+    +buscarPorId(id)
+    +crear(datos)
+    +actualizar(id, cambios)
+    +cambiarEstado(id, estado, ahora)
+    +renovar(id, ahora)
+  }
+  interface RepositorioMascotas <<puerto>> {
+    +buscarPorId(id)
+    +crear(datos)
+    +actualizar(id, cambios)
+  }
+  interface RepositorioResguardo <<puerto>> {
+    +buscarPorId(id)
+    +crear(datos)
+    +marcarEntregado(id, ahora)
+    +eliminar(id)
+  }
+  interface NotificadorCambios <<puerto>> {
+    +reportesCambiaron()
+    +resguardoCambio()
+  }
+}
+
+package "Adaptadores de producción (src/infraestructura)" {
+  class AlmacenFotosDisco
+  class RepositorioReportesPrisma
+  class RepositorioMascotasPrisma
+  class RepositorioResguardoPrisma
+  class NotificadorCacheNext
+}
+
+package "Dobles de prueba (src/servicios/dobles.ts)" {
+  class AlmacenFotosEnMemoria
+  class RepositorioReportesEnMemoria
+  class RepositorioMascotasEnMemoria
+  class RepositorioResguardoEnMemoria
+  class NotificadorEspia
+}
+
+class Composicion <<raíz de composición>> {
+  +servicioReportes
+  +servicioMascotas
+  +servicioResguardo
+}
+
+RutaReportes --> ServicioReportes
+RutaMascotas --> ServicioMascotas
+RutaResguardo --> ServicioResguardo
+
+ServicioReportes ..> RepositorioReportes
+ServicioReportes ..> AlmacenFotos
+ServicioReportes ..> NotificadorCambios
+ServicioMascotas ..> RepositorioMascotas
+ServicioMascotas ..> AlmacenFotos
+ServicioResguardo ..> RepositorioResguardo
+ServicioResguardo ..> AlmacenFotos
+ServicioResguardo ..> NotificadorCambios
+
+AlmacenFotosDisco ..|> AlmacenFotos
+RepositorioReportesPrisma ..|> RepositorioReportes
+RepositorioMascotasPrisma ..|> RepositorioMascotas
+RepositorioResguardoPrisma ..|> RepositorioResguardo
+NotificadorCacheNext ..|> NotificadorCambios
+
+AlmacenFotosEnMemoria ..|> AlmacenFotos
+RepositorioReportesEnMemoria ..|> RepositorioReportes
+RepositorioMascotasEnMemoria ..|> RepositorioMascotas
+RepositorioResguardoEnMemoria ..|> RepositorioResguardo
+NotificadorEspia ..|> NotificadorCambios
+
+Composicion ..> ServicioReportes : crea e inyecta
+Composicion ..> ServicioMascotas : crea e inyecta
+Composicion ..> ServicioResguardo : crea e inyecta
+Composicion ..> AlmacenFotosDisco
+Composicion ..> RepositorioReportesPrisma
+Composicion ..> NotificadorCacheNext
+
+note bottom of Composicion
+  Es el único lugar donde se elige la
+  implementación. Cambiar de disco a la
+  nube = escribir otra clase que implemente
+  AlmacenFotos y cambiar UNA línea aquí.
+end note
+
+note bottom of ServicioReportes
+  Probado con dobles en memoria:
+  src/servicios/*.test.ts (24 pruebas,
+  sin base de datos ni disco).
+end note
+@enduml

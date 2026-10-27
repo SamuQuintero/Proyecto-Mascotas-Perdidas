@@ -1,0 +1,60 @@
+@startuml 14-despliegue
+!pragma layout smetana
+title PetMatch — Diagrama de despliegue
+skinparam shadowing false
+skinparam node {
+  BackgroundColor #FFFBF5
+  BorderColor #3A344F
+}
+
+node "Navegador de la persona" as Navegador {
+  artifact "React (Client Components)\nLeaflet · localStorage" as Cliente
+}
+
+node "Servidor Next.js 14 (Node 18+)" as Servidor {
+  artifact "Server Components\n(páginas dinámicas)" as Paginas
+  artifact "Rutas API\n/api/*" as Api
+  artifact "Servicios + dominio puro\n(src/servicios, src/lib)" as Dominio
+  artifact "Caché por etiquetas\n(unstable_cache)" as Cache
+  folder "public/uploads\n(fotos subidas)" as Uploads
+}
+
+node "Supabase (ca-central-1)" as Supabase {
+  database "PostgreSQL\n6 tablas con RLS activo" as DB
+  component "Pooler (pgbouncer)\npuerto 6543" as Pooler
+}
+
+cloud "OpenStreetMap" as OSM
+
+Cliente --> Paginas : HTTPS (HTML + RSC)
+Cliente --> Api : HTTPS (fetch / multipart)
+Cliente --> OSM : teselas del mapa
+Paginas --> Cache : lecturas
+Api --> Dominio
+Dominio --> Cache : invalida etiquetas
+Dominio --> Uploads : guardar / eliminar fotos
+Cache --> Pooler : DATABASE_URL (runtime)
+Dominio --> Pooler : DATABASE_URL (runtime)
+Pooler --> DB
+
+note bottom of Supabase
+  prisma db push usa DIRECT_URL (5432).
+  Tras crear tablas: npm run db:rls
+  para que la API pública (clave anon)
+  no pueda leer ni escribir los datos.
+end note
+
+note bottom of Navegador
+  Las cookies de sesión son httpOnly y
+  firmadas con HMAC (SESION_SECRETO y
+  ADMIN_SECRETO). Nada sensible vive en
+  localStorage: solo los ids de los
+  reportes y placas creados desde ahí.
+end note
+
+note right of Uploads
+  Hoy en disco local. Detrás del puerto
+  AlmacenFotos: migrar a Supabase Storage
+  o S3 solo cambia el adaptador.
+end note
+@enduml

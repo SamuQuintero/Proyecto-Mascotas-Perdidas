@@ -106,12 +106,22 @@ Notas de diseño:
 ## Arquitectura
 
 Detalle con diagramas en [docs/ARQUITECTURA.md](./docs/ARQUITECTURA.md).
+Los diagramas UML (PlantUML) están en [docs/uml/](./docs/uml/README.md) y el
+análisis de los principios SOLID en [docs/SOLID.md](./docs/SOLID.md).
+
+El código sigue una arquitectura de **puertos y adaptadores** en las escrituras
+de reportes, mascotas y resguardo:
+`rutas → servicios (src/servicios) → puertos (src/lib/puertos.ts) ← adaptadores (src/infraestructura)`,
+conectados en `src/composicion.ts`. Los servicios se prueban con dobles en
+memoria, sin base de datos.
 
 Una sola aplicación Next.js sirve las páginas y la API. Piezas clave:
 
-- `src/lib/coincidencias.ts` — lógica pura de coincidencias (HU-4, 7, 10,
-  15, 20, 24): sin acceso a la base de datos, fácil de probar. Agrupa
-  colores por familias ("café", "marrón" y "chocolate" son lo mismo).
+- `src/lib/coincidencias/` — lógica pura de coincidencias (HU-4, 7, 10,
+  15, 20, 24): sin acceso a la base de datos, fácil de probar. Un motor de
+  puntuación genérico suma criterios intercambiables (especie, color, tamaño,
+  distancia, señas de gato). Agrupa colores por familias ("café", "marrón" y
+  "chocolate" son lo mismo).
 - `src/lib/felinos.ts`, `renovacion.ts`, `propiedad.ts`, `indicadores.ts`,
   `establecimientos.ts`, `resguardo.ts`, `compartir.ts` — reglas de cada
   historia, también puras y con pruebas.
@@ -212,15 +222,17 @@ app.**
 npm test
 ```
 
-179 pruebas unitarias sobre la lógica pura: validación de datos, coincidencias
-y duplicados, señas felinas, renovación y permisos, indicadores, directorio,
-resguardo, compartir, sesiones, contraseñas y fechas.
+209 pruebas unitarias: la lógica pura (validación, coincidencias y duplicados,
+señas felinas, renovación y permisos, indicadores, directorio, resguardo,
+compartir, sesiones, contraseñas y fechas) y los casos de uso de
+`src/servicios/` con dobles en memoria.
 
 ## Estructura del proyecto
 
 ```
 ├─ Product Backlog.xlsx          # Fuente oficial de historias de usuario
-├─ docs/                         # ARQUITECTURA.md y DISENO_PRODUCTO.md
+├─ docs/                         # ARQUITECTURA.md, DISENO_PRODUCTO.md, SOLID.md
+│  └─ uml/                       # 14 diagramas PlantUML (.puml)
 ├─ prisma/
 │  ├─ schema.prisma              # Reporte, Mensaje, Usuario, Mascota, Vacuna, AnimalResguardo
 │  └─ cuentas-prueba.json        # Datos de las cuentas de prueba
@@ -239,7 +251,10 @@ resguardo, compartir, sesiones, contraseñas y fechas.
    │  ├─ admin/                  # Panel, login e indicadores (HU-22)
    │  └─ api/                    # Reportes, mascotas, resguardo, cuenta, alertas
    ├─ components/                # Formularios, campana, mapas, ShellAcceso, etc.
-   └─ lib/                       # Lógica pura, sesiones, caché, validación
+   ├─ servicios/                 # Casos de uso (dependen de puertos, no de Prisma)
+   ├─ infraestructura/           # Adaptadores: Prisma, disco, caché de Next, HTTP
+   ├─ composicion.ts             # Raíz de composición: elige las implementaciones
+   └─ lib/                       # Lógica pura, puertos, sesiones, caché, validación
 ```
 
 ## Posibles mejoras futuras
@@ -251,5 +266,5 @@ latencia, y paginación del listado de reportes cuando crezca el volumen.
 
 ## Estado del proyecto
 
-**24 historias implementadas.** Pasan las 179 pruebas automatizadas
+**24 historias implementadas.** Pasan las 209 pruebas automatizadas
 (`npm test`) y el proyecto compila (`npm run build`).

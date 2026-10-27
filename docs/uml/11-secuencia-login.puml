@@ -1,0 +1,57 @@
+@startuml 11-secuencia-login
+title Secuencia — Inicio de sesión de una cuenta (ciudadano, veterinaria o refugio)
+skinparam shadowing false
+autonumber
+
+actor Persona
+participant "ShellAcceso +\nFormularioLoginCuenta" as Form
+participant "POST /api/cuenta/login" as Ruta
+participant "loginSchema (Zod)" as Zod
+database "Supabase\n(Usuario)" as DB
+participant "contrasenas.ts\n(scrypt)" as Hash
+participant "sesionUsuario.ts\n(HMAC)" as Token
+participant "Layout raíz\nusuarioSesionLigera()" as Layout
+participant "Panel del rol\nusuarioActual()" as Panel
+
+Persona -> Form : correo y contraseña\n(o botón de cuenta de prueba)
+Form -> Ruta : { email, contrasena }
+Ruta -> Zod : safeParse
+alt formato inválido
+  Zod --> Ruta : errores
+  Ruta --> Form : 400 { errores }
+else formato válido
+  Ruta -> DB : findUnique(email)
+  DB --> Ruta : Usuario | null
+  Ruta -> Hash : verificarContrasena(clave, hash)
+  alt cuenta inexistente o clave incorrecta
+    Ruta -> Ruta : espera 400 ms\n(frena los intentos a ciegas)
+    Ruta --> Form : 401 "Correo o contraseña incorrectos."
+    Form -> Form : muestra el error con animación de temblor
+  else correcta
+    Ruta -> Token : crearTokenUsuario({ id, rol, nombre })
+    Token --> Ruta : contenido.firma (expira en 30 días)
+    Ruta --> Form : 200 { usuario } + Set-Cookie\nhttpOnly · sameSite=lax
+    Form -> Form : "¡Bienvenido!" y router.push(rutaPanel(rol))
+  end
+end
+
+== Después del login ==
+Form -> Layout : cada navegación
+Layout -> Token : verificarTokenUsuario(cookie)
+Token --> Layout : { id, rol, nombre }\n(sin consultar la base: el navbar es rápido)
+
+Form -> Panel : /cuenta · /veterinaria · /refugio
+Panel -> DB : usuarioActual() verifica que la cuenta existe\n(se pide en paralelo con los datos del panel)
+DB --> Panel : Usuario
+alt el rol no corresponde al panel
+  Panel --> Persona : redirect(rutaPanel(rol real))
+else corresponde
+  Panel --> Persona : panel con sus datos
+end
+
+note over Token, Panel
+  El administrador usa otro sistema de sesión
+  (sesion.ts + admin.ts, credenciales en .env):
+  nunca toca la tabla Usuario.
+end note
+@enduml

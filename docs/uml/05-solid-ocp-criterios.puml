@@ -1,0 +1,93 @@
+@startuml 05-solid-ocp-criterios
+!pragma layout smetana
+title SOLID · O — Abierto/cerrado: criterios de puntuación intercambiables (patrón Strategy)
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor #FFFBF5
+  BorderColor #3A344F
+}
+skinparam stereotypeCBackgroundColor #EAE4FF
+
+interface "Criterio<A, B>" as Criterio <<estrategia>> {
+  +nombre : string
+  +evaluar(a, b) : Aporte
+}
+
+class Aporte <<valor>> {
+  +puntos : number
+  +razones? : string[]
+  +cumple? : boolean
+  +descarta? : boolean
+}
+
+class "puntuar(criterios, a, b)" as Motor <<motor — cerrado a modificación>> {
+  suma los aportes
+  limita el puntaje a 0–100
+  devuelve null si un criterio descarta
+}
+
+class Puntuacion <<valor>> {
+  +puntaje : number
+  +razones : string[]
+  +cumplidos : Set<string>
+}
+
+package "Criterios (criterios.ts) — abiertos a extensión" {
+  class criterioEspecie <<fábrica(peso)>>
+  class criterioColor <<fábrica(peso, obligatorio)>>
+  class criterioTamano <<fábrica(igual, vecino)>>
+  class criterioDistancia <<constante>>
+  class criterioFelino <<constante>>
+  class "criterioEdad\n(ejemplo en puntuacion.test.ts)" as criterioEdad
+}
+
+package "Comparaciones (cada una es una LISTA de criterios con sus pesos)" {
+  class "reportes.ts · HU-4 / HU-7\nespecie 30 · color 35 · tamaño 20/5\ndistancia · felino" as CmpReportes
+  class "mascotas.ts · HU-10\nespecie 35 · color 40 (obligatorio)\ntamaño 25/8 · felino" as CmpMascotas
+  class "resguardo.ts · HU-20\nespecie 35 · color 40 (obligatorio)\ntamaño 25/8" as CmpResguardo
+}
+
+Criterio <|.. criterioEspecie
+Criterio <|.. criterioColor
+Criterio <|.. criterioTamano
+Criterio <|.. criterioDistancia
+Criterio <|.. criterioFelino
+Criterio <|.. criterioEdad
+
+Criterio ..> Aporte : devuelve
+Motor ..> Criterio : recorre una lista
+Motor ..> Puntuacion : devuelve
+
+CmpReportes ..> Motor
+CmpMascotas ..> Motor
+CmpResguardo ..> Motor
+
+CmpReportes o-- criterioEspecie
+CmpReportes o-- criterioColor
+CmpReportes o-- criterioTamano
+CmpReportes o-- criterioDistancia
+CmpReportes o-- criterioFelino
+CmpMascotas o-- criterioEspecie
+CmpMascotas o-- criterioColor
+CmpMascotas o-- criterioTamano
+CmpMascotas o-- criterioFelino
+CmpResguardo o-- criterioEspecie
+CmpResguardo o-- criterioColor
+CmpResguardo o-- criterioTamano
+
+note bottom of criterioEdad
+  Para sumar una característica nueva:
+  1. escribir un objeto Criterio,
+  2. agregarlo a la lista de la comparación
+     que lo necesite.
+  El motor y las demás comparaciones
+  NO se modifican.
+end note
+
+note bottom of Motor
+  Antes: tres funciones repetían el mismo
+  bloque de "sumar puntos" con pesos
+  distintos. Ahora los pesos son datos.
+end note
+@enduml

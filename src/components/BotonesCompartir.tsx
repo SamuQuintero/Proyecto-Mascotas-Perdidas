@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Check, Link2, MessageCircle, Share2 } from "lucide-react";
-import {
-  enlaceCompartirFacebook,
-  enlaceCompartirWhatsApp,
-  enlaceCompartirX,
-} from "@/lib/compartir";
+import { REDES_SOCIALES } from "@/lib/compartir";
+
+// Íconos opcionales por red; una red sin ícono se muestra solo con su nombre.
+const ICONOS: Record<string, typeof MessageCircle | undefined> = {
+  whatsapp: MessageCircle,
+};
 
 // HU-21: compartir el reporte en redes con un enlace a la plataforma.
 export default function BotonesCompartir({
@@ -59,31 +60,21 @@ export default function BotonesCompartir({
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <a
-          href={enlaceCompartirWhatsApp(url, texto)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={clase}
-        >
-          <MessageCircle className="h-4 w-4 text-encontrada-600" aria-hidden="true" />
-          WhatsApp
-        </a>
-        <a
-          href={enlaceCompartirFacebook(url)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={clase}
-        >
-          Facebook
-        </a>
-        <a
-          href={enlaceCompartirX(url, texto)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={clase}
-        >
-          X
-        </a>
+        {REDES_SOCIALES.map((red) => {
+          const Icono = ICONOS[red.id];
+          return (
+            <a
+              key={red.id}
+              href={red.enlace(url, texto)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={clase}
+            >
+              {Icono && <Icono className="h-4 w-4 text-encontrada-600" aria-hidden="true" />}
+              {red.etiqueta}
+            </a>
+          );
+        })}
         <button type="button" onClick={copiar} className={clase}>
           {copiado ? (
             <Check className="h-4 w-4 text-encontrada-600" aria-hidden="true" />

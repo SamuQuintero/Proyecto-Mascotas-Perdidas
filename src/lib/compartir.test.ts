@@ -48,3 +48,17 @@ describe("compartir reporte (HU-21)", () => {
     expect(descripcion).toContain("café");
   });
 });
+
+import { REDES_SOCIALES } from "./compartir";
+
+describe("registro de redes sociales (OCP)", () => {
+  it("cada red arma un enlace que incluye el reporte", () => {
+    for (const red of REDES_SOCIALES) {
+      expect(red.enlace(URL, "Hola")).toContain(encodeURIComponent(URL));
+    }
+  });
+  it("tiene ids únicos", () => {
+    const ids = REDES_SOCIALES.map((r) => r.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});

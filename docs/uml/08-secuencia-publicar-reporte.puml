@@ -1,0 +1,57 @@
+@startuml 08-secuencia-publicar-reporte
+title Secuencia — Publicar un reporte (HU-1 / HU-2) con inversión de dependencias
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+autonumber
+
+actor Persona
+participant "FormularioReporte\n(navegador)" as Form
+participant "POST /api/reportes\n(ruta delgada)" as Ruta
+participant "ServicioReportes" as Srv
+participant "AlmacenFotos\n«puerto»" as Fotos
+participant "RepositorioReportes\n«puerto»" as Repo
+participant "NotificadorCambios\n«puerto»" as Notif
+database "Supabase" as DB
+collections "Caché de Next" as Cache
+
+Persona -> Form : completa datos, foto y ubica el mapa
+Form -> Ruta : multipart/form-data
+activate Ruta
+Ruta -> Ruta : leerFormulario()\n(datos + foto)
+Ruta -> Ruta : usuarioActual()\n(cuenta opcional)
+Ruta -> Srv : publicar({ datos, foto, usuarioId })
+activate Srv
+
+alt no hay foto
+  Srv --> Ruta : Falla INVALIDO { foto }
+else datos inválidos (Zod)
+  Srv --> Ruta : Falla INVALIDO { campo: mensaje }
+else datos y foto presentes
+  Srv -> Fotos : guardar(foto)
+  alt formato o tamaño inválido
+    Fotos --> Srv : ErrorFotoInvalida
+    Srv --> Ruta : Falla INVALIDO { foto }
+  else foto guardada
+    Fotos --> Srv : fotoUrl
+    Srv -> Repo : crear({ ...campos, fotoUrl, usuarioId })
+    Repo -> DB : INSERT Reporte
+    DB --> Repo : fila
+    Repo --> Srv : Reporte
+    Srv -> Notif : reportesCambiaron()
+    Notif -> Cache : revalidateTag("reportes")
+    Srv --> Ruta : Resultado ok(Reporte)
+  end
+end
+deactivate Srv
+
+Ruta -> Ruta : responder()\nok → 201 · INVALIDO → 400
+Ruta --> Form : JSON
+deactivate Ruta
+Form -> Form : recordarReporte(id)\n(localStorage) y redirige
+Form --> Persona : página del reporte con aviso de éxito
+
+note over Srv, Repo
+  El servicio no importa Prisma, ni el disco, ni Next.js.
+  En las pruebas, Fotos / Repo / Notif son dobles en memoria.
+end note
+@enduml

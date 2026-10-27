@@ -41,3 +41,18 @@ export function vistaPreviaReporte(reporte: ReporteCompartible) {
     descripcion: `${reporte.especie}, ${reporte.color.toLowerCase()}. Mira la foto, el mapa y cómo contactar.`,
   };
 }
+
+// Registro de redes sociales (principio abierto/cerrado): el botón de
+// compartir recorre esta lista. Para agregar una red (Telegram, LinkedIn…)
+// se agrega una entrada aquí; el componente no se modifica.
+export interface RedSocial {
+  id: string;
+  etiqueta: string;
+  enlace(url: string, texto: string): string;
+}
+
+export const REDES_SOCIALES: readonly RedSocial[] = [
+  { id: "whatsapp", etiqueta: "WhatsApp", enlace: (url, texto) => enlaceCompartirWhatsApp(url, texto) },
+  { id: "facebook", etiqueta: "Facebook", enlace: (url) => enlaceCompartirFacebook(url) },
+  { id: "x", etiqueta: "X", enlace: (url, texto) => enlaceCompartirX(url, texto) },
+];

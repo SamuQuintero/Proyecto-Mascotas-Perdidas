@@ -1,0 +1,110 @@
+@startuml 03-arquitectura-capas
+!pragma layout smetana
+title PetMatch — Arquitectura por capas (las flechas apuntan hacia lo que se depende)
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam component {
+  BackgroundColor #FFFBF5
+  BorderColor #3A344F
+}
+skinparam package {
+  BorderColor #7D5CF6
+}
+
+package "Presentación (src/app, src/components)" as P1 {
+  [Páginas y componentes React\n(Server y Client Components)] as UI
+}
+
+package "Entrada HTTP (src/app/api/*/route.ts)" as P2 {
+  [Rutas delgadas\nleen la petición y traducen la respuesta] as Rutas
+  [respuestasHttp.ts / formulario.ts] as Http
+}
+
+package "Aplicación (src/servicios)" as P3 {
+  [ServicioReportes] as SR
+  [ServicioMascotas] as SM
+  [ServicioResguardo] as SRes
+  [Resultado / Falla] as Res
+}
+
+package "Dominio puro (src/lib)" as P4 {
+  [coincidencias/\n(criterios y puntuación)] as Coinc
+  [propiedad · renovacion · felinos\nindicadores · establecimientos · resguardo] as Reglas
+  [validacion (Zod)] as Valid
+}
+
+package "Puertos (src/lib/puertos.ts)" as P5 {
+  interface "AlmacenFotos" as IFotos
+  interface "RepositorioReportes\nRepositorioMascotas\nRepositorioResguardo" as IRepos
+  interface "NotificadorCambios" as INotif
+}
+
+package "Infraestructura (src/infraestructura)" as P6 {
+  [AlmacenFotosDisco] as AFotos
+  [Repositorios Prisma] as RPrisma
+  [NotificadorCacheNext] as NCache
+}
+
+package "Lecturas con caché (src/lib/cache.ts)" as P7 {
+  [Caché por etiquetas\n(unstable_cache)] as Cache
+}
+
+[Composición\n(src/composicion.ts)] as Comp
+
+cloud "Supabase\nPostgreSQL" as DB
+folder "public/uploads" as Disco
+cloud "OpenStreetMap" as OSM
+
+UI --> Rutas : fetch / formularios
+UI --> Cache : páginas leen datos
+UI --> Coinc : usa tipos y\nformatos
+Rutas --> SR
+Rutas --> SM
+Rutas --> SRes
+Rutas --> Http
+SR --> Reglas
+SR --> Valid
+SM --> Valid
+SRes --> Valid
+SR --> Res
+SR ..> IFotos
+SR ..> IRepos
+SR ..> INotif
+SM ..> IFotos
+SM ..> IRepos
+SRes ..> IFotos
+SRes ..> IRepos
+SRes ..> INotif
+Coinc --> Reglas
+
+AFotos ..|> IFotos
+RPrisma ..|> IRepos
+NCache ..|> INotif
+
+AFotos --> Disco
+RPrisma --> DB
+Cache --> DB
+NCache --> Cache : invalida etiquetas
+UI --> OSM : mapas
+
+Comp ..> SR : crea
+Comp ..> SM : crea
+Comp ..> SRes : crea
+Comp ..> AFotos : elige
+Comp ..> RPrisma : elige
+Comp ..> NCache : elige
+
+note bottom of IRepos
+  Principio de inversión de dependencias:
+  los servicios NO conocen Prisma, el disco
+  ni Next.js. Dependen de estas interfaces;
+  los adaptadores las implementan.
+end note
+
+note right of Cache
+  Pendiente: las lecturas y algunas rutas
+  (login, registro, vacunas, mensajes,
+  alertas) siguen usando Prisma directo.
+  Ver docs/SOLID.md, sección "Pendiente".
+end note
+@enduml
