@@ -22,6 +22,7 @@ import BotonRenovar from "@/components/BotonRenovar";
 import BotonYaAparecio from "@/components/BotonYaAparecio";
 import BotonesCompartir from "@/components/BotonesCompartir";
 import MensajesReporte from "@/components/MensajesReporte";
+import Celebracion from "@/components/movimiento/Celebracion";
 import PanelAlertas from "@/components/PanelAlertas";
 import type { AlertaReporte } from "@/lib/alertas";
 import type { AlertaResguardoPublica } from "@/lib/alertasResguardo";
@@ -82,7 +83,10 @@ export default function DetalleReporte({
           role="status"
           className="flex animate-aparecer items-center gap-3 rounded-2xl border border-encontrada-200 bg-encontrada-50 px-4 py-3 text-sm font-semibold text-encontrada-800"
         >
-          <CircleCheckBig className="h-5 w-5 shrink-0" aria-hidden="true" />
+          <span className="relative shrink-0">
+            <CircleCheckBig className="h-5 w-5 animate-marca-ok" aria-hidden="true" />
+            {aviso === "nuevo" && <Celebracion cantidad={9} radio={34} achatado={1} />}
+          </span>
           {aviso === "nuevo"
             ? "¡Reporte publicado con éxito! Ya está visible para toda la comunidad."
             : "Cambios guardados. El reporte ya muestra la información actualizada."}
@@ -91,11 +95,18 @@ export default function DetalleReporte({
 
       {reencontrada && (
         <div className="relative animate-aparecer overflow-hidden rounded-3xl bg-gradient-to-r from-reencontrada-500 via-reencontrada-600 to-perdida-500 p-6 text-white shadow-brillo-lavanda">
-          <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10" />
-          <div className="absolute -bottom-10 right-20 h-24 w-24 rounded-full bg-sol-300/30" />
+          <div className="absolute -right-6 -top-6 h-32 w-32 animate-deriva rounded-full bg-white/10" />
+          <div className="absolute -bottom-10 right-20 h-24 w-24 animate-deriva rounded-full bg-sol-300/30 [animation-delay:-6s]" />
+          <span
+            className="reflejo pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+            aria-hidden="true"
+          />
           <div className="relative flex items-center gap-4">
-            <span className="flex h-14 w-14 shrink-0 animate-latido items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
-              <PartyPopper className="h-7 w-7" aria-hidden="true" />
+            <span className="relative flex h-14 w-14 shrink-0 items-center justify-center">
+              <span className="flex h-14 w-14 animate-latido items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
+                <PartyPopper className="h-7 w-7" aria-hidden="true" />
+              </span>
+              <Celebracion cantidad={16} radio={110} achatado={0.45} retraso={350} />
             </span>
             <div>
               <p className="font-display text-xl font-bold sm:text-2xl">
