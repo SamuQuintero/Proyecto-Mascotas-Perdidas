@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Home, Phone, Search } from "lucide-react";
 import { enlaceTelefono } from "@/lib/contacto";
-import { prisma } from "@/lib/db";
+import { animalesEnResguardo } from "@/lib/cache";
 import { textoResguardo } from "@/lib/resguardo";
 import { contieneTexto } from "@/lib/texto";
 import { ETIQUETA_TAMANO } from "@/lib/tipos";
@@ -23,13 +23,9 @@ export default async function ResguardoPage({
   const especie = ESPECIES.find((e) => e === searchParams.especie);
   const color = searchParams.color?.trim() ?? "";
 
-  const animales = (
-    await prisma.animalResguardo.findMany({
-      where: { estado: "EN_RESGUARDO", ...(especie ? { especie } : {}) },
-      orderBy: { desde: "desc" },
-      include: { refugio: true },
-    })
-  ).filter((a) => contieneTexto(a.color, color));
+  const animales = (await animalesEnResguardo()).filter(
+    (a) => (!especie || a.especie === especie) && contieneTexto(a.color, color)
+  );
 
   return (
     <div className="space-y-6">
@@ -95,7 +91,7 @@ export default async function ResguardoPage({
                   {textoResguardo(animal.desde)}
                 </p>
                 <p className="text-sm font-semibold text-tinta-800">
-                  {animal.refugio.nombreRefugio || animal.refugio.nombre}
+                  {animal.refugio.nombre}
                 </p>
                 {animal.refugio.telefono ? (
                   <a href={enlaceTelefono(animal.refugio.telefono)} className="boton-secundario">

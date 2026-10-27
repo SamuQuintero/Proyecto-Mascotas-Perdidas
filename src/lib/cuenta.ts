@@ -81,7 +81,10 @@ export async function exigirVeterinaria() {
 
 // HU-19 / HU-23: quién hace la petición para decidir si puede renovar o
 // editar un reporte o perfil (ver propiedad.ts).
+// Basta el id firmado de la cookie: comparar con el dueño de un recurso no
+// necesita confirmar en la base de datos que la cuenta sigue existiendo (si
+// se borró, sus recursos quedaron sin dueño), y así se ahorra una consulta.
 export async function sesionGestion() {
-  const usuario = await usuarioActual();
-  return { usuarioId: usuario?.id ?? null, esAdmin: adminActual() !== null };
+  const sesion = usuarioSesionLigera();
+  return { usuarioId: sesion?.id ?? null, esAdmin: adminActual() !== null };
 }

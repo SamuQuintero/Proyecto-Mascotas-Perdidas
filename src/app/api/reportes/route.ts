@@ -5,6 +5,7 @@ import { ErrorArchivoInvalido, guardarFotoReporte } from "@/lib/almacenamiento";
 import { buscarReportes } from "@/lib/busqueda";
 import { leerFiltros } from "@/lib/filtros";
 import { camposParaGuardar } from "@/lib/reportes";
+import { invalidar, ETIQUETA_REPORTES } from "@/lib/cache";
 import { usuarioActual } from "@/lib/cuenta";
 
 // GET acepta los mismos filtros que la página /reportes (HU-6):
@@ -75,5 +76,6 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  invalidar(ETIQUETA_REPORTES);
   return NextResponse.json({ reporte }, { status: 201 });
 }

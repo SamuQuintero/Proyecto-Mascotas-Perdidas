@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { invalidar, ETIQUETA_REPORTES } from "@/lib/cache";
 import { sesionGestion } from "@/lib/cuenta";
 import { puedeCambiarEstado } from "@/lib/propiedad";
 
@@ -59,5 +60,6 @@ export async function PATCH(
     },
   });
 
+  invalidar(ETIQUETA_REPORTES);
   return NextResponse.json({ reporte });
 }

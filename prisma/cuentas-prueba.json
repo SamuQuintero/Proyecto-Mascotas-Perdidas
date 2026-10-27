@@ -1,0 +1,30 @@
+{
+  "contrasena": "Prueba123",
+  "cuentas": [
+    {
+      "rol": "CIUDADANO",
+      "nombre": "Camila Prueba",
+      "email": "ciudadano@petmatch.test"
+    },
+    {
+      "rol": "VETERINARIA",
+      "nombre": "Dra. Valeria Prueba",
+      "email": "veterinaria@petmatch.test",
+      "nombreClinica": "Veterinaria Patitas (prueba)",
+      "telefono": "300 111 2233",
+      "direccion": "Calle 18 #25-10, Pasto",
+      "latitud": 1.2136,
+      "longitud": -77.2811
+    },
+    {
+      "rol": "REFUGIO",
+      "nombre": "Rafael Prueba",
+      "email": "refugio@petmatch.test",
+      "nombreRefugio": "Fundación Huellitas (prueba)",
+      "telefono": "300 444 5566",
+      "direccion": "Carrera 27 #12-40, Pasto",
+      "latitud": 1.2204,
+      "longitud": -77.2735
+    }
+  ]
+}

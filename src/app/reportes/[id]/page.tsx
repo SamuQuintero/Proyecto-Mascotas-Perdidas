@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
 import DetalleReporte from "@/components/DetalleReporte";
 import { adminActual } from "@/lib/admin";
 import { alertasDeReporte } from "@/lib/alertas";
 import { alertasResguardoDeReportes } from "@/lib/alertasResguardo";
+import { reportePorId } from "@/lib/cache";
+import { textoParaCompartir, vistaPreviaReporte } from "@/lib/compartir";
+import { esUrlLocal, urlAbsoluta } from "@/lib/contacto";
 import { sesionGestion } from "@/lib/cuenta";
 import { puedeGestionar } from "@/lib/propiedad";
 import { puedeRenovar } from "@/lib/renovacion";
-import { urlAbsoluta, esUrlLocal } from "@/lib/contacto";
-import { textoParaCompartir, vistaPreviaReporte } from "@/lib/compartir";
-import { serializarReporte } from "@/lib/tipos";
 
 // HU-21: vista previa al pegar el enlace en redes (foto, título y descripción).
 export async function generateMetadata({
@@ -18,7 +17,7 @@ export async function generateMetadata({
 }: {
   params: { id: string };
 }): Promise<Metadata> {
-  const reporte = await prisma.reporte.findUnique({ where: { id: params.id } });
+  const reporte = await reportePorId(params.id);
   if (!reporte) return {};
   const { titulo, descripcion } = vistaPreviaReporte(reporte);
   const url = urlAbsoluta(`/reportes/${reporte.id}`);
@@ -49,24 +48,24 @@ export default async function DetalleReportePage({
   params: { id: string };
   searchParams: { nuevo?: string; editado?: string };
 }) {
-  const reporte = await prisma.reporte.findUnique({
-    where: { id: params.id },
-  });
+  // El reporte, las alertas y los animales en resguardo salen del caché del
+  // servidor (ver cache.ts): la página casi no espera a la base de datos.
+  const reporte = await reportePorId(params.id);
 
   if (!reporte) {
     notFound();
   }
 
-  const serializado = serializarReporte(reporte);
-  const alertas = await alertasDeReporte(serializado);
-  const resguardo = (await alertasResguardoDeReportes([reporte])).get(reporte.id) ?? [];
-  const gestiona = puedeGestionar(reporte, await sesionGestion());
-
+  const [alertas, resguardo, sesion] = await Promise.all([
+    alertasDeReporte(reporte),
+    alertasResguardoDeReportes([reporte]).then((mapa) => mapa.get(reporte.id) ?? []),
+    sesionGestion(),
+  ]);
   const urlCompartir = urlAbsoluta(`/reportes/${reporte.id}`);
 
   return (
     <DetalleReporte
-      reporte={serializado}
+      reporte={reporte}
       alertas={alertas}
       aviso={
         searchParams.nuevo === "true"
@@ -80,7 +79,7 @@ export default async function DetalleReportePage({
       textoCompartir={textoParaCompartir(reporte)}
       enlaceLocal={esUrlLocal(urlCompartir)}
       resguardo={resguardo}
-      puedeGestionar={gestiona}
+      puedeGestionar={puedeGestionar(reporte, sesion)}
       puedeRenovar={puedeRenovar(reporte)}
     />
   );

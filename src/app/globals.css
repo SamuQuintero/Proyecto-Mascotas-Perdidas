@@ -35,7 +35,7 @@ body {
   }
 
   .boton {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition duration-200 active:translate-y-0 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .boton-primario {
@@ -48,6 +48,12 @@ body {
 
   .titulo-display {
     @apply font-display font-bold tracking-tight text-tinta-900;
+  }
+
+  /* Bloque de carga: se ve de inmediato mientras llegan los datos. */
+  .esqueleto {
+    @apply animate-brillo rounded-2xl bg-gradient-to-r from-tinta-100 via-tinta-50 to-tinta-100;
+    background-size: 200% 100%;
   }
 
   .texto-degradado {

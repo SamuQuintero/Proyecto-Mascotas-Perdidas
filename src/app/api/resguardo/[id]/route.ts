@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exigirRefugio } from "@/lib/cuenta";
 import { prisma } from "@/lib/db";
+import { invalidar, ETIQUETA_RESGUARDO } from "@/lib/cache";
 import { eliminarFotoReporte } from "@/lib/almacenamiento";
 
 // Cada refugio solo gestiona sus propios animales.
@@ -24,6 +25,7 @@ export async function PATCH(_request: NextRequest, { params }: { params: { id: s
     where: { id: animal.id },
     data: { estado: "ENTREGADO", entregadoEn: new Date() },
   });
+  invalidar(ETIQUETA_RESGUARDO);
   return NextResponse.json({ ok: true });
 }
 
@@ -39,5 +41,6 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
 
   await prisma.animalResguardo.delete({ where: { id: animal.id } });
   await eliminarFotoReporte(animal.fotoUrl);
+  invalidar(ETIQUETA_RESGUARDO);
   return NextResponse.json({ ok: true });
 }

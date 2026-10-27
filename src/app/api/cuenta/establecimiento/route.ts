@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exigirEstablecimiento } from "@/lib/cuenta";
 import { prisma } from "@/lib/db";
+import { ETIQUETA_ESTABLECIMIENTOS, ETIQUETA_RESGUARDO, invalidar } from "@/lib/cache";
 import { primerErrorPorCampo } from "@/lib/validacion";
 import { establecimientoSchema } from "@/lib/validacionCuenta";
 
@@ -30,5 +31,7 @@ export async function PATCH(request: NextRequest) {
     },
   });
 
+  // El refugio de un animal en resguardo muestra su teléfono: también se actualiza.
+  invalidar(ETIQUETA_ESTABLECIMIENTOS, ETIQUETA_RESGUARDO);
   return NextResponse.json({ ok: true });
 }

@@ -5,7 +5,7 @@ import AccionesResguardo from "@/components/AccionesResguardo";
 import BotonCerrarSesionCuenta from "@/components/BotonCerrarSesionCuenta";
 import FormularioResguardo from "@/components/FormularioResguardo";
 import PerfilEstablecimiento from "@/components/PerfilEstablecimiento";
-import { usuarioActual } from "@/lib/cuenta";
+import { usuarioActual, usuarioSesionLigera } from "@/lib/cuenta";
 import { prisma } from "@/lib/db";
 import { textoResguardo } from "@/lib/resguardo";
 import { ETIQUETA_TAMANO } from "@/lib/tipos";
@@ -18,14 +18,19 @@ export const metadata = {
 // HU-20: panel del refugio o rescatista. Publica los animales que tiene
 // bajo resguardo (y desde cuándo) y gestiona los que ya entregó.
 export default async function RefugioPage() {
-  const usuario = await usuarioActual();
+  const sesion = usuarioSesionLigera();
+  if (!sesion) redirect("/cuenta/login?siguiente=/refugio");
+
+  // El usuario y sus animales se piden a la vez (ver /cuenta).
+  const [usuario, animales] = await Promise.all([
+    usuarioActual(),
+    prisma.animalResguardo.findMany({
+      where: { refugioId: sesion.id },
+      orderBy: [{ estado: "asc" }, { desde: "desc" }],
+    }),
+  ]);
   if (!usuario) redirect("/cuenta/login?siguiente=/refugio");
   if (usuario.rol !== "REFUGIO") redirect(rutaPanel(usuario.rol));
-
-  const animales = await prisma.animalResguardo.findMany({
-    where: { refugioId: usuario.id },
-    orderBy: [{ estado: "asc" }, { desde: "desc" }],
-  });
   const enResguardo = animales.filter((a) => a.estado === "EN_RESGUARDO");
   const entregados = animales.filter((a) => a.estado === "ENTREGADO");
 

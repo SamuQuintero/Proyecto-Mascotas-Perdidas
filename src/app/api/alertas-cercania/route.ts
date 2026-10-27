@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { usuarioActual } from "@/lib/cuenta";
 import { distanciaKm, formatearDistancia } from "@/lib/coincidencias";
-import { prisma } from "@/lib/db";
+import { reportesActivosDeTipo } from "@/lib/cache";
 
 // HU-16: avisos de mascotas perdidas cerca de un ciudadano suscrito, sin
 // que tenga que haber publicado ningún reporte propio (a diferencia de
@@ -18,10 +18,9 @@ export async function GET() {
   }
 
   const centro = { latitud: avisoLatitud, longitud: avisoLongitud };
-  const perdidas = await prisma.reporte.findMany({
-    where: { tipo: "PERDIDA", estado: "ACTIVO" },
-    orderBy: { renovadoEn: "desc" },
-  });
+  const perdidas = (await reportesActivosDeTipo("PERDIDA")).sort(
+    (a, b) => b.renovadoEn.localeCompare(a.renovadoEn)
+  );
 
   const cercanos = perdidas
     .map((reporte) => ({ reporte, distanciaKm: distanciaKm(centro, reporte) }))

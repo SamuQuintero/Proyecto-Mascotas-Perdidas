@@ -10,8 +10,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import TarjetaReporte from "@/components/TarjetaReporte";
-import { prisma } from "@/lib/db";
-import { serializarReporte } from "@/lib/tipos";
+import { resumenInicio } from "@/lib/cache";
+import type { Reporte } from "@/lib/tipos";
 
 export const dynamic = "force-dynamic";
 
@@ -37,14 +37,7 @@ const PASOS = [
 ];
 
 export default async function InicioPage() {
-  const [recientes, conteos] = await Promise.all([
-    prisma.reporte.findMany({
-      where: { estado: "ACTIVO" },
-      orderBy: { creadoEn: "desc" },
-      take: 6,
-    }),
-    prisma.reporte.groupBy({ by: ["tipo", "estado"], _count: { _all: true } }),
-  ]);
+  const { recientes, conteos } = await resumenInicio();
 
   const contar = (tipo: string | null, estado: string) =>
     conteos
@@ -54,7 +47,7 @@ export default async function InicioPage() {
   const perdidas = contar("PERDIDA", "ACTIVO");
   const encontradas = contar("ENCONTRADA", "ACTIVO");
   const reencontradas = contar(null, "REENCONTRADA");
-  const reportes = recientes.map(serializarReporte);
+  const reportes = recientes;
   const collage = reportes.slice(0, 3);
 
   return (
@@ -220,7 +213,7 @@ function Estadistica({
 // Composición de fotos reales de los últimos reportes. Si aún no hay
 // reportes, muestra una ilustración con íconos para que el inicio nunca se
 // vea vacío.
-function Collage({ reportes }: { reportes: ReturnType<typeof serializarReporte>[] }) {
+function Collage({ reportes }: { reportes: Reporte[] }) {
   const posiciones = [
     "left-[6%] top-[4%] w-[58%] [--giro:-6deg]",
     "right-[2%] top-[22%] w-[48%] [--giro:5deg]",

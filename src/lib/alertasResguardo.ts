@@ -1,5 +1,5 @@
+import { animalesEnResguardo } from "@/lib/cache";
 import { calcularAlertasResguardo, type ReporteComparable } from "@/lib/coincidencias";
-import { prisma } from "@/lib/db";
 
 // HU-20: animales en resguardo que se parecen a una mascota perdida. Solo
 // las pérdidas abiertas generan alertas; solo cuentan los animales que
@@ -29,10 +29,7 @@ export async function alertasResguardoDeReportes(
   const resultado = new Map<string, AlertaResguardoPublica[]>();
   if (abiertas.length === 0) return resultado;
 
-  const animales = await prisma.animalResguardo.findMany({
-    where: { estado: "EN_RESGUARDO" },
-    include: { refugio: true },
-  });
+  const animales = await animalesEnResguardo();
 
   for (const reporte of abiertas) {
     resultado.set(
@@ -43,10 +40,10 @@ export async function alertasResguardoDeReportes(
         especie: animal.especie,
         color: animal.color,
         fotoUrl: animal.fotoUrl,
-        desde: animal.desde.toISOString(),
+        desde: animal.desde,
         puntaje,
         razones,
-        refugio: animal.refugio.nombreRefugio || animal.refugio.nombre,
+        refugio: animal.refugio.nombre,
         telefono: animal.refugio.telefono,
       }))
     );

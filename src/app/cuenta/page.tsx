@@ -6,7 +6,8 @@ import BotonYaAparecio from "@/components/BotonYaAparecio";
 import BotonCerrarSesionCuenta from "@/components/BotonCerrarSesionCuenta";
 import ControlSuscripcion from "@/components/ControlSuscripcion";
 import { EtiquetaEstado, EtiquetaTipo } from "@/components/Etiquetas";
-import { usuarioActual } from "@/lib/cuenta";
+import { reportesActivosDeTipo } from "@/lib/cache";
+import { usuarioActual, usuarioSesionLigera } from "@/lib/cuenta";
 import { distanciaKm, formatearDistancia } from "@/lib/coincidencias";
 import { prisma } from "@/lib/db";
 import { rutaPanel } from "@/lib/roles";
@@ -19,20 +20,26 @@ export const metadata = {
 
 // HU-16: panel del ciudadano suscrito a avisos de cercanía.
 export default async function CuentaPage() {
-  const usuario = await usuarioActual();
+  const sesion = usuarioSesionLigera();
+  if (!sesion) redirect("/cuenta/login");
+
+  // Todo lo que se necesita se pide a la vez (con el id firmado de la
+  // cookie): cada consulta tarda ~0,5 s, y en serie se sumarían.
+  const [usuario, misReportes, misMascotas, perdidasAbiertas] = await Promise.all([
+    usuarioActual(),
+    prisma.reporte.findMany({
+      where: { usuarioId: sesion.id },
+      orderBy: { renovadoEn: "desc" },
+      take: 30,
+    }),
+    prisma.mascota.findMany({
+      where: { usuarioId: sesion.id },
+      orderBy: { creadoEn: "desc" },
+    }),
+    reportesActivosDeTipo("PERDIDA"),
+  ]);
   if (!usuario) redirect("/cuenta/login");
   if (usuario.rol !== "CIUDADANO") redirect(rutaPanel(usuario.rol));
-
-  const misReportes = await prisma.reporte.findMany({
-    where: { usuarioId: usuario.id },
-    orderBy: { renovadoEn: "desc" },
-    take: 30,
-  });
-
-  const misMascotas = await prisma.mascota.findMany({
-    where: { usuarioId: usuario.id },
-    orderBy: { creadoEn: "desc" },
-  });
 
   const suscrito =
     usuario.avisoLatitud !== null &&
@@ -40,12 +47,7 @@ export default async function CuentaPage() {
     usuario.avisoRadioKm !== null;
 
   const cercanos = suscrito
-    ? (
-        await prisma.reporte.findMany({
-          where: { tipo: "PERDIDA", estado: "ACTIVO" },
-          orderBy: { creadoEn: "desc" },
-        })
-      )
+    ? perdidasAbiertas
         .map((reporte) => ({
           reporte,
           distancia: distanciaKm(

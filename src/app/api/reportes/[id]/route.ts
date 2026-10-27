@@ -8,6 +8,7 @@ import {
   guardarFotoReporte,
 } from "@/lib/almacenamiento";
 import { camposParaGuardar } from "@/lib/reportes";
+import { invalidar, ETIQUETA_REPORTES } from "@/lib/cache";
 import { primerErrorPorCampo, reporteSchema } from "@/lib/validacion";
 
 export async function GET(
@@ -107,5 +108,6 @@ export async function PATCH(
     await eliminarFotoReporte(existente.fotoUrl);
   }
 
+  invalidar(ETIQUETA_REPORTES);
   return NextResponse.json({ reporte });
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { calcularAlertasMascota } from "@/lib/coincidencias";
+import { reportesActivosDeTipo } from "@/lib/cache";
 import { prisma } from "@/lib/db";
 
 // HU-10 (redefinida): "si una persona reporta las mismas características
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
 
   const [mascotas, hallazgos] = await Promise.all([
     prisma.mascota.findMany({ where: { id: { in: ids } } }),
-    prisma.reporte.findMany({ where: { tipo: "ENCONTRADA", estado: "ACTIVO" } }),
+    reportesActivosDeTipo("ENCONTRADA"),
   ]);
 
   return NextResponse.json({

@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/db";
+import { reportesActivosDeTipo } from "@/lib/cache";
 import { calcularAlertas, type Alerta } from "@/lib/coincidencias";
-import { serializarReporte, type Reporte } from "@/lib/tipos";
+import type { Reporte } from "@/lib/tipos";
 
 // Consulta los reportes abiertos del tipo contrario y calcula las alertas
 // (HU-4 coincidencias, HU-7 cercanía) de uno o varios reportes. Solo los
@@ -28,14 +28,10 @@ export async function alertasDeReportes(
 
   const tipos = Array.from(new Set(abiertos.map((r) => r.tipo)));
   const candidatos = (
-    await prisma.reporte.findMany({
-      where: {
-        estado: "ACTIVO",
-        tipo: { in: tipos.map((t) => (t === "PERDIDA" ? "ENCONTRADA" : "PERDIDA")) },
-      },
-      orderBy: { creadoEn: "desc" },
-    })
-  ).map(serializarReporte);
+    await Promise.all(
+      tipos.map((t) => reportesActivosDeTipo(t === "PERDIDA" ? "ENCONTRADA" : "PERDIDA"))
+    )
+  ).flat();
 
   for (const reporte of abiertos) {
     resultado.set(reporte.id, calcularAlertas(reporte, candidatos));

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exigirRefugio } from "@/lib/cuenta";
 import { prisma } from "@/lib/db";
+import { invalidar, ETIQUETA_RESGUARDO } from "@/lib/cache";
 import { ErrorArchivoInvalido, guardarFotoReporte } from "@/lib/almacenamiento";
 import { animalResguardoSchema } from "@/lib/resguardo";
 import { primerErrorPorCampo } from "@/lib/validacion";
@@ -57,5 +58,6 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  invalidar(ETIQUETA_RESGUARDO);
   return NextResponse.json({ animal }, { status: 201 });
 }

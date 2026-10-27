@@ -3,48 +3,25 @@ import { HeartHandshake } from "lucide-react";
 import ListaEstablecimientos, {
   type EstablecimientoPublico,
 } from "@/components/ListaEstablecimientos";
+import { establecimientosPublicos } from "@/lib/cache";
 import { enlaceTelefono, enlaceWhatsApp } from "@/lib/contacto";
-import { prisma } from "@/lib/db";
 
 export const metadata = {
   title: "Dónde acudir con una mascota encontrada — PetMatch",
 };
 
-// Las cuentas editan su perfil y deben verse al instante en el directorio.
-export const dynamic = "force-dynamic";
-
 // HU-18: directorio de veterinarias y refugios que reciben mascotas
-// encontradas, para quien halla un animal y no puede quedarse con él.
+// encontradas, para quien halla un animal y no puede quedarse con él. La
+// lista va en caché y se invalida cuando un local cambia su perfil.
 export default async function DondeAcudirPage() {
-  const usuarios = await prisma.usuario.findMany({
-    where: {
-      recibeEncontradas: true,
-      rol: { in: ["VETERINARIA", "REFUGIO"] },
-      telefono: { not: null },
-      latitud: { not: null },
-      longitud: { not: null },
-    },
-    orderBy: { creadoEn: "asc" },
-  });
-
-  const establecimientos: EstablecimientoPublico[] = usuarios.flatMap((u) => {
-    // Los filtros de la consulta garantizan estos datos; se revisa para el tipado.
-    if (!u.telefono || u.latitud === null || u.longitud === null) return [];
-    if (u.rol !== "VETERINARIA" && u.rol !== "REFUGIO") return [];
-    return [
-      {
-        id: u.id,
-        tipo: u.rol,
-        nombre: (u.rol === "REFUGIO" ? u.nombreRefugio : u.nombreClinica) || u.nombre,
-        telefono: u.telefono,
-        direccion: u.direccion,
-        latitud: u.latitud,
-        longitud: u.longitud,
-        enlaceTelefono: enlaceTelefono(u.telefono),
-        enlaceWhatsApp: enlaceWhatsApp(u.telefono),
-      },
-    ];
-  });
+  const establecimientos: EstablecimientoPublico[] = (await establecimientosPublicos()).map(
+    ({ rol, ...e }) => ({
+      ...e,
+      tipo: rol,
+      enlaceTelefono: enlaceTelefono(e.telefono),
+      enlaceWhatsApp: enlaceWhatsApp(e.telefono),
+    })
+  );
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

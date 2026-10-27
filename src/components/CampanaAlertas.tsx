@@ -87,7 +87,8 @@ interface ResguardoApi {
   }[];
 }
 
-const INTERVALO_MS = 60 * 1000;
+const INTERVALO_MS = 2 * 60 * 1000;
+const ESPERA_INICIAL_MS = 1500;
 const NOVEDAD_CERCANIA_MS = 7 * 24 * 60 * 60 * 1000;
 
 // Una novedad se identifica por el reporte y por su última difusión: si el
@@ -166,11 +167,18 @@ export default function CampanaAlertas() {
   }, []);
 
   useEffect(() => {
-    cargar();
-    const intervalo = window.setInterval(cargar, INTERVALO_MS);
+    // La primera carga espera un momento: así la página que se está abriendo
+    // usa la conexión primero, y la campana (5 consultas) no la compite.
+    const inicio = window.setTimeout(cargar, ESPERA_INICIAL_MS);
+    // Con la pestaña oculta no se consulta: nadie vería el resultado.
+    const alIntervalo = () => {
+      if (!document.hidden) cargar();
+    };
+    const intervalo = window.setInterval(alIntervalo, INTERVALO_MS);
     window.addEventListener("focus", cargar);
     window.addEventListener(EVENTO_CAMBIO, cargar);
     return () => {
+      window.clearTimeout(inicio);
       window.clearInterval(intervalo);
       window.removeEventListener("focus", cargar);
       window.removeEventListener(EVENTO_CAMBIO, cargar);
@@ -281,7 +289,7 @@ export default function CampanaAlertas() {
             ) : sinNadaRegistrado ? (
               <Vacio texto="Cuando publiques un reporte o crees la placa QR de tu mascota desde este dispositivo, aquí te avisaremos de coincidencias." />
             ) : sinNada ? (
-              <Vacio texto="Todavía no hay coincidencias. Revisamos cada minuto: te avisaremos apenas aparezca algo." />
+              <Vacio texto="Todavía no hay coincidencias. Revisamos cada pocos minutos: te avisaremos apenas aparezca algo." />
             ) : (
               <>
                 {resguardo.map((r) => (

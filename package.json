@@ -10,7 +10,8 @@
     "test": "vitest run",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "cuentas:prueba": "node scripts/crear-cuentas-prueba.js"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",

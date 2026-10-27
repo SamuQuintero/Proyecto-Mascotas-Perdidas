@@ -104,11 +104,40 @@ const config: Config = {
           "0%, 100%": { transform: "scale(1)" },
           "50%": { transform: "scale(1.08)" },
         },
+        // Solo opacidad: no crea un contexto de posicionamiento, así que no
+        // afecta a elementos sticky o fixed dentro de la página.
+        "aparecer-suave": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        temblar: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "20%, 60%": { transform: "translateX(-6px)" },
+          "40%, 80%": { transform: "translateX(6px)" },
+        },
+        brillo: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        deriva: {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "50%": { transform: "translate(24px, -18px) scale(1.08)" },
+        },
+        "marca-ok": {
+          "0%": { transform: "scale(0.4)", opacity: "0" },
+          "70%": { transform: "scale(1.15)", opacity: "1" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         aparecer: "aparecer 0.6s cubic-bezier(0.22, 1, 0.36, 1) both",
         flotar: "flotar 6s ease-in-out infinite",
         latido: "latido 2.4s ease-in-out infinite",
+        "aparecer-suave": "aparecer-suave 0.35s ease-out both",
+        temblar: "temblar 0.4s ease-in-out",
+        brillo: "brillo 1.6s linear infinite",
+        deriva: "deriva 14s ease-in-out infinite",
+        "marca-ok": "marca-ok 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
       },
     },
   },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sesionGestion } from "@/lib/cuenta";
 import { prisma } from "@/lib/db";
+import { invalidar, ETIQUETA_REPORTES } from "@/lib/cache";
 import { puedeGestionar } from "@/lib/propiedad";
 import { puedeRenovar } from "@/lib/renovacion";
 
@@ -37,6 +38,7 @@ export async function POST(
     where: { id: reporte.id },
     data: { renovadoEn: new Date(), renovaciones: { increment: 1 } },
   });
+  invalidar(ETIQUETA_REPORTES);
   return NextResponse.json({
     renovadoEn: actualizado.renovadoEn,
     renovaciones: actualizado.renovaciones,

@@ -15,6 +15,7 @@ import FilaMascotaVacunas from "@/components/FilaMascotaVacunas";
 import PerfilEstablecimiento from "@/components/PerfilEstablecimiento";
 import { usuarioActual } from "@/lib/cuenta";
 import { prisma } from "@/lib/db";
+import { rutaPanel } from "@/lib/roles";
 import { formatearFechaHora } from "@/lib/formato";
 import { contieneTexto } from "@/lib/texto";
 
@@ -31,13 +32,11 @@ export default async function VeterinariaPage({
 }: {
   searchParams: { q?: string };
 }) {
-  const usuario = await usuarioActual();
-  if (!usuario) redirect("/cuenta/login?siguiente=/veterinaria");
-  if (usuario.rol !== "VETERINARIA") redirect("/cuenta");
-
   const q = searchParams.q?.trim() ?? "";
 
-  const [reportes, conteos, mascotas] = await Promise.all([
+  // El usuario y los datos del panel se piden a la vez (ver /cuenta).
+  const [usuario, reportes, conteos, mascotas] = await Promise.all([
+    usuarioActual(),
     prisma.reporte.findMany({ orderBy: { creadoEn: "desc" }, take: 50 }),
     prisma.reporte.groupBy({ by: ["tipo", "estado"], _count: { _all: true } }),
     prisma.mascota.findMany({
@@ -45,6 +44,8 @@ export default async function VeterinariaPage({
       include: { vacunas: { orderBy: { fecha: "desc" } } },
     }),
   ]);
+  if (!usuario) redirect("/cuenta/login?siguiente=/veterinaria");
+  if (usuario.rol !== "VETERINARIA") redirect(rutaPanel(usuario.rol));
 
   const contar = (filtro: (c: (typeof conteos)[number]) => boolean) =>
     conteos.filter(filtro).reduce((total, c) => total + c._count._all, 0);
