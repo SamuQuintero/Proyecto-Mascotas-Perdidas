@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import AccionesAdmin from "@/components/AccionesAdmin";
 import BotonRenovar from "@/components/BotonRenovar";
+import BotonesCompartir from "@/components/BotonesCompartir";
 import MensajesReporte from "@/components/MensajesReporte";
 import PanelAlertas from "@/components/PanelAlertas";
 import type { AlertaReporte } from "@/lib/alertas";
@@ -36,6 +37,9 @@ export default function DetalleReporte({
   alertas,
   puedeGestionar,
   puedeRenovar,
+  urlCompartir,
+  textoCompartir,
+  enlaceLocal,
 }: {
   reporte: Reporte;
   aviso: "nuevo" | "editado" | null;
@@ -44,6 +48,9 @@ export default function DetalleReporte({
   // El dueño (cuenta con la que se publicó) o el admin.
   puedeGestionar: boolean;
   puedeRenovar: boolean;
+  urlCompartir: string;
+  textoCompartir: string;
+  enlaceLocal: boolean;
 }) {
   const estilo = ESTILO_TIPO[reporte.tipo];
   const reencontrada = reporte.estado === "REENCONTRADA";
@@ -230,6 +237,10 @@ export default function DetalleReporte({
               </ul>
             )}
           </section>
+
+          {!reencontrada && (
+            <BotonesCompartir url={urlCompartir} texto={textoCompartir} enlaceLocal={enlaceLocal} />
+          )}
 
           {reporte.tipo === "ENCONTRADA" && !reencontrada && (
             <Link
