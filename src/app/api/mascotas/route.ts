@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { ErrorArchivoInvalido, guardarFotoReporte } from "@/lib/almacenamiento";
+import { servicioMascotas } from "@/composicion";
+import { leerFormulario } from "@/infraestructura/formulario";
+import { responder } from "@/infraestructura/respuestasHttp";
 import { usuarioActual } from "@/lib/cuenta";
-import { camposMascotaParaGuardar } from "@/lib/mascotas";
-import { mascotaSchema, primerErrorPorCampo } from "@/lib/validacion";
+import { prisma } from "@/lib/db";
 
 // GET /api/mascotas?ids=a,b — resumen de los perfiles creados desde este
 // dispositivo (para listarlos en /mascotas).
@@ -22,56 +22,24 @@ export async function GET(request: NextRequest) {
 }
 
 // HU-8: crear el perfil digital de una mascota (sin cuenta, como los
-// reportes). Recibe multipart/form-data con los datos y la foto.
+// reportes). Recibe multipart/form-data con los datos y la foto. Las reglas
+// viven en ServicioMascotas.
 export async function POST(request: NextRequest) {
-  const formData = await request.formData().catch(() => null);
-  if (!formData) {
+  const formulario = await leerFormulario(request);
+  if (!formulario) {
     return NextResponse.json(
       { error: "Envía los datos del perfil como multipart/form-data." },
       { status: 400 }
     );
   }
 
-  const foto = formData.get("foto");
-  if (!(foto instanceof File) || foto.size === 0) {
-    return NextResponse.json(
-      { errores: { foto: "La fotografía es obligatoria." } },
-      { status: 400 }
-    );
-  }
-
-  const resultado = mascotaSchema.safeParse(
-    Object.fromEntries(
-      Array.from(formData.entries()).filter(([clave]) => clave !== "foto")
-    )
-  );
-  if (!resultado.success) {
-    return NextResponse.json(
-      { errores: primerErrorPorCampo(resultado.error) },
-      { status: 400 }
-    );
-  }
-
-  let fotoUrl: string;
-  try {
-    fotoUrl = await guardarFotoReporte(foto);
-  } catch (error) {
-    if (error instanceof ErrorArchivoInvalido) {
-      return NextResponse.json({ errores: { foto: error.message } }, { status: 400 });
-    }
-    throw error;
-  }
-
-  const datos = resultado.data;
   // Con sesión iniciada el perfil queda a nombre de la cuenta (HU-23).
   const usuario = await usuarioActual();
-  const mascota = await prisma.mascota.create({
-    data: {
-      ...camposMascotaParaGuardar(datos),
-      usuarioId: usuario?.id ?? null,
-      fotoUrl,
-    },
-  });
 
-  return NextResponse.json({ mascota }, { status: 201 });
+  const resultado = await servicioMascotas.crear({
+    datos: formulario.datos,
+    foto: formulario.foto,
+    usuarioId: usuario?.id ?? null,
+  });
+  return responder(resultado, (mascota) => NextResponse.json({ mascota }, { status: 201 }));
 }

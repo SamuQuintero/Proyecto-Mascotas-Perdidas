@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
+import { ErrorFotoInvalida } from "@/lib/puertos";
 import {
   FOTO_TAMANO_MAXIMO_BYTES,
   FOTO_TIPOS_PERMITIDOS,
@@ -14,7 +15,9 @@ import {
 
 const CARPETA_DESTINO = path.join(process.cwd(), "public", "uploads");
 
-export class ErrorArchivoInvalido extends Error {}
+// Es un ErrorFotoInvalida (ver puertos.ts): así los servicios lo reconocen
+// sin depender de este módulo concreto.
+export class ErrorArchivoInvalido extends ErrorFotoInvalida {}
 
 export async function guardarFotoReporte(archivo: File): Promise<string> {
   if (!FOTO_TIPOS_PERMITIDOS.includes(archivo.type)) {
