@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { exigirAdmin } from "@/lib/admin";
+import { sesionGestion } from "@/lib/cuenta";
+import { puedeCambiarEstado } from "@/lib/propiedad";
 
 const cuerpoSchema = z.object({
   estado: z.enum(["ACTIVO", "REENCONTRADA"]),
 });
 
 // HU-12: marcar un reporte como "reencontrada" (o reabrirlo si se marcó
-// por error). Solo administrador.
+// por error). El administrador puede todo; el dueño del reporte (la cuenta
+// con la que se publicó) solo puede marcarlo como reencontrada.
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const noAutorizado = exigirAdmin();
-  if (noAutorizado) return noAutorizado;
-
   const resultado = cuerpoSchema.safeParse(
     await request.json().catch(() => null)
   );
@@ -28,7 +27,7 @@ export async function PATCH(
 
   const existente = await prisma.reporte.findUnique({
     where: { id: params.id },
-    select: { id: true },
+    select: { id: true, usuarioId: true },
   });
   if (!existente) {
     return NextResponse.json(
@@ -38,6 +37,20 @@ export async function PATCH(
   }
 
   const { estado } = resultado.data;
+
+  const sesion = await sesionGestion();
+  if (!puedeCambiarEstado(existente, sesion, estado)) {
+    const sinSesion = !sesion.esAdmin && sesion.usuarioId === null;
+    return NextResponse.json(
+      {
+        error: sinSesion
+          ? "Inicia sesión para cerrar este caso."
+          : "Solo el administrador o quien publicó el reporte puede cerrar el caso.",
+      },
+      { status: sinSesion ? 401 : 403 }
+    );
+  }
+
   const reporte = await prisma.reporte.update({
     where: { id: existente.id },
     data: {

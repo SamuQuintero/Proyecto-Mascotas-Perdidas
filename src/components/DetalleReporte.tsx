@@ -15,13 +15,16 @@ import {
   Phone,
   UserRound,
   EyeOff,
+  Home,
 } from "lucide-react";
 import AccionesAdmin from "@/components/AccionesAdmin";
 import BotonRenovar from "@/components/BotonRenovar";
+import BotonYaAparecio from "@/components/BotonYaAparecio";
 import BotonesCompartir from "@/components/BotonesCompartir";
 import MensajesReporte from "@/components/MensajesReporte";
 import PanelAlertas from "@/components/PanelAlertas";
 import type { AlertaReporte } from "@/lib/alertas";
+import type { AlertaResguardoPublica } from "@/lib/alertasResguardo";
 import { ESTILO_TIPO, EtiquetaEstado, EtiquetaTipo } from "@/components/Etiquetas";
 import { formatearFecha, formatearFechaHora, formatearHora, haceCuanto } from "@/lib/formato";
 import { resumenSenasFelinas } from "@/lib/felinos";
@@ -42,6 +45,7 @@ export default function DetalleReporte({
   urlCompartir,
   textoCompartir,
   enlaceLocal,
+  resguardo,
 }: {
   reporte: Reporte;
   aviso: "nuevo" | "editado" | null;
@@ -53,6 +57,8 @@ export default function DetalleReporte({
   urlCompartir: string;
   textoCompartir: string;
   enlaceLocal: boolean;
+  // HU-20: animales en resguardo que se parecen a esta pérdida.
+  resguardo: AlertaResguardoPublica[];
 }) {
   const estilo = ESTILO_TIPO[reporte.tipo];
   const reencontrada = reporte.estado === "REENCONTRADA";
@@ -174,6 +180,47 @@ export default function DetalleReporte({
 
           {!reencontrada && <PanelAlertas reporte={reporte} alertas={alertas} />}
 
+          {!reencontrada && resguardo.length > 0 && (
+            <section className="tarjeta space-y-3 p-6">
+              <h2 className="flex items-center gap-2 font-display text-lg font-bold">
+                <Home className="h-5 w-5 text-reencontrada-500" aria-hidden="true" />
+                Podría estar en un refugio
+              </h2>
+              <p className="text-sm text-tinta-500">
+                Estos animales en resguardo se parecen a {reporte.nombre || "esta mascota"}.
+                Contacta al refugio para confirmarlo.
+              </p>
+              <ul className="space-y-2">
+                {resguardo.map((a) => (
+                  <li key={a.id} className="flex gap-3 rounded-2xl bg-crema-100 p-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={a.fotoUrl} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-tinta-900">
+                        {a.titulo} · {a.color}
+                      </p>
+                      <p className="truncate text-xs text-tinta-500">
+                        En resguardo desde el {formatearFecha(a.desde)} · {a.refugio}
+                      </p>
+                      <p className="mt-1 text-[11px] font-bold text-reencontrada-700">
+                        {a.puntaje}% parecido · {a.razones.join(", ")}
+                      </p>
+                    </div>
+                    {a.telefono && (
+                      <a
+                        href={`tel:${a.telefono.replace(/[^\d+]/g, "")}`}
+                        className="boton-secundario self-center"
+                      >
+                        <Phone className="h-4 w-4" aria-hidden="true" />
+                        Llamar
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <MensajesReporte reporteId={reporte.id} />
         </div>
 
@@ -200,6 +247,7 @@ export default function DetalleReporte({
                 . Mientras no aparezca, confirma que sigue abierto para que vuelva a subir en el
                 listado y a avisar a quienes viven cerca.
               </p>
+              {reporte.tipo === "PERDIDA" && !esAdmin && <BotonYaAparecio id={reporte.id} />}
               {puedeRenovar ? (
                 <BotonRenovar id={reporte.id} />
               ) : (

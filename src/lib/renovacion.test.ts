@@ -61,3 +61,45 @@ describe("puedeGestionar (HU-19 / HU-23)", () => {
     expect(puedeGestionar({ usuarioId: null }, { usuarioId: null, esAdmin: false })).toBe(false);
   });
 });
+
+import { puedeCambiarEstado } from "./propiedad";
+import { calcularAlertasResguardo, type ReporteComparable } from "./coincidencias";
+
+describe("puedeCambiarEstado (cierre por el dueño)", () => {
+  const dueno = { usuarioId: "a", esAdmin: false };
+  it("el dueño puede cerrar su caso pero no reabrirlo", () => {
+    expect(puedeCambiarEstado({ usuarioId: "a" }, dueno, "REENCONTRADA")).toBe(true);
+    expect(puedeCambiarEstado({ usuarioId: "a" }, dueno, "ACTIVO")).toBe(false);
+  });
+  it("otro usuario o sin sesión no puede cerrar", () => {
+    expect(puedeCambiarEstado({ usuarioId: "b" }, dueno, "REENCONTRADA")).toBe(false);
+    expect(puedeCambiarEstado({ usuarioId: "a" }, { usuarioId: null, esAdmin: false }, "REENCONTRADA")).toBe(false);
+  });
+  it("el admin puede todo", () => {
+    expect(puedeCambiarEstado({ usuarioId: null }, { usuarioId: null, esAdmin: true }, "ACTIVO")).toBe(true);
+  });
+});
+
+describe("animales en resguardo vs pérdidas (HU-20)", () => {
+  const perdida: ReporteComparable = {
+    id: "p", tipo: "PERDIDA", especie: "Perro", color: "Café", tamano: "MEDIANO",
+    latitud: 1.2, longitud: -77.3, fecha: new Date("2026-03-10T15:00:00Z"),
+  };
+  const animal = (parcial = {}) => ({
+    id: "a", especie: "Perro", color: "Marrón", tamano: "MEDIANO" as const,
+    desde: new Date("2026-03-12T05:00:00Z"), ...parcial,
+  });
+
+  it("alerta si coinciden especie, color y tamaño", () => {
+    const [a] = calcularAlertasResguardo(perdida, [animal()]);
+    expect(a.puntaje).toBe(100);
+  });
+  it("descarta color distinto, especie distinta o ingreso anterior a la pérdida", () => {
+    expect(calcularAlertasResguardo(perdida, [animal({ color: "Blanco" })])).toHaveLength(0);
+    expect(calcularAlertasResguardo(perdida, [animal({ especie: "Gato" })])).toHaveLength(0);
+    expect(calcularAlertasResguardo(perdida, [animal({ desde: new Date("2026-03-01T05:00:00Z") })])).toHaveLength(0);
+  });
+  it("no compara contra hallazgos", () => {
+    expect(calcularAlertasResguardo({ ...perdida, tipo: "ENCONTRADA" }, [animal()])).toHaveLength(0);
+  });
+});

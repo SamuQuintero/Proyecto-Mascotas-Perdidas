@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import DetalleReporte from "@/components/DetalleReporte";
 import { adminActual } from "@/lib/admin";
 import { alertasDeReporte } from "@/lib/alertas";
+import { alertasResguardoDeReportes } from "@/lib/alertasResguardo";
 import { sesionGestion } from "@/lib/cuenta";
 import { puedeGestionar } from "@/lib/propiedad";
 import { puedeRenovar } from "@/lib/renovacion";
@@ -58,6 +59,7 @@ export default async function DetalleReportePage({
 
   const serializado = serializarReporte(reporte);
   const alertas = await alertasDeReporte(serializado);
+  const resguardo = (await alertasResguardoDeReportes([reporte])).get(reporte.id) ?? [];
   const gestiona = puedeGestionar(reporte, await sesionGestion());
 
   const urlCompartir = urlAbsoluta(`/reportes/${reporte.id}`);
@@ -77,6 +79,7 @@ export default async function DetalleReportePage({
       urlCompartir={urlCompartir}
       textoCompartir={textoParaCompartir(reporte)}
       enlaceLocal={esUrlLocal(urlCompartir)}
+      resguardo={resguardo}
       puedeGestionar={gestiona}
       puedeRenovar={puedeRenovar(reporte)}
     />

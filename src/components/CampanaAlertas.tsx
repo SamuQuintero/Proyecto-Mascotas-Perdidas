@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell, BellRing, Megaphone, MapPin, PawPrint, Radar, Sparkles, X } from "lucide-react";
+import { Bell, BellRing, Home, Megaphone, MapPin, PawPrint, Radar, Sparkles, X } from "lucide-react";
 import { formatearDistancia } from "@/lib/coincidencias";
 import { haceCuanto } from "@/lib/formato";
 import {
@@ -73,6 +73,20 @@ interface RecordatorioApi {
   renovadoEn: string;
 }
 
+// HU-20: animales en resguardo parecidos a una pérdida propia.
+interface ResguardoApi {
+  id: string;
+  titulo: string;
+  animales: {
+    id: string;
+    titulo: string;
+    color: string;
+    fotoUrl: string;
+    refugio: string;
+    puntaje: number;
+  }[];
+}
+
 const INTERVALO_MS = 60 * 1000;
 const NOVEDAD_CERCANIA_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -92,6 +106,7 @@ export default function CampanaAlertas() {
   const [mascotas, setMascotas] = useState<MascotaApi[] | null>(null);
   const [cercania, setCercania] = useState<CercaniaApi[]>([]);
   const [recordatorios, setRecordatorios] = useState<RecordatorioApi[]>([]);
+  const [resguardo, setResguardo] = useState<ResguardoApi[]>([]);
   const [vistas, setVistas] = useState<Set<string>>(new Set());
   const [abierta, setAbierta] = useState(false);
   // Alertas que eran nuevas al abrir el panel: siguen resaltadas mientras
@@ -118,6 +133,15 @@ export default function CampanaAlertas() {
         setCercania(reportes.filter((c) => new Date(c.renovadoEn).getTime() >= limite));
       }
       if (respRecordatorios.ok) setRecordatorios((await respRecordatorios.json()).recordatorios ?? []);
+
+      if (idsReportes.length === 0) {
+        setResguardo([]);
+      } else {
+        const respuesta = await fetch(`/api/alertas-resguardo?ids=${idsReportes.join(",")}`, {
+          cache: "no-store",
+        });
+        if (respuesta.ok) setResguardo((await respuesta.json()).reportes ?? []);
+      }
 
       if (idsReportes.length === 0) {
         setReportes([]);
@@ -172,7 +196,11 @@ export default function CampanaAlertas() {
 
   const conAlertas = (reportes ?? []).filter((r) => r.alertas.length > 0);
   const mascotasConAlertas = (mascotas ?? []).filter((m) => m.alertas.length > 0);
+  const clavesResguardo = resguardo.flatMap((r) =>
+    r.animales.map((a) => claveAlerta(`resguardo:${r.id}`, a.id))
+  );
   const claves = [
+    ...clavesResguardo,
     ...recordatorios.map(claveRecordatorio),
     ...cercania.map(claveCercania),
     ...conAlertas.flatMap((r) => r.alertas.map((a) => claveAlerta(r.id, a.id))),
@@ -186,13 +214,15 @@ export default function CampanaAlertas() {
     conAlertas.length === 0 &&
     mascotasConAlertas.length === 0 &&
     cercania.length === 0 &&
-    recordatorios.length === 0;
+    recordatorios.length === 0 &&
+    resguardo.length === 0;
   const sinNadaRegistrado =
     !cargando &&
     (reportes ?? []).length === 0 &&
     (mascotas ?? []).length === 0 &&
     cercania.length === 0 &&
-    recordatorios.length === 0;
+    recordatorios.length === 0 &&
+    resguardo.length === 0;
 
   function alternar() {
     const abrir = !abierta;
@@ -254,6 +284,43 @@ export default function CampanaAlertas() {
               <Vacio texto="Todavía no hay coincidencias. Revisamos cada minuto: te avisaremos apenas aparezca algo." />
             ) : (
               <>
+                {resguardo.map((r) => (
+                  <section key={`resguardo:${r.id}`} className="border-b border-tinta-100">
+                    <Link
+                      href={`/reportes/${r.id}`}
+                      className="block bg-reencontrada-50 px-5 py-2 text-xs font-bold uppercase tracking-wider text-reencontrada-700 hover:text-reencontrada-900"
+                    >
+                      <Home className="mr-1 inline h-3 w-3" aria-hidden="true" />
+                      Podría estar en un refugio: {r.titulo} →
+                    </Link>
+                    <ul>
+                      {r.animales.map((a) => (
+                        <li key={a.id}>
+                          <Link
+                            href={`/reportes/${r.id}`}
+                            className={`flex gap-3 px-5 py-3 transition hover:bg-tinta-50 ${
+                              resaltadas.has(claveAlerta(`resguardo:${r.id}`, a.id))
+                                ? "bg-reencontrada-50/60"
+                                : ""
+                            }`}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={a.fotoUrl} alt="" className="h-14 w-14 shrink-0 rounded-2xl object-cover" />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-tinta-900">
+                                {a.titulo} ({a.color.toLowerCase()}) en {a.refugio}
+                              </p>
+                              <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-reencontrada-100 px-2 py-0.5 text-[11px] font-bold text-reencontrada-700">
+                                <Sparkles className="h-3 w-3" aria-hidden="true" />
+                                {a.puntaje}% parecido
+                              </span>
+                            </div>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ))}
                 {recordatorios.length > 0 && (
                   <section className="border-b border-tinta-100">
                     <p className="bg-perdida-50 px-5 py-2 text-xs font-bold uppercase tracking-wider text-perdida-700">

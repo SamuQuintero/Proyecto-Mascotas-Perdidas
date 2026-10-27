@@ -315,6 +315,74 @@ export function calcularAlertasMascota<R extends ReporteComparable>(
     .sort((a, b) => b.puntaje - a.puntaje);
 }
 
+// HU-20 ↔ HU-4: un animal que un refugio tiene en resguardo puede ser una
+// mascota que alguien reportó perdida. Se compara por características
+// (especie, color, tamaño), como el perfil con QR de HU-10, y solo contra
+// pérdidas anteriores a su ingreso (con un día de margen).
+export const PUNTAJE_MINIMO_COINCIDENCIA_RESGUARDO = 55;
+
+export interface AnimalResguardoComparable {
+  id: string;
+  especie: string;
+  color: string;
+  tamano: Tamano;
+  desde: Date | string;
+}
+
+export interface AlertaResguardo<A extends AnimalResguardoComparable = AnimalResguardoComparable> {
+  animal: A;
+  puntaje: number;
+  razones: string[];
+}
+
+export function compararResguardoConPerdida<A extends AnimalResguardoComparable>(
+  animal: A,
+  reporte: ReporteComparable
+): AlertaResguardo<A> | null {
+  if (reporte.tipo !== "PERDIDA") return null;
+  if (!especiesCompatibles(animal.especie, reporte.especie)) return null;
+  if (new Date(animal.desde).getTime() < new Date(reporte.fecha).getTime() - TOLERANCIA_FECHA_MS) {
+    return null;
+  }
+
+  const razones: string[] = [];
+  let puntaje = 0;
+
+  if (animal.especie === reporte.especie && animal.especie !== "Otro") {
+    puntaje += 35;
+    razones.push(`Misma especie (${animal.especie.toLowerCase()})`);
+  }
+
+  const coloresAnimal = familiasDeColor(animal.color);
+  const coloresReporte = familiasDeColor(reporte.color);
+  const comunes = Array.from(coloresAnimal).filter((c) => coloresReporte.has(c));
+  if (comunes.length === 0) return null;
+  puntaje += Math.round(40 * (comunes.length / Math.min(coloresAnimal.size, coloresReporte.size)));
+  razones.push(`Color parecido (${animal.color.toLowerCase()})`);
+
+  const diferenciaTamano = Math.abs(ORDEN_TAMANO[animal.tamano] - ORDEN_TAMANO[reporte.tamano]);
+  if (diferenciaTamano === 0) {
+    puntaje += 25;
+    razones.push("Mismo tamaño");
+  } else if (diferenciaTamano === 1) {
+    puntaje += 8;
+  }
+
+  puntaje = Math.min(100, puntaje);
+  if (puntaje < PUNTAJE_MINIMO_COINCIDENCIA_RESGUARDO) return null;
+  return { animal, puntaje, razones };
+}
+
+export function calcularAlertasResguardo<A extends AnimalResguardoComparable>(
+  reporte: ReporteComparable,
+  animales: A[]
+): AlertaResguardo<A>[] {
+  return animales
+    .map((animal) => compararResguardoConPerdida(animal, reporte))
+    .filter((a): a is AlertaResguardo<A> => a !== null)
+    .sort((a, b) => b.puntaje - a.puntaje);
+}
+
 export function formatearDistancia(km: number): string {
   if (km < 1) return `${Math.max(10, Math.round((km * 1000) / 10) * 10)} m`;
   return `${km.toFixed(1).replace(".", ",")} km`;

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FileText, MapPinned, Pencil, QrCode, Radar } from "lucide-react";
 import BotonRenovar from "@/components/BotonRenovar";
+import BotonYaAparecio from "@/components/BotonYaAparecio";
 import BotonCerrarSesionCuenta from "@/components/BotonCerrarSesionCuenta";
 import ControlSuscripcion from "@/components/ControlSuscripcion";
 import { EtiquetaEstado, EtiquetaTipo } from "@/components/Etiquetas";
@@ -108,6 +109,9 @@ export default async function CuentaPage() {
                   </div>
                 </Link>
                 <div className="flex flex-wrap items-center gap-2">
+                  {reporte.tipo === "PERDIDA" && reporte.estado === "ACTIVO" && (
+                    <BotonYaAparecio id={reporte.id} compacto />
+                  )}
                   {reporte.tipo === "PERDIDA" && puedeRenovar(reporte) && (
                     <BotonRenovar id={reporte.id} compacto />
                   )}
