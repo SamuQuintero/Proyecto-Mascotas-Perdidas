@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
-// Sesión de cuentas reales (ciudadano HU-16, veterinaria HU-17). Es un
+// Sesión de cuentas reales (ciudadano HU-16, veterinaria HU-17, refugio HU-20). Es un
 // módulo separado de src/lib/sesion.ts (el admin único, por variables de
 // entorno): aquí la identidad vive en la tabla Usuario, y la cookie solo
 // guarda el id y el rol, firmados con HMAC, para no tener que consultar la
@@ -26,9 +26,11 @@ function secreto(): string {
   return "clave-de-desarrollo-petmatch-no-usar-en-produccion";
 }
 
+const ROLES = ["CIUDADANO", "VETERINARIA", "REFUGIO"];
+
 interface DatosSesion {
   id: string;
-  rol: "CIUDADANO" | "VETERINARIA";
+  rol: "CIUDADANO" | "VETERINARIA" | "REFUGIO";
   // El nombre va en la cookie (firmada, no se puede falsificar) para que el
   // navbar lo muestre sin consultar la base de datos en cada navegación.
   // Las rutas que necesitan el registro completo y verificado (/cuenta,
@@ -65,7 +67,7 @@ export function verificarTokenUsuario(
   try {
     const datos = JSON.parse(Buffer.from(contenido, "base64url").toString());
     if (typeof datos.exp !== "number" || datos.exp <= ahora) return null;
-    if (datos.rol !== "CIUDADANO" && datos.rol !== "VETERINARIA") return null;
+    if (!ROLES.includes(datos.rol)) return null;
     if (typeof datos.id !== "string") return null;
     if (typeof datos.nombre !== "string") return null;
     return { id: datos.id, rol: datos.rol, nombre: datos.nombre };

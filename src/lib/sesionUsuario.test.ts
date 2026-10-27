@@ -15,6 +15,11 @@ describe("token de sesión de usuario (ciudadano / veterinaria)", () => {
     });
   });
 
+  it("acepta el rol de refugio", () => {
+    const token = crearTokenUsuario({ id: "ref1", rol: "REFUGIO", nombre: "Huellitas" });
+    expect(verificarTokenUsuario(token)?.rol).toBe("REFUGIO");
+  });
+
   it("expira después de la duración de la sesión", () => {
     const ahora = Date.now();
     const token = crearTokenUsuario(

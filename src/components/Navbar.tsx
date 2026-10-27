@@ -8,6 +8,8 @@ import {
   LockKeyhole,
   LogOut,
   Menu,
+  Home,
+  MapPinned,
   Plus,
   QrCode,
   Radar,
@@ -18,6 +20,7 @@ import {
 } from "lucide-react";
 import CampanaAlertas from "@/components/CampanaAlertas";
 import Logo from "@/components/Logo";
+import { rutaPanel, type RolCuenta } from "@/lib/roles";
 
 const ENLACES = [
   { href: "/", etiqueta: "Inicio" },
@@ -25,11 +28,13 @@ const ENLACES = [
   { href: "/perdida/nuevo", etiqueta: "Perdí mi mascota" },
   { href: "/encontrada/nuevo", etiqueta: "Encontré una" },
   { href: "/mascotas", etiqueta: "Placa QR" },
+  { href: "/donde-acudir", etiqueta: "Dónde acudir" },
+  { href: "/resguardo", etiqueta: "En resguardo" },
 ];
 
 export interface UsuarioNavbar {
   nombre: string;
-  rol: "CIUDADANO" | "VETERINARIA";
+  rol: RolCuenta;
 }
 
 // Navbar global. "Admin" y "Cuenta" son opcionales: nadie necesita iniciar
@@ -70,7 +75,7 @@ export default function Navbar({
     router.refresh();
   }
 
-  const rutaCuenta = usuario?.rol === "VETERINARIA" ? "/veterinaria" : "/cuenta";
+  const rutaCuenta = usuario ? rutaPanel(usuario.rol) : "/cuenta";
 
   function activo(href: string) {
     return href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -89,7 +94,7 @@ export default function Navbar({
           <Logo />
         </Link>
 
-        <ul className="hidden items-center gap-1 rounded-full border border-tinta-200/70 bg-white/70 p-1 shadow-sm backdrop-blur lg:flex">
+        <ul className="hidden items-center gap-1 rounded-full border border-tinta-200/70 bg-white/70 p-1 shadow-sm backdrop-blur xl:flex">
           {ENLACES.map((enlace) => (
             <li key={enlace.href}>
               <Link
@@ -109,13 +114,15 @@ export default function Navbar({
         <div className="flex items-center gap-2">
           <CampanaAlertas />
           {usuario ? (
-            <div className="hidden items-center gap-1 rounded-full border border-tinta-200 bg-white/80 p-1 lg:flex">
+            <div className="hidden items-center gap-1 rounded-full border border-tinta-200 bg-white/80 p-1 xl:flex">
               <Link
                 href={rutaCuenta}
                 className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold text-tinta-700 transition hover:bg-tinta-100"
               >
                 {usuario.rol === "VETERINARIA" ? (
                   <Stethoscope className="h-4 w-4 text-encontrada-600" />
+                ) : usuario.rol === "REFUGIO" ? (
+                  <Home className="h-4 w-4 text-reencontrada-600" />
                 ) : (
                   <Radar className="h-4 w-4 text-reencontrada-600" />
                 )}
@@ -133,14 +140,14 @@ export default function Navbar({
           ) : (
             <Link
               href="/cuenta/login"
-              className="hidden items-center gap-2 rounded-full border border-tinta-200 bg-white/80 px-4 py-2 text-sm font-semibold text-tinta-700 shadow-sm transition hover:-translate-y-0.5 hover:border-tinta-300 hover:shadow-suave lg:inline-flex"
+              className="hidden items-center gap-2 rounded-full border border-tinta-200 bg-white/80 px-4 py-2 text-sm font-semibold text-tinta-700 shadow-sm transition hover:-translate-y-0.5 hover:border-tinta-300 hover:shadow-suave xl:inline-flex"
             >
               <UserCircle2 className="h-4 w-4" />
               Cuenta
             </Link>
           )}
           {admin ? (
-            <div className="hidden items-center gap-1 rounded-full border border-reencontrada-200 bg-reencontrada-50 p-1 lg:flex">
+            <div className="hidden items-center gap-1 rounded-full border border-reencontrada-200 bg-reencontrada-50 p-1 xl:flex">
               <Link
                 href="/admin"
                 className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold text-reencontrada-700 transition hover:bg-white"
@@ -162,7 +169,7 @@ export default function Navbar({
           ) : (
             <Link
               href="/admin/login"
-              className="hidden items-center gap-2 rounded-full border border-tinta-200 bg-white/80 px-4 py-2 text-sm font-semibold text-tinta-700 shadow-sm transition hover:-translate-y-0.5 hover:border-tinta-300 hover:shadow-suave lg:inline-flex"
+              className="hidden items-center gap-2 rounded-full border border-tinta-200 bg-white/80 px-4 py-2 text-sm font-semibold text-tinta-700 shadow-sm transition hover:-translate-y-0.5 hover:border-tinta-300 hover:shadow-suave xl:inline-flex"
             >
               <LockKeyhole className="h-4 w-4" />
               Admin
@@ -171,7 +178,7 @@ export default function Navbar({
 
           <button
             onClick={() => setMenuAbierto((abierto) => !abierto)}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-tinta-200 bg-white/80 text-tinta-700 shadow-sm lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-tinta-200 bg-white/80 text-tinta-700 shadow-sm xl:hidden"
             aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={menuAbierto}
           >
@@ -181,7 +188,7 @@ export default function Navbar({
       </nav>
 
       {menuAbierto && (
-        <div className="animate-aparecer px-4 pb-5 pt-1 lg:hidden">
+        <div className="animate-aparecer px-4 pb-5 pt-1 xl:hidden">
           <ul className="space-y-1">
             {ENLACES.map((enlace) => (
               <li key={enlace.href}>
@@ -197,6 +204,10 @@ export default function Navbar({
                     <Search className="h-4 w-4" />
                   ) : enlace.href === "/mascotas" ? (
                     <QrCode className="h-4 w-4" />
+                  ) : enlace.href === "/donde-acudir" ? (
+                    <MapPinned className="h-4 w-4" />
+                  ) : enlace.href === "/resguardo" ? (
+                    <Home className="h-4 w-4" />
                   ) : enlace.href === "/" ? null : (
                     <Plus className="h-4 w-4" />
                   )}
@@ -214,6 +225,8 @@ export default function Navbar({
                 >
                   {usuario.rol === "VETERINARIA" ? (
                     <Stethoscope className="h-4 w-4" />
+                  ) : usuario.rol === "REFUGIO" ? (
+                    <Home className="h-4 w-4" />
                   ) : (
                     <Radar className="h-4 w-4" />
                   )}

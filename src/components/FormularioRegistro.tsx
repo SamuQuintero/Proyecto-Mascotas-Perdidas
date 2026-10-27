@@ -2,18 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Loader2, PawPrint, Stethoscope } from "lucide-react";
+import { Home, Loader2, PawPrint, Stethoscope } from "lucide-react";
 import { Alerta } from "@/components/CamposFormulario";
-
-type Rol = "CIUDADANO" | "VETERINARIA";
+import { rutaPanel, type RolCuenta } from "@/lib/roles";
 
 // HU-16 (ciudadano) / HU-17 (veterinaria): un único formulario de registro
 // con selector de tipo de cuenta, para no duplicar el flujo.
 export default function FormularioRegistro() {
   const router = useRouter();
-  const [rol, setRol] = useState<Rol>("CIUDADANO");
+  const [rol, setRol] = useState<RolCuenta>("CIUDADANO");
   const [nombre, setNombre] = useState("");
   const [nombreClinica, setNombreClinica] = useState("");
+  const [nombreRefugio, setNombreRefugio] = useState("");
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -29,7 +29,7 @@ export default function FormularioRegistro() {
       const respuesta = await fetch("/api/cuenta/registro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, email, contrasena, rol, nombreClinica }),
+        body: JSON.stringify({ nombre, email, contrasena, rol, nombreClinica, nombreRefugio }),
       });
       const data = await respuesta.json().catch(() => ({}));
 
@@ -40,7 +40,7 @@ export default function FormularioRegistro() {
         return;
       }
 
-      router.push(rol === "VETERINARIA" ? "/veterinaria" : "/cuenta");
+      router.push(rutaPanel(rol));
       router.refresh();
     } catch {
       setErrorGeneral("No se pudo conectar con el servidor. Intenta nuevamente.");
@@ -50,7 +50,7 @@ export default function FormularioRegistro() {
 
   return (
     <form onSubmit={registrar} className="space-y-5" noValidate>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <button
           type="button"
           onClick={() => setRol("CIUDADANO")}
@@ -79,13 +79,28 @@ export default function FormularioRegistro() {
             className={`h-6 w-6 ${rol === "VETERINARIA" ? "text-encontrada-600" : "text-tinta-400"}`}
           />
           <span className="text-sm font-bold text-tinta-800">Soy veterinaria</span>
-          <span className="text-xs text-tinta-500">Quiero vincular microchips</span>
+          <span className="text-xs text-tinta-500">Llevo el carnet de vacunas</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setRol("REFUGIO")}
+          className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition ${
+            rol === "REFUGIO"
+              ? "border-reencontrada-400 bg-reencontrada-50"
+              : "border-tinta-200 bg-white hover:border-tinta-300"
+          }`}
+        >
+          <Home
+            className={`h-6 w-6 ${rol === "REFUGIO" ? "text-reencontrada-600" : "text-tinta-400"}`}
+          />
+          <span className="text-sm font-bold text-tinta-800">Soy refugio</span>
+          <span className="text-xs text-tinta-500">Publico animales en resguardo</span>
         </button>
       </div>
 
       <label className="block">
         <span className="mb-1.5 block text-sm font-semibold text-tinta-700">
-          {rol === "VETERINARIA" ? "Tu nombre" : "Nombre"}
+          {rol === "CIUDADANO" ? "Nombre" : "Tu nombre"}
         </span>
         <input
           value={nombre}
@@ -114,6 +129,26 @@ export default function FormularioRegistro() {
           {errores.nombreClinica && (
             <span className="mt-1 block text-xs font-medium text-red-600">
               {errores.nombreClinica}
+            </span>
+          )}
+        </label>
+      )}
+
+      {rol === "REFUGIO" && (
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-semibold text-tinta-700">
+            Nombre del refugio, fundación o rescatista
+          </span>
+          <input
+            value={nombreRefugio}
+            onChange={(e) => setNombreRefugio(e.target.value)}
+            className="campo-input"
+            placeholder="Ej. Fundación Huellitas de Pasto"
+            aria-invalid={Boolean(errores.nombreRefugio)}
+          />
+          {errores.nombreRefugio && (
+            <span className="mt-1 block text-xs font-medium text-red-600">
+              {errores.nombreRefugio}
             </span>
           )}
         </label>

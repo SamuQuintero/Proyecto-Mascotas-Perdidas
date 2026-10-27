@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Alerta } from "@/components/CamposFormulario";
+import { rutaPanel } from "@/lib/roles";
 
 export default function FormularioLoginCuenta({ siguiente }: { siguiente: string }) {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function FormularioLoginCuenta({ siguiente }: { siguiente: string
         return;
       }
 
-      router.push(data.usuario.rol === "VETERINARIA" ? "/veterinaria" : siguiente);
+      router.push(data.usuario.rol === "CIUDADANO" ? siguiente : rutaPanel(data.usuario.rol));
       router.refresh();
     } catch {
       setError("No se pudo conectar con el servidor.");

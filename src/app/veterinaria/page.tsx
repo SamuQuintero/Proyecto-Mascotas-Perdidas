@@ -12,6 +12,7 @@ import {
 import BotonCerrarSesionCuenta from "@/components/BotonCerrarSesionCuenta";
 import { EtiquetaEstado, EtiquetaTipo } from "@/components/Etiquetas";
 import FilaMascotaVacunas from "@/components/FilaMascotaVacunas";
+import PerfilEstablecimiento from "@/components/PerfilEstablecimiento";
 import { usuarioActual } from "@/lib/cuenta";
 import { prisma } from "@/lib/db";
 import { formatearFechaHora } from "@/lib/formato";
@@ -102,6 +103,23 @@ export default async function VeterinariaPage({
             <p className="text-sm font-medium text-tinta-500">{etiqueta}</p>
           </div>
         ))}
+      </section>
+
+      <section className="tarjeta p-6">
+        <h2 className="mb-1 font-display text-xl font-bold">Directorio “Dónde acudir”</h2>
+        <p className="mb-4 text-sm text-tinta-500">
+          Si tu veterinaria recibe mascotas encontradas, actívalo y quien halle un animal
+          verá tu teléfono y ubicación.
+        </p>
+        <PerfilEstablecimiento
+          inicial={{
+            telefono: usuario.telefono,
+            direccion: usuario.direccion,
+            latitud: usuario.latitud,
+            longitud: usuario.longitud,
+            recibeEncontradas: usuario.recibeEncontradas,
+          }}
+        />
       </section>
 
       <section className="space-y-4">

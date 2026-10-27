@@ -531,6 +531,16 @@ export default function FormularioReporte({ tipo, reporteInicial }: Props) {
         </div>
       </div>
 
+      {tipo === "ENCONTRADA" && !editando && (
+        <p className="rounded-2xl bg-encontrada-50 p-4 text-sm text-encontrada-800">
+          ¿No puedes quedarte con el animal? Mira{" "}
+          <Link href="/donde-acudir" className="font-bold underline">
+            qué veterinarias y refugios cercanos lo reciben
+          </Link>
+          .
+        </p>
+      )}
+
       {errorGeneral && <Alerta>{errorGeneral}</Alerta>}
 
       <Seccion numero={1} titulo="Datos de la mascota" Icono={PawPrint}>

@@ -8,6 +8,7 @@ import {
   CircleCheckBig,
   Mail,
   MapPin,
+  MapPinned,
   PartyPopper,
   Phone,
   UserRound,
@@ -199,6 +200,23 @@ export default function DetalleReporte({
               </ul>
             )}
           </section>
+
+          {reporte.tipo === "ENCONTRADA" && !reencontrada && (
+            <Link
+              href="/donde-acudir"
+              className="tarjeta flex items-start gap-3 p-5 transition hover:-translate-y-0.5 hover:shadow-suave"
+            >
+              <MapPinned className="mt-0.5 h-5 w-5 shrink-0 text-encontrada-600" aria-hidden="true" />
+              <span>
+                <span className="block font-display text-base font-bold text-tinta-900">
+                  ¿No puedes quedarte con ella?
+                </span>
+                <span className="block text-sm text-tinta-500">
+                  Mira qué veterinarias y refugios cercanos reciben mascotas encontradas.
+                </span>
+              </span>
+            </Link>
+          )}
 
           <section className="tarjeta p-5">
             <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold">

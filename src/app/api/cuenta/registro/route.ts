@@ -5,7 +5,7 @@ import { COOKIE_USUARIO, DURACION_SESION_MS, crearTokenUsuario } from "@/lib/ses
 import { primerErrorPorCampo } from "@/lib/validacion";
 import { registroSchema } from "@/lib/validacionCuenta";
 
-// HU-16 / HU-17: registro de ciudadano o veterinaria. Son cuentas reales
+// HU-16 / HU-17 / HU-20: registro de ciudadano, veterinaria o refugio. Son cuentas reales
 // (con contraseña), a diferencia del resto de la aplicación, que no las
 // necesita para publicar o buscar reportes.
 export async function POST(request: NextRequest) {
@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
       contrasenaHash: hashContrasena(datos.contrasena),
       rol: datos.rol,
       nombreClinica: datos.rol === "VETERINARIA" ? datos.nombreClinica || null : null,
+      nombreRefugio: datos.rol === "REFUGIO" ? datos.nombreRefugio || null : null,
     },
   });
 

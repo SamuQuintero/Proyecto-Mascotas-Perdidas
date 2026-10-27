@@ -7,6 +7,7 @@ import { EtiquetaTipo } from "@/components/Etiquetas";
 import { usuarioActual } from "@/lib/cuenta";
 import { distanciaKm, formatearDistancia } from "@/lib/coincidencias";
 import { prisma } from "@/lib/db";
+import { rutaPanel } from "@/lib/roles";
 import { formatearFechaHora } from "@/lib/formato";
 
 export const metadata = {
@@ -17,7 +18,7 @@ export const metadata = {
 export default async function CuentaPage() {
   const usuario = await usuarioActual();
   if (!usuario) redirect("/cuenta/login");
-  if (usuario.rol === "VETERINARIA") redirect("/veterinaria");
+  if (usuario.rol !== "CIUDADANO") redirect(rutaPanel(usuario.rol));
 
   const suscrito =
     usuario.avisoLatitud !== null &&

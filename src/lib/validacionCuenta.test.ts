@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loginSchema, registroSchema, suscripcionSchema } from "./validacionCuenta";
+import { loginSchema, registroSchema, suscripcionSchema, establecimientoSchema } from "./validacionCuenta";
 
 describe("registroSchema — HU-16 / HU-17", () => {
   it("acepta un registro de ciudadano sin nombre de clínica", () => {
@@ -72,6 +72,51 @@ describe("suscripcionSchema — HU-16 (radio de aviso)", () => {
     ).toBe(false);
     expect(
       suscripcionSchema.safeParse({ latitud: 1.21, longitud: -77.28, radioKm: 51 }).success
+    ).toBe(false);
+  });
+});
+
+describe("registro de refugio (HU-20)", () => {
+  const base = { nombre: "Ana", email: "a@b.co", contrasena: "secreta1", rol: "REFUGIO" as const };
+
+  it("exige el nombre del refugio", () => {
+    const r = registroSchema.safeParse(base);
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.issues[0].path).toEqual(["nombreRefugio"]);
+  });
+
+  it("acepta un refugio con nombre", () => {
+    expect(registroSchema.safeParse({ ...base, nombreRefugio: "Huellitas" }).success).toBe(true);
+  });
+});
+
+describe("establecimientoSchema (HU-18)", () => {
+  it("permite guardar sin aparecer en el directorio aunque falten datos", () => {
+    expect(establecimientoSchema.safeParse({ recibeEncontradas: false }).success).toBe(true);
+  });
+
+  it("para aparecer en el directorio exige teléfono y ubicación", () => {
+    const r = establecimientoSchema.safeParse({ recibeEncontradas: true });
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      expect(r.error.issues.map((i) => i.path[0]).sort()).toEqual(["latitud", "telefono"]);
+    }
+  });
+
+  it("acepta teléfono y ubicación", () => {
+    expect(
+      establecimientoSchema.safeParse({
+        recibeEncontradas: true,
+        telefono: "300 123 4567",
+        latitud: 1.21,
+        longitud: -77.28,
+      }).success
+    ).toBe(true);
+  });
+
+  it("rechaza un teléfono con letras", () => {
+    expect(
+      establecimientoSchema.safeParse({ recibeEncontradas: false, telefono: "llámame" }).success
     ).toBe(false);
   });
 });

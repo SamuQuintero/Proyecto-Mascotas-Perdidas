@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { COOKIE_USUARIO, verificarTokenUsuario } from "@/lib/sesionUsuario";
 
-// Lectura de la sesión de usuario (ciudadano o veterinaria) desde páginas y
+// Lectura de la sesión de usuario (ciudadano, veterinaria o refugio) desde páginas y
 // rutas de API. Paralelo a src/lib/admin.ts, que hace lo mismo para el
 // admin único.
 
@@ -33,6 +33,34 @@ export async function exigirCiudadano() {
     usuario: null,
     error: NextResponse.json(
       { error: "Necesitas iniciar sesión como ciudadano." },
+      { status: 401 }
+    ),
+  };
+}
+
+export async function exigirRefugio() {
+  const usuario = await usuarioActual();
+  if (usuario?.rol === "REFUGIO") return { usuario, error: null };
+  return {
+    usuario: null,
+    error: NextResponse.json(
+      { error: "Necesitas iniciar sesión como refugio." },
+      { status: 401 }
+    ),
+  };
+}
+
+// HU-18: veterinarias y refugios comparten el perfil público de
+// "a quién acudir" (ubicación, teléfono, recibe mascotas encontradas).
+export async function exigirEstablecimiento() {
+  const usuario = await usuarioActual();
+  if (usuario && (usuario.rol === "VETERINARIA" || usuario.rol === "REFUGIO")) {
+    return { usuario, error: null };
+  }
+  return {
+    usuario: null,
+    error: NextResponse.json(
+      { error: "Necesitas iniciar sesión como veterinaria o refugio." },
       { status: 401 }
     ),
   };
