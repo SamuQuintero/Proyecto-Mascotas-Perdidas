@@ -300,7 +300,7 @@ export default function FormularioReporte({ tipo, reporteInicial, conSesion }: P
 
       if (respuesta.status === 401) {
         setErrorGeneral(
-          "Tu sesión de administrador expiró. Inicia sesión de nuevo para guardar los cambios."
+          "Tu sesión expiró. Inicia sesión de nuevo para guardar los cambios."
         );
         setPaso("formulario");
         return;

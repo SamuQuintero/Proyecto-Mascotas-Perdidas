@@ -11,6 +11,7 @@ import {
   MapPinned,
   Megaphone,
   PartyPopper,
+  Pencil,
   Phone,
   UserRound,
   EyeOff,
@@ -174,6 +175,13 @@ export default function DetalleReporte({
 
         <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
           {esAdmin && <AccionesAdmin id={reporte.id} estado={reporte.estado} />}
+
+          {puedeGestionar && !esAdmin && (
+            <Link href={`/reportes/${reporte.id}/editar`} className="boton-secundario w-full">
+              <Pencil className="h-4 w-4" aria-hidden="true" />
+              Editar mis datos de contacto y fotos
+            </Link>
+          )}
 
           {puedeGestionar && reporte.estado === "ACTIVO" && (
             <section className="tarjeta space-y-3 p-5">

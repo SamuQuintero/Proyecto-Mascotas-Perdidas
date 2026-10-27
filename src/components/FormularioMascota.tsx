@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Camera, Loader2, PawPrint, Phone, QrCode } from "lucide-react";
+import { Camera, Loader2, PawPrint, Pencil, Phone, QrCode } from "lucide-react";
 import CampoColor from "@/components/CampoColor";
 import CampoImagen from "@/components/CampoImagen";
 import { Alerta, Campo, Seccion } from "@/components/CamposFormulario";
@@ -28,10 +28,41 @@ const VACIO = {
   contactoEmail: "",
 };
 
-// HU-8: formulario para crear el perfil digital de una mascota.
-export default function FormularioMascota() {
+export interface MascotaEditable {
+  id: string;
+  nombre: string;
+  especie: string;
+  raza: string | null;
+  color: string;
+  tamano: Tamano;
+  senasParticulares: string | null;
+  fotoUrl: string;
+  contactoNombre: string;
+  contactoTelefono: string;
+  contactoEmail: string | null;
+}
+
+function camposDesde(mascota: MascotaEditable): typeof VACIO {
+  return {
+    nombre: mascota.nombre,
+    especie: mascota.especie,
+    raza: mascota.raza ?? "",
+    color: mascota.color,
+    tamano: mascota.tamano,
+    senasParticulares: mascota.senasParticulares ?? "",
+    contactoNombre: mascota.contactoNombre,
+    contactoTelefono: mascota.contactoTelefono,
+    contactoEmail: mascota.contactoEmail ?? "",
+  };
+}
+
+// HU-8: formulario para crear el perfil digital de una mascota. Con
+// `mascotaInicial` edita ese perfil (HU-23): la foto se conserva si no se
+// elige otra.
+export default function FormularioMascota({ mascotaInicial }: { mascotaInicial?: MascotaEditable }) {
   const router = useRouter();
-  const [campos, setCampos] = useState(VACIO);
+  const editando = mascotaInicial !== undefined;
+  const [campos, setCampos] = useState(mascotaInicial ? camposDesde(mascotaInicial) : VACIO);
   const [foto, setFoto] = useState<File | null>(null);
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
@@ -47,8 +78,8 @@ export default function FormularioMascota() {
 
     const resultado = mascotaSchema.safeParse(campos);
     const nuevos = resultado.success ? {} : primerErrorPorCampo(resultado.error);
-    if (!foto) nuevos.foto = "La fotografía es obligatoria.";
-    else if (!FOTO_TIPOS_PERMITIDOS.includes(foto.type)) {
+    if (!foto && !editando) nuevos.foto = "La fotografía es obligatoria.";
+    else if (foto && !FOTO_TIPOS_PERMITIDOS.includes(foto.type)) {
       nuevos.foto = "Formato no soportado. Usa JPG, PNG o WEBP.";
     }
     setErrores(nuevos);
@@ -61,15 +92,28 @@ export default function FormularioMascota() {
     setEnviando(true);
     const formData = new FormData();
     Object.entries(campos).forEach(([clave, valor]) => formData.append(clave, valor));
-    formData.append("foto", foto as File);
+    if (foto) formData.append("foto", foto);
 
     try {
-      const respuesta = await fetch("/api/mascotas", { method: "POST", body: formData });
+      const respuesta = await fetch(
+        editando ? `/api/mascotas/${mascotaInicial.id}` : "/api/mascotas",
+        { method: editando ? "PATCH" : "POST", body: formData }
+      );
       const data = await respuesta.json().catch(() => ({}));
       if (!respuesta.ok) {
         setErrores(data.errores ?? {});
-        setErrorGeneral(data.error ?? "No se pudo crear el perfil. Revisa los datos.");
+        setErrorGeneral(
+          data.error ??
+            (editando
+              ? "No se pudieron guardar los cambios. Revisa los datos."
+              : "No se pudo crear el perfil. Revisa los datos.")
+        );
         setEnviando(false);
+        return;
+      }
+      if (editando) {
+        router.push(`/mascotas/${mascotaInicial.id}`);
+        router.refresh();
         return;
       }
       recordarMascota(data.mascota.id);
@@ -84,13 +128,20 @@ export default function FormularioMascota() {
     <form onSubmit={crear} className="mx-auto max-w-2xl space-y-6" noValidate>
       <div className="flex animate-aparecer items-start gap-4">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sol-300 to-perdida-500 text-white shadow-brillo">
-          <QrCode className="h-7 w-7" aria-hidden="true" />
+          {editando ? (
+            <Pencil className="h-7 w-7" aria-hidden="true" />
+          ) : (
+            <QrCode className="h-7 w-7" aria-hidden="true" />
+          )}
         </span>
         <div>
-          <h1 className="titulo-display text-3xl sm:text-4xl">Crea su placa con QR</h1>
+          <h1 className="titulo-display text-3xl sm:text-4xl">
+            {editando ? `Editar a ${mascotaInicial.nombre}` : "Crea su placa con QR"}
+          </h1>
           <p className="mt-2 text-tinta-500">
-            Completa su perfil una sola vez. Te daremos un código QR para imprimir y
-            ponerlo en su collar: quien la encuentre podrá contactarte al escanearlo.
+            {editando
+              ? "Actualiza su foto y tus datos de contacto cuando cambien. El código QR de su placa sigue siendo el mismo: no tienes que volver a imprimirlo."
+              : "Completa su perfil una sola vez. Te daremos un código QR para imprimir y ponerlo en su collar: quien la encuentre podrá contactarte al escanearlo."}
           </p>
         </div>
       </div>
@@ -166,7 +217,7 @@ export default function FormularioMascota() {
       </Seccion>
 
       <Seccion numero={2} titulo="Fotografía" Icono={Camera}>
-        <CampoImagen onCambiar={setFoto} error={errores.foto} />
+        <CampoImagen onCambiar={setFoto} error={errores.foto} urlInicial={mascotaInicial?.fotoUrl} />
       </Seccion>
 
       <Seccion numero={3} titulo="Cómo contactarte" Icono={Phone}>
@@ -214,10 +265,18 @@ export default function FormularioMascota() {
       >
         {enviando ? (
           <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+        ) : editando ? (
+          <Pencil className="h-5 w-5" aria-hidden="true" />
         ) : (
           <QrCode className="h-5 w-5" aria-hidden="true" />
         )}
-        {enviando ? "Creando perfil…" : "Crear perfil y generar QR"}
+        {enviando
+          ? editando
+            ? "Guardando…"
+            : "Creando perfil…"
+          : editando
+            ? "Guardar cambios"
+            : "Crear perfil y generar QR"}
       </button>
     </form>
   );

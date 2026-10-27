@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { ErrorArchivoInvalido, guardarFotoReporte } from "@/lib/almacenamiento";
+import { usuarioActual } from "@/lib/cuenta";
+import { camposMascotaParaGuardar } from "@/lib/mascotas";
 import { mascotaSchema, primerErrorPorCampo } from "@/lib/validacion";
 
 // GET /api/mascotas?ids=a,b — resumen de los perfiles creados desde este
@@ -61,18 +63,13 @@ export async function POST(request: NextRequest) {
   }
 
   const datos = resultado.data;
+  // Con sesión iniciada el perfil queda a nombre de la cuenta (HU-23).
+  const usuario = await usuarioActual();
   const mascota = await prisma.mascota.create({
     data: {
-      nombre: datos.nombre,
-      especie: datos.especie,
-      raza: datos.raza || null,
-      color: datos.color,
-      tamano: datos.tamano,
-      senasParticulares: datos.senasParticulares || null,
+      ...camposMascotaParaGuardar(datos),
+      usuarioId: usuario?.id ?? null,
       fotoUrl,
-      contactoNombre: datos.contactoNombre,
-      contactoTelefono: datos.contactoTelefono,
-      contactoEmail: datos.contactoEmail || null,
     },
   });
 

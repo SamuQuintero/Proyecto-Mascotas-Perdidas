@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { MapPinned, Radar, FileText } from "lucide-react";
+import { FileText, MapPinned, Pencil, QrCode, Radar } from "lucide-react";
 import BotonRenovar from "@/components/BotonRenovar";
 import BotonCerrarSesionCuenta from "@/components/BotonCerrarSesionCuenta";
 import ControlSuscripcion from "@/components/ControlSuscripcion";
@@ -26,6 +26,11 @@ export default async function CuentaPage() {
     where: { usuarioId: usuario.id },
     orderBy: { renovadoEn: "desc" },
     take: 30,
+  });
+
+  const misMascotas = await prisma.mascota.findMany({
+    where: { usuarioId: usuario.id },
+    orderBy: { creadoEn: "desc" },
   });
 
   const suscrito =
@@ -102,9 +107,58 @@ export default async function CuentaPage() {
                     </div>
                   </div>
                 </Link>
-                {reporte.tipo === "PERDIDA" && puedeRenovar(reporte) && (
-                  <BotonRenovar id={reporte.id} compacto />
-                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  {reporte.tipo === "PERDIDA" && puedeRenovar(reporte) && (
+                    <BotonRenovar id={reporte.id} compacto />
+                  )}
+                  <Link
+                    href={`/reportes/${reporte.id}/editar`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-tinta-200 bg-white px-3 py-1.5 text-xs font-bold text-tinta-600 transition hover:border-tinta-300"
+                  >
+                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                    Editar
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold">
+          <QrCode className="h-5 w-5 text-reencontrada-500" aria-hidden="true" />
+          Mis mascotas con placa QR ({misMascotas.length})
+        </h2>
+        {misMascotas.length === 0 ? (
+          <div className="tarjeta px-6 py-8 text-center text-sm text-tinta-500">
+            Los perfiles que crees con tu sesión iniciada aparecerán aquí para que puedas
+            actualizar su foto y tu contacto.{" "}
+            <Link href="/mascotas/nueva" className="font-semibold text-perdida-600 underline">
+              Crear una placa
+            </Link>
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {misMascotas.map((mascota) => (
+              <li key={mascota.id} className="tarjeta flex items-center gap-3 p-3">
+                <Link href={`/mascotas/${mascota.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={mascota.fotoUrl} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                  <div className="min-w-0">
+                    <p className="truncate font-display font-bold text-tinta-900">{mascota.nombre}</p>
+                    <p className="truncate text-xs text-tinta-500">
+                      {mascota.especie} · {mascota.contactoTelefono}
+                    </p>
+                  </div>
+                </Link>
+                <Link
+                  href={`/mascotas/${mascota.id}/editar`}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-tinta-200 bg-white px-3 py-1.5 text-xs font-bold text-tinta-600 transition hover:border-tinta-300"
+                >
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                  Editar
+                </Link>
               </li>
             ))}
           </ul>

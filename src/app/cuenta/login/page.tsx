@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, LogIn } from "lucide-react";
 import FormularioLoginCuenta from "@/components/FormularioLoginCuenta";
 import { usuarioActual } from "@/lib/cuenta";
+import { rutaPanel } from "@/lib/roles";
 
 export const metadata = {
   title: "Iniciar sesión — PetMatch",
@@ -19,7 +20,7 @@ export default async function LoginCuentaPage({
 }) {
   const usuario = await usuarioActual();
   const siguiente = destinoSeguro(searchParams.siguiente);
-  if (usuario) redirect(usuario.rol === "VETERINARIA" ? "/veterinaria" : siguiente);
+  if (usuario) redirect(usuario.rol === "CIUDADANO" ? siguiente : rutaPanel(usuario.rol));
 
   return (
     <div className="mx-auto max-w-md py-6">

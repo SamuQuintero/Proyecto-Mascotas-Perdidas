@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { exigirAdmin } from "@/lib/admin";
+import { sesionGestion } from "@/lib/cuenta";
+import { puedeGestionar } from "@/lib/propiedad";
 import {
   ErrorArchivoInvalido,
   eliminarFotoReporte,
@@ -27,7 +28,8 @@ export async function GET(
   return NextResponse.json({ reporte });
 }
 
-// HU-25: editar un reporte (solo administrador). Recibe el mismo
+// HU-25 / HU-23: editar un reporte (el administrador, o su dueño: la cuenta
+// con la que se publicó). Recibe el mismo
 // multipart/form-data que la creación; la foto es opcional y solo se
 // reemplaza si se envía una nueva. El tipo (perdida/encontrada) no se
 // cambia al editar: se toma siempre del reporte existente.
@@ -35,9 +37,6 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const noAutorizado = exigirAdmin();
-  if (noAutorizado) return noAutorizado;
-
   const existente = await prisma.reporte.findUnique({
     where: { id: params.id },
   });
@@ -45,6 +44,19 @@ export async function PATCH(
     return NextResponse.json(
       { error: "Reporte no encontrado." },
       { status: 404 }
+    );
+  }
+
+  const sesion = await sesionGestion();
+  if (!puedeGestionar(existente, sesion)) {
+    const sinSesion = !sesion.esAdmin && sesion.usuarioId === null;
+    return NextResponse.json(
+      {
+        error: sinSesion
+          ? "Inicia sesión para editar este reporte."
+          : "Solo quien publicó el reporte puede editarlo.",
+      },
+      { status: sinSesion ? 401 : 403 }
     );
   }
 

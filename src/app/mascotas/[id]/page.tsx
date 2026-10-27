@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { HeartHandshake, Mail, MessageCircle, Phone, QrCode, Syringe } from "lucide-react";
+import { HeartHandshake, Mail, MessageCircle, Pencil, Phone, QrCode, Syringe } from "lucide-react";
+import { sesionGestion } from "@/lib/cuenta";
 import { prisma } from "@/lib/db";
+import { puedeGestionar } from "@/lib/propiedad";
 import { enlaceTelefono, enlaceWhatsApp } from "@/lib/contacto";
 import { formatearFecha } from "@/lib/formato";
 import { ETIQUETA_TAMANO } from "@/lib/tipos";
@@ -23,6 +25,7 @@ export default async function PerfilMascotaPage({ params }: { params: { id: stri
   });
   if (!mascota) notFound();
 
+  const gestiona = puedeGestionar(mascota, await sesionGestion());
   const whatsapp = enlaceWhatsApp(mascota.contactoTelefono);
   const mensaje = encodeURIComponent(
     `¡Hola! Encontré a ${mascota.nombre}. Escaneé el código QR de su placa en PetMatch.`
@@ -30,6 +33,13 @@ export default async function PerfilMascotaPage({ params }: { params: { id: stri
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
+      {gestiona && (
+        <Link href={`/mascotas/${mascota.id}/editar`} className="boton-secundario w-full">
+          <Pencil className="h-4 w-4" aria-hidden="true" />
+          Editar foto y datos de contacto
+        </Link>
+      )}
+
       <div className="relative animate-aparecer overflow-hidden rounded-4xl bg-white shadow-elevada">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
