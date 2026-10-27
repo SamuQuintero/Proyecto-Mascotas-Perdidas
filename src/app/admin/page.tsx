@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
+  BarChart3,
   Eye,
   HeartHandshake,
   LayoutDashboard,
@@ -96,6 +97,13 @@ export default async function PanelAdminPage({
           Aquí llevas el control de todos los reportes: revisa, corrige y
           celebra cada reencuentro.
         </p>
+        <Link
+          href="/admin/indicadores"
+          className="mt-4 inline-flex items-center gap-2 rounded-full border border-tinta-200 bg-white px-4 py-2 text-sm font-semibold text-tinta-700 shadow-sm transition hover:-translate-y-0.5 hover:border-tinta-300"
+        >
+          <BarChart3 className="h-4 w-4 text-reencontrada-500" aria-hidden="true" />
+          Ver indicadores por especie, zona y tiempo
+        </Link>
       </header>
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Resumen">
