@@ -294,4 +294,4 @@ latencia, y paginación del listado de reportes cuando crezca el volumen.
 ## Estado del proyecto
 
 **27 de 27 historias implementadas en 4 Sprints.** Pasan las 237 pruebas automatizadas
-(`npm test`), la prueba de humo (80/80) y el proyecto compila (`npm run build`). Pendiente: el despliegue.
+(`npm test`), la prueba de humo (80/80) y el proyecto compila (`npm run build`). Desplegado en https://proyecto-mascotas-perdidas.vercel.app

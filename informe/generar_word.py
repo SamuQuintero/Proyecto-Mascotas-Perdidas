@@ -784,23 +784,30 @@ def _manual(I):
 # =================================================================== DESPLIEGUE
 def _despliegue(I):
     I.h1("12. Despliegue")
-    I.nota("**Etapa pendiente.** El despliegue es la última actividad del proyecto; esta sección se completará con el resultado "
-           "(URL pública, fecha y verificación) una vez realizado.")
+    I.p("La aplicación está **desplegada en producción** en https://proyecto-mascotas-perdidas.vercel.app (Vercel, despliegue "
+        "automático desde la rama `main` del repositorio), con la base de datos en Supabase y las fotografías en Supabase Storage. "
+        "Fecha de la verificación: 10/11/2026.", alinear="justificado")
     I.h2("12.1 Plan")
     I.vinetas([
         "**Alojamiento de la aplicación:** plataforma con soporte para Next.js 15 (por ejemplo, Vercel) o un servidor Node con `npm run build` y `npm run start`.",
         "**Base de datos:** el proyecto de Supabase existente (región `ca-central-1`, la más cercana disponible cuando se creó; su latencia se documenta en la sección de rendimiento); variables `DATABASE_URL` (pooler) y `DIRECT_URL`.",
         "**Variables de entorno:** `DATABASE_URL`, `DIRECT_URL`, `ADMIN_USUARIO`, `ADMIN_CONTRASENA`, `ADMIN_SECRETO`, `SESION_SECRETO` (ambos de 32 o más caracteres aleatorios), `ADMIN_CONTRASENA` (12 o más caracteres) y `URL_PUBLICA` (dominio https, obligatoria: la usan el QR y los enlaces al compartir). **No** definir `MOSTRAR_CUENTAS_PRUEBA`.",
-        "**Fotografías:** hoy se guardan en `public/uploads`, que no es persistente en plataformas sin servidor. Antes de publicar en ese tipo de plataformas, se escribe un adaptador del puerto `AlmacenFotos` para **Supabase Storage** (cambio de una clase y una línea en `composicion.ts`).",
+        "**Fotografías:** en producción se guardan en **Supabase Storage** (bucket público `fotos`, que la aplicación crea si no existe) mediante un adaptador del puerto `AlmacenFotos`; en desarrollo siguen en `public/uploads`. Solo cambió una clase y una línea en `composicion.ts`.",
         "**Datos de prueba:** las cuentas y los datos de prueba se eliminaron de la base real antes de abrirla al público, de modo que queda lista para los registros reales; las credenciales del administrador deben ser nuevas y fuertes.",
         "**Seguridad:** ejecutar `npm run db:rls` tras sincronizar el esquema; rotar la clave pública de Supabase si estuvo expuesta.",
     ])
     I.h2("12.2 Lista de verificación")
-    I.tabla(["Verificación", "Resultado"],
-            [["Compilación de producción (`npm run build`)", "[[pendiente]]"], ["URL pública accesible", "[[pendiente]]"],
-             ["Inicio de sesión de cada rol", "[[pendiente]]"], ["Publicar y ver un reporte con foto", "[[pendiente]]"],
-             ["QR de la placa abre desde otro celular", "[[pendiente]]"], ["Enlaces para compartir muestran vista previa", "[[pendiente]]"]],
-            [11, 6], tam=9.5, leyenda="Lista de verificación del despliegue.")
+    I.tabla(["Verificación en producción", "Resultado"],
+            [["Compilación de producción en Vercel", "Aprobada (despliegue en estado Ready, menos de 1 minuto y medio)"],
+             ["URL pública accesible", "Aprobada: las 7 páginas principales responden 200 en 0,2 a 1 s"],
+             ["Cabeceras de seguridad y bloqueo de peticiones de otro origen", "Aprobada (CSP, HSTS, X-Frame-Options; escritura de otro origen responde 403)"],
+             ["Sin cuentas ni datos de prueba visibles", "Aprobada: base de datos sin cuentas de prueba"],
+             ["Inicio de sesión del administrador", "Aprobada"],
+             ["Publicar un reporte con foto", "Aprobada: respuesta 201 y foto guardada en Supabase Storage"],
+             ["La foto se descarga desde su URL pública", "Aprobada (200, image/png)"],
+             ["Eliminar un reporte como administrador", "Aprobada"],
+             ["Diagnóstico de administrador (`/api/admin/diagnostico`)", "Aprobada: base de datos y bucket de fotos en estado correcto"]],
+            [8.5, 8.5], tam=9.5, leyenda="Lista de verificación del despliegue.")
 
 
 # ================================================================ CONCLUSIONES
