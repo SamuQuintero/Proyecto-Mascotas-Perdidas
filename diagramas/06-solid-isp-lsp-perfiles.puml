@@ -1,0 +1,80 @@
+@startuml 06-solid-isp-lsp-perfiles
+!include estilo.puml
+set separator none
+hide empty members
+title SOLID · I y L — Interfaces pequeñas y sustitución (src/lib/coincidencias/perfiles.ts)
+skinparam classAttributeIconSize 0
+skinparam stereotypeCBackgroundColor #EAE4FF
+
+package "Capacidades pequeñas (ISP)" {
+  interface Identificable {
+    +id : string
+  }
+  interface Geolocalizable {
+    +latitud : number
+    +longitud : number
+  }
+  interface ConFecha {
+    +fecha : Date | string
+  }
+  interface PerfilFisico {
+    +especie : string
+    +color : string
+    +tamano : Tamano
+  }
+  interface SenasFelinasComparables {
+    +patronPelaje? : string
+    +largoPelaje? : string
+    +colorOjos? : string
+  }
+}
+
+package "Tipos comparables = composición de capacidades" {
+  class ReporteComparable <<composicion>> {
+    +tipo : TipoReporte
+  }
+  class MascotaComparable <<composicion>>
+  class AnimalResguardoComparable <<composicion>> {
+    +desde : Date | string
+  }
+}
+
+package "Criterios — piden SOLO lo que usan" {
+  class "criterioColor\n(pide PerfilFisico)" as CColor
+  class "criterioDistancia\n(pide Geolocalizable)" as CDist
+  class "criterioFelino\n(pide PerfilFisico + señas)" as CFel
+}
+
+Identificable <|-- ReporteComparable
+Geolocalizable <|-- ReporteComparable
+ConFecha <|-- ReporteComparable
+PerfilFisico <|-- ReporteComparable
+SenasFelinasComparables <|-- ReporteComparable
+
+Identificable <|-- MascotaComparable
+PerfilFisico <|-- MascotaComparable
+SenasFelinasComparables <|-- MascotaComparable
+
+Identificable <|-- AnimalResguardoComparable
+PerfilFisico <|-- AnimalResguardoComparable
+
+CColor ..> PerfilFisico : usa
+CDist ..> Geolocalizable : usa
+CFel ..> SenasFelinasComparables : usa
+
+note right of CDist
+  Un perfil de mascota (sin ubicación) o un
+  animal de refugio (sin señas de gato) NUNCA
+  tuvo que inventar campos para entrar al
+  motor: cada criterio solo exige su capacidad.
+end note
+
+note bottom of PerfilFisico
+  Liskov: cualquier tipo que cumpla
+  PerfilFisico puede pasar por criterioColor,
+  criterioEspecie y criterioTamano sin que
+  el criterio sepa cuál es. Lo demuestra
+  puntuacion.test.ts (criterio de edad nuevo
+  junto a los existentes).
+end note
+@enduml

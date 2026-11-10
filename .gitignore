@@ -21,3 +21,6 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# Herramientas descargadas para generar los diagramas (npm run diagramas)
+/diagramas/herramientas/

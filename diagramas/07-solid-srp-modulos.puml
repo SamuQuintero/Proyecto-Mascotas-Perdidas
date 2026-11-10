@@ -1,0 +1,72 @@
+@startuml 07-solid-srp-modulos
+!include estilo.puml
+title SOLID · S — Responsabilidad única: antes y después
+skinparam componentStyle rectangle
+
+package "ANTES" as Antes {
+  component "coincidencias.ts (389 líneas)\n- distancias\n- familias de color\n- HU-4 / HU-7\n- HU-15 duplicados\n- HU-10 mascotas\n- HU-20 resguardo\n- 3 bloques de puntuación repetidos" as Monolito #FFE4DA
+
+  component "app/api/reportes/route.ts\n- lee el formulario\n- valida\n- guarda la foto en disco\n- consulta la sesión\n- escribe en la base\n- invalida la caché\n- decide el código HTTP" as RutaGorda #FFE4DA
+}
+
+package "DESPUÉS: src/lib/coincidencias/" as Despues {
+  component "geo.ts\ndistancias" as Geo
+  component "colores.ts\nfamilias de color" as Colores
+  component "perfiles.ts\ncontratos mínimos" as Perfiles
+  component "reglas.ts\nelegibilidad previa" as Reglas
+  component "puntuacion.ts\nmotor genérico" as Motor
+  component "criterios.ts\nespecie · color · tamaño…" as Criterios
+  component "reportes.ts\nHU-4 / HU-7" as CReportes
+  component "duplicados.ts\nHU-15" as CDup
+  component "mascotas.ts\nHU-10" as CMasc
+  component "resguardo.ts\nHU-20" as CRes
+  component "index.ts\nfachada" as Index
+}
+
+package "DESPUÉS: una responsabilidad por capa" as Despues2 {
+  component "Ruta POST\ntraduce HTTP ↔ servicio" as Ruta #D0F7E8
+  component "ServicioReportes\nreglas del negocio" as Servicio #D0F7E8
+  component "AlmacenFotosDisco\nguardar fotos" as Fotos #D0F7E8
+  component "RepositorioReportesPrisma\nacceso a la base" as Repo #D0F7E8
+  component "NotificadorCacheNext\ninvalidar caché" as Notif #D0F7E8
+  component "respuestasHttp\ncódigo HTTP por falla" as RespHttp #D0F7E8
+}
+
+Monolito -[hidden]-> Geo
+RutaGorda -[hidden]-> Ruta
+
+Criterios --> Colores
+Criterios --> Geo
+Criterios --> Perfiles
+CReportes --> Motor
+CReportes --> Criterios
+CReportes --> Reglas
+CDup --> Colores
+CDup --> Reglas
+CMasc --> Motor
+CMasc --> Criterios
+CRes --> Motor
+CRes --> Criterios
+Index --> CReportes
+Index --> CDup
+Index --> CMasc
+Index --> CRes
+
+Ruta --> Servicio
+Ruta --> RespHttp
+Servicio --> Fotos
+Servicio --> Repo
+Servicio --> Notif
+
+note bottom of Index
+  El resto de la aplicación sigue importando
+  "@/lib/coincidencias": no sabe cómo está
+  dividido por dentro.
+end note
+
+note bottom of Servicio
+  Si cambia la regla "no renovar dos veces
+  al día" solo se toca renovacion.ts; si cambia
+  el hosting de fotos, solo AlmacenFotosDisco.
+end note
+@enduml

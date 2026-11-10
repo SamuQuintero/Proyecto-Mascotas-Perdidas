@@ -1,0 +1,61 @@
+@startuml 13-actividad-puntuacion
+!include estilo.puml
+title Actividad — Cómo se decide si dos reportes coinciden (HU-4 / HU-7)
+
+start
+:Recibir un reporte base y un candidato\n(del tipo contrario);
+
+if (¿Mismo tipo o mismo id?) then (sí)
+  :Sin alerta;
+  stop
+endif
+
+if (¿Especies compatibles?\n("Otro" es comodín)) then (no)
+  :Sin alerta;
+  stop
+endif
+
+if (¿El hallazgo es anterior a la pérdida\nmás de un día?) then (sí)
+  :Sin alerta;
+  stop
+endif
+
+:suma = 0\nrazones = [ ];
+
+partition "Motor puntuar(criterios, base, candidato)" {
+  while (¿quedan criterios en la lista?) is (sí)
+    :aporte = criterio.evaluar(base, candidato);
+    if (¿aporte.descarta?) then (sí)
+      :Devolver null;
+      stop
+    endif
+    :suma += aporte.puntos;
+    :juntar aporte.razones;
+    :si aporte.cumple, recordar el criterio;
+  endwhile (no)
+  :puntaje = limitar(suma, 0, 100);
+}
+
+:distancia = haversine(base, candidato);
+:esCercano = distancia ≤ 2 km;
+:esCoincidencia = color cumplido\ny puntaje ≥ 60;
+
+if (¿esCoincidencia o esCercano?) then (no)
+  :Sin alerta;
+  stop
+else (sí)
+  :Crear alerta { puntaje, razones,\nesCoincidencia, esCercano, distancia };
+endif
+
+:Ordenar: primero las coincidencias\n(mayor puntaje), luego las cercanas\n(menor distancia);
+
+note right
+  Criterios de esta comparación:
+  especie 30 · color 35 · tamaño 20/5
+  distancia 15/10/5 · señas de gato ±
+  Para sumar otra característica solo
+  se agrega un criterio a la lista.
+end note
+stop
+
+@enduml

@@ -1,0 +1,139 @@
+@startuml 02-clases-dominio
+!include estilo.puml
+set separator none
+title PetMatch — Modelo de dominio (prisma/schema.prisma)
+skinparam classAttributeIconSize 0
+
+enum TipoReporte {
+  PERDIDA
+  ENCONTRADA
+}
+
+enum EstadoReporte {
+  ACTIVO
+  REENCONTRADA
+}
+
+enum Tamano {
+  PEQUENO
+  MEDIANO
+  GRANDE
+}
+
+enum RolUsuario {
+  CIUDADANO
+  VETERINARIA
+  REFUGIO
+}
+
+enum EstadoResguardo {
+  EN_RESGUARDO
+  ENTREGADO
+}
+
+class Reporte {
+  +id : String
+  +tipo : TipoReporte
+  +estado : EstadoReporte
+  +especie : String
+  +color : String
+  +tamano : Tamano
+  +zona : String
+  +fecha : DateTime
+  +latitud : Float
+  +longitud : Float
+  +fotoUrl : String
+  ..opcionales..
+  +raza, nombre, senasParticulares
+  +tieneCollar : Boolean
+  +contacto : nombre, telefono, email
+  +reportanteAnonimo : Boolean
+  ..HU-19 difusión..
+  +renovadoEn : DateTime
+  +renovaciones : Int
+  +reencontradaEn : DateTime
+  ..HU-24 gatos..
+  +patronPelaje, largoPelaje, colorOjos
+  +esDeInterior : Boolean
+}
+
+class Mensaje {
+  +id : String
+  +autor : String
+  +texto : String
+  +creadoEn : DateTime
+}
+
+class Usuario {
+  +id : String
+  +nombre : String
+  +email : String {unique}
+  +contrasenaHash : String
+  +rol : RolUsuario
+  ..CIUDADANO (HU-16)..
+  +avisoLatitud, avisoLongitud
+  +avisoRadioKm : Int
+  ..VETERINARIA / REFUGIO..
+  +nombreClinica, nombreRefugio
+  ..directorio (HU-18)..
+  +telefono, direccion
+  +latitud, longitud
+  +recibeEncontradas : Boolean
+}
+
+class Mascota {
+  +id : String
+  +nombre : String
+  +especie : String
+  +color : String
+  +tamano : Tamano
+  +fotoUrl : String
+  +contacto : nombre, telefono, email
+  +señas de gato (HU-24)
+}
+
+class Vacuna {
+  +id : String
+  +nombre : String
+  +fecha : DateTime
+  +veterinaria : String
+}
+
+class AnimalResguardo {
+  +id : String
+  +especie : String
+  +color : String
+  +tamano : Tamano
+  +desde : DateTime
+  +estado : EstadoResguardo
+  +entregadoEn : DateTime
+  +fotoUrl : String
+}
+
+Reporte "1" *-- "0..*" Mensaje : chat (HU-11)
+Mascota "1" *-- "0..*" Vacuna : carnet (HU-17)
+Usuario "1" *-- "0..*" AnimalResguardo : refugio (HU-20)
+Usuario "0..1" o-- "0..*" Reporte : dueño (HU-19, 23)
+Usuario "0..1" o-- "0..*" Mascota : dueño (HU-23)
+
+Reporte ..> TipoReporte
+Reporte ..> EstadoReporte
+Reporte ..> Tamano
+Mascota ..> Tamano
+AnimalResguardo ..> Tamano
+AnimalResguardo ..> EstadoResguardo
+Usuario ..> RolUsuario
+
+note bottom of Reporte
+  Un único modelo para pérdidas y hallazgos:
+  el campo "tipo" diferencia el caso de uso
+  sin duplicar la tabla.
+end note
+
+note bottom of Usuario
+  "Dueño" es opcional: lo publicado sin cuenta
+  no tiene dueño y solo lo gestiona el admin.
+  El administrador NO está en esta tabla
+  (vive en variables de entorno).
+end note
+@enduml

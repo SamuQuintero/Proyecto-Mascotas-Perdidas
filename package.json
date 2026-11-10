@@ -12,7 +12,8 @@
     "prisma:push": "prisma db push",
     "postinstall": "prisma generate",
     "cuentas:prueba": "node scripts/crear-cuentas-prueba.js",
-    "db:rls": "node scripts/activar-rls.js"
+    "db:rls": "node scripts/activar-rls.js",
+    "diagramas": "node diagramas/generar.js"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",

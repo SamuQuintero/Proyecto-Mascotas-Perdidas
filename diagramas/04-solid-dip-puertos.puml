@@ -1,0 +1,106 @@
+@startuml 04-solid-dip-puertos
+!include estilo.puml
+set separator none
+title SOLID · D — Inversión de dependencias: servicios, puertos y adaptadores
+hide empty members
+skinparam classAttributeIconSize 0
+
+package "Entrada HTTP (rutas delgadas)" as HTTP {
+  class "Rutas de reportes\nPOST/PATCH /api/reportes\n.../renovar · .../estado" as RutaReportes
+  class "Rutas de mascotas\nPOST /api/mascotas\nPATCH /api/mascotas/[id]" as RutaMascotas
+  class "Rutas de resguardo\nPOST /api/resguardo\nPATCH · DELETE .../[id]" as RutaResguardo
+}
+
+package "Casos de uso (src/servicios): dependen SOLO de interfaces" as CU {
+  class ServicioReportes {
+    +publicar(datos, foto, usuarioId)
+    +editar(id, datos, foto, sesion)
+    +cambiarEstado(id, estado, sesion)
+    +renovar(id, sesion)
+  }
+  class ServicioMascotas {
+    +crear(datos, foto, usuarioId)
+    +editar(id, datos, foto, sesion)
+  }
+  class ServicioResguardo {
+    +publicar(refugioId, datos, foto)
+    +marcarEntregado(id, refugioId)
+    +eliminar(id, refugioId)
+  }
+}
+
+package "Puertos (src/lib/puertos)" as PU {
+  interface AlmacenFotos <<puerto>> {
+    +guardar(archivo)
+    +eliminar(url)
+  }
+  interface NotificadorCambios <<puerto>> {
+    +reportesCambiaron()
+    +resguardoCambio()
+  }
+  interface RepositorioReportes <<puerto>> {
+    +buscarPorId · crear · actualizar
+    +cambiarEstado · renovar
+  }
+  interface RepositorioMascotas <<puerto>> {
+    +buscarPorId · crear · actualizar
+  }
+  interface RepositorioResguardo <<puerto>> {
+    +buscarPorId · crear
+    +marcarEntregado · eliminar
+  }
+}
+
+package "Adaptadores de producción (src/infraestructura)" as AD {
+  class AlmacenFotosDisco
+  class NotificadorCacheNext
+  class RepositorioReportesPrisma
+  class RepositorioMascotasPrisma
+  class RepositorioResguardoPrisma
+}
+
+class "Dobles en memoria\n(src/servicios/dobles)" as Dobles <<solo pruebas>>
+
+class "Composición\n(src/composicion)" as Composicion <<raíz de composición>>
+
+RutaReportes --> ServicioReportes
+RutaMascotas --> ServicioMascotas
+RutaResguardo --> ServicioResguardo
+
+ServicioReportes ..> RepositorioReportes
+ServicioReportes ..> AlmacenFotos
+ServicioReportes ..> NotificadorCambios
+ServicioMascotas ..> RepositorioMascotas
+ServicioMascotas ..> AlmacenFotos
+ServicioResguardo ..> RepositorioResguardo
+ServicioResguardo ..> AlmacenFotos
+ServicioResguardo ..> NotificadorCambios
+
+AlmacenFotos <|.. AlmacenFotosDisco
+NotificadorCambios <|.. NotificadorCacheNext
+RepositorioReportes <|.. RepositorioReportesPrisma
+RepositorioMascotas <|.. RepositorioMascotasPrisma
+RepositorioResguardo <|.. RepositorioResguardoPrisma
+
+AlmacenFotos <|.. Dobles
+NotificadorCambios <|.. Dobles
+RepositorioReportes <|.. Dobles
+RepositorioMascotas <|.. Dobles
+RepositorioResguardo <|.. Dobles
+
+Composicion ..> ServicioReportes : crea e inyecta
+Composicion ..> ServicioMascotas : crea e inyecta
+Composicion ..> ServicioResguardo : crea e inyecta
+
+note right of Composicion
+  Único lugar donde se elige la implementación.
+  Pasar las fotos a la nube = escribir otra clase
+  que implemente AlmacenFotos y cambiar UNA línea.
+end note
+
+note bottom of Dobles
+  Con ellos los servicios se prueban
+  sin base de datos ni disco
+  (24 pruebas en src/servicios/*.test.ts).
+end note
+@enduml

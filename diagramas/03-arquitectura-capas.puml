@@ -1,0 +1,49 @@
+@startuml 03-arquitectura-capas
+!include estilo.puml
+title PetMatch — Arquitectura por capas
+top to bottom direction
+skinparam rectangle {
+  RoundCorner 18
+  FontSize 13
+}
+
+rectangle "**Presentación**\nsrc/app (páginas) · src/components (React, mapas, formularios)" as L1 #FFFBF5
+rectangle "**Entrada HTTP**\nsrc/app/api/*/route.ts · respuestasHttp · formulario\n//rutas delgadas: leen la petición y traducen la respuesta//" as L2 #FFF4F0
+rectangle "**Aplicación (casos de uso)**\nsrc/servicios: ServicioReportes · ServicioMascotas · ServicioResguardo\n//reglas del negocio; devuelven Resultado, no conocen HTTP//" as L3 #D0F7E8
+rectangle "**Dominio puro**\nsrc/lib: coincidencias/ · propiedad · renovacion · felinos · indicadores\nestablecimientos · resguardo · compartir · validación (Zod)\n//sin base de datos ni red: se prueba directamente//" as L4 #EAE4FF
+rectangle "**Puertos (interfaces)**\nsrc/lib/puertos: AlmacenFotos · NotificadorCambios\nRepositorioReportes · RepositorioMascotas · RepositorioResguardo" as L5 #FFF3CC
+rectangle "**Infraestructura (adaptadores)**\nsrc/infraestructura: AlmacenFotosDisco · NotificadorCacheNext\nRepositorioReportesPrisma · RepositorioMascotasPrisma · RepositorioResguardoPrisma" as L6 #FFE4DA
+rectangle "**Lecturas con caché**\nsrc/lib/cache.ts (unstable_cache por etiquetas)" as LC #FFE4DA
+rectangle "**Raíz de composición**\nsrc/composicion.ts" as COMP #F1EFF6
+
+database "Supabase\nPostgreSQL" as DB
+folder "public/uploads\n(fotos)" as DISCO
+cloud "OpenStreetMap" as OSM
+
+L1 --> L2 : fetch / formularios
+L1 --> LC : las páginas\nleen datos
+L1 --> OSM : mapas
+L2 --> L3 : llama a
+L3 --> L4 : usa reglas
+L3 ..> L5 : depende SOLO de
+L5 <|.. L6 : implementan
+L6 --> DB
+L6 --> DISCO
+LC --> DB
+L6 ..> LC : invalida etiquetas
+COMP ..> L3 : crea e inyecta
+COMP ..> L6 : elige las\nimplementaciones
+
+note right of L5
+  **Inversión de dependencias:**
+  los servicios NO conocen Prisma,
+  el disco ni Next.js. Cambiar de
+  proveedor = cambiar un adaptador.
+end note
+
+note left of LC
+  Pendiente: las lecturas y algunas rutas
+  (login, registro, vacunas, mensajes,
+  alertas) aún usan Prisma directo.
+end note
+@enduml

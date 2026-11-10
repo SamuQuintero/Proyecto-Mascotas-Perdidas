@@ -1,0 +1,113 @@
+' Estilo común de todos los diagramas de PetMatch (paleta de la aplicación).
+'   tinta #1C1829 · coral (perdida) #FF6B45 · menta (encontrada) #14AD84
+'   lavanda (reencontrada) #7D5CF6 · sol #FFC22E · crema #FFFBF5
+
+skinparam shadowing false
+skinparam dpi 110
+skinparam roundCorner 14
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 13
+skinparam defaultFontColor #1C1829
+skinparam backgroundColor #FFFFFF
+skinparam ArrowColor #3A344F
+skinparam ArrowFontSize 12
+skinparam ArrowFontColor #4F4867
+skinparam titleFontSize 22
+skinparam titleFontStyle bold
+skinparam titleFontColor #1C1829
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam padding 3
+skinparam wrapWidth 260
+skinparam maxMessageSize 260
+
+skinparam note {
+  BackgroundColor #FFF3CC
+  BorderColor #F2A60C
+  FontColor #3A344F
+  FontSize 12
+}
+
+skinparam package {
+  BackgroundColor #FFFBF5
+  BorderColor #9A7FFF
+  FontColor #46299A
+  FontStyle bold
+}
+
+skinparam rectangle {
+  BackgroundColor #FFFBF5
+  BorderColor #9A7FFF
+  FontColor #46299A
+}
+
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #3A344F
+  HeaderBackgroundColor #FFE4DA
+  AttributeFontSize 12
+  StereotypeFontColor #7D5CF6
+}
+
+skinparam interface {
+  BackgroundColor #EAE4FF
+  BorderColor #7D5CF6
+}
+
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #3A344F
+}
+
+skinparam node {
+  BackgroundColor #FFFBF5
+  BorderColor #3A344F
+}
+
+skinparam database {
+  BackgroundColor #D0F7E8
+  BorderColor #0A8C6B
+}
+
+skinparam cloud {
+  BackgroundColor #EAE4FF
+  BorderColor #7D5CF6
+}
+
+skinparam usecase {
+  BackgroundColor #FFF4F0
+  BorderColor #FF6B45
+}
+
+skinparam actor {
+  BackgroundColor #EAE4FF
+  BorderColor #7D5CF6
+}
+
+skinparam state {
+  BackgroundColor #FFFFFF
+  BorderColor #3A344F
+  StartColor #FF6B45
+  EndColor #1C1829
+}
+
+skinparam activity {
+  BackgroundColor #FFFFFF
+  BorderColor #3A344F
+  DiamondBackgroundColor #FFF3CC
+  DiamondBorderColor #F2A60C
+  StartColor #FF6B45
+  EndColor #1C1829
+}
+
+skinparam sequence {
+  ParticipantBackgroundColor #FFFBF5
+  ParticipantBorderColor #3A344F
+  LifeLineBorderColor #968FAB
+  LifeLineBackgroundColor #F1EFF6
+  GroupBackgroundColor #F5F2FF
+  GroupBorderColor #9A7FFF
+  DividerBackgroundColor #EAE4FF
+  BoxBackgroundColor #FFFBF5
+  ArrowColor #3A344F
+}

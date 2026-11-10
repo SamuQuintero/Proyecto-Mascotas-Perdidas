@@ -1,0 +1,103 @@
+@startuml 01-casos-de-uso
+!include estilo.puml
+title PetMatch — Casos de uso (24 historias de usuario)
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Visitante\n(sin cuenta)" as Visitante
+actor "Ciudadano" as Ciudadano
+actor "Veterinaria" as Veterinaria
+actor "Refugio" as Refugio
+actor "Administrador" as Admin
+
+' Las cuentas con sesión pueden hacer todo lo que hace un visitante.
+Visitante <|-- Ciudadano
+Visitante <|-- Veterinaria
+Visitante <|-- Refugio
+
+rectangle "PetMatch" {
+
+  package "Reportes" {
+    usecase "Publicar mascota perdida\n(HU-1, 3, 13)" as UC_perdida
+    usecase "Publicar mascota encontrada\n(HU-2, 5)" as UC_encontrada
+    usecase "Filtrar y buscar reportes\n(HU-6, 14)" as UC_filtrar
+    usecase "Advertir posible duplicado\n(HU-15)" as UC_duplicado
+    usecase "Chatear en un reporte\n(HU-11)" as UC_chat
+    usecase "Compartir en redes\n(HU-21)" as UC_compartir
+  }
+
+  package "Gestión del caso" {
+    usecase "Renovar / volver a difundir\n(HU-19)" as UC_renovar
+    usecase "Marcar «ya apareció»\n(HU-12)" as UC_cerrar
+    usecase "Editar reporte o placa\n(HU-23, 25)" as UC_editar
+    usecase "Reabrir un caso cerrado\n(HU-12)" as UC_reabrir
+  }
+
+  package "Alertas" {
+    usecase "Alerta de coincidencia\n(HU-4, 24)" as UC_coincidencia
+    usecase "Aviso de hallazgo cercano\n(HU-7)" as UC_cercano
+    usecase "Alerta por mascota con QR\n(HU-10)" as UC_alerta_qr
+    usecase "Avisos de cercanía por zona\n(HU-16)" as UC_zona
+  }
+
+  package "Placa QR" {
+    usecase "Crear perfil con placa QR\n(HU-8)" as UC_placa
+    usecase "Escanear QR y ver contacto\n(HU-9)" as UC_escanear
+    usecase "Llevar carnet de vacunas\n(HU-17)" as UC_vacunas
+  }
+
+  package "Refugios y directorio" {
+    usecase "Ver dónde acudir con un hallazgo\n(HU-18)" as UC_donde
+    usecase "Publicar animales en resguardo\n(HU-20)" as UC_resguardo
+    usecase "Ver animales en resguardo\n(HU-20)" as UC_ver_resguardo
+  }
+
+  package "Administración" {
+    usecase "Ver indicadores por especie,\nzona y tiempo (HU-22)" as UC_indicadores
+  }
+}
+
+Visitante --> UC_perdida
+Visitante --> UC_encontrada
+Visitante --> UC_filtrar
+Visitante --> UC_chat
+Visitante --> UC_compartir
+Visitante --> UC_placa
+Visitante --> UC_escanear
+Visitante --> UC_donde
+Visitante --> UC_ver_resguardo
+Visitante --> UC_coincidencia
+Visitante --> UC_cercano
+Visitante --> UC_alerta_qr
+
+UC_encontrada ..> UC_duplicado : <<include>>
+UC_perdida ..> UC_duplicado : <<include>>
+
+Ciudadano --> UC_zona
+Ciudadano --> UC_renovar
+Ciudadano --> UC_cerrar
+Ciudadano --> UC_editar
+
+Veterinaria --> UC_vacunas
+Veterinaria --> UC_donde : aparece en el\ndirectorio
+
+Refugio --> UC_resguardo
+Refugio --> UC_donde : aparece en el\ndirectorio
+
+Admin --> UC_editar
+Admin --> UC_cerrar
+Admin --> UC_reabrir
+Admin --> UC_renovar
+Admin --> UC_indicadores
+
+note right of UC_cerrar
+  El dueño solo puede cerrar su caso.
+  Reabrirlo es solo del administrador.
+end note
+
+note right of UC_editar
+  Solo el dueño (la cuenta con la que se
+  publicó) o el administrador. Lo publicado
+  sin cuenta solo lo edita el administrador.
+end note
+@enduml
