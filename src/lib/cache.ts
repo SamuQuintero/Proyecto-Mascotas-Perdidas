@@ -1,7 +1,12 @@
 import { revalidateTag, unstable_cache } from "next/cache";
 import { cache } from "react";
 import { prisma } from "@/lib/db";
-import { coincideConTexto, construirConsulta, type FiltrosReporte } from "@/lib/filtros";
+import {
+  coincideConTexto,
+  construirConsulta,
+  construirOrden,
+  type FiltrosReporte,
+} from "@/lib/filtros";
 import { serializarReporte, type Reporte, type TipoReporte } from "@/lib/tipos";
 
 // Lecturas de uso común, guardadas en caché del servidor. La base de datos
@@ -42,8 +47,8 @@ export const reportesFiltrados = unstable_cache(
   async (filtros: FiltrosReporte): Promise<Reporte[]> => {
     const reportes = await prisma.reporte.findMany({
       where: construirConsulta(filtros),
-      // HU-19: un reporte renovado vuelve a aparecer arriba.
-      orderBy: { renovadoEn: "desc" },
+      // HU-27: orden elegido (por defecto, lo más reciente o renovado primero).
+      orderBy: construirOrden(filtros.orden),
     });
     return reportes.filter((r) => coincideConTexto(r, filtros)).map(serializarReporte);
   },

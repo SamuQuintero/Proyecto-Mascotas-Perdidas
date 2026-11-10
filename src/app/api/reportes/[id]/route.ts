@@ -46,3 +46,16 @@ export async function PATCH(
   });
   return responder(resultado, (reporte) => NextResponse.json({ reporte }));
 }
+
+// HU-26: eliminar un reporte (el administrador o su dueño). Las reglas viven
+// en ServicioReportes.eliminar.
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const resultado = await servicioReportes.eliminar({
+    id: params.id,
+    sesion: await sesionGestion(),
+  });
+  return responder(resultado, () => NextResponse.json({ ok: true }));
+}

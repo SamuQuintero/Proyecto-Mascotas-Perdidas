@@ -154,6 +154,25 @@ export class ServicioReportes {
     return ok(reporte);
   }
 
+  // HU-26: retirar un reporte que ya no es necesario (el dueño o el admin).
+  // Se borra también su foto; el chat se elimina en cascada.
+  async eliminar(entrada: { id: string; sesion: Sesion }): Promise<Resultado<true>> {
+    const existente = await this.repositorio.buscarPorId(entrada.id);
+    if (!existente) return noEncontrado("Reporte no encontrado.");
+
+    if (!puedeGestionar(existente, entrada.sesion)) {
+      return sinPermiso(entrada.sesion, {
+        sinSesion: "Inicia sesión para eliminar este reporte.",
+        prohibido: "Solo quien publicó el reporte puede eliminarlo.",
+      });
+    }
+
+    await this.repositorio.eliminar(existente.id);
+    await this.fotos.eliminar(existente.fotoUrl);
+    this.cambios.reportesCambiaron();
+    return ok(true);
+  }
+
   private async guardarFoto(foto: File): Promise<Resultado<string>> {
     try {
       return ok(await this.fotos.guardar(foto));

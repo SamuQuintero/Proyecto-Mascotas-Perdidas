@@ -18,6 +18,7 @@ import {
   Home,
 } from "lucide-react";
 import AccionesAdmin from "@/components/AccionesAdmin";
+import BotonEliminarReporte from "@/components/BotonEliminarReporte";
 import BotonRenovar from "@/components/BotonRenovar";
 import BotonYaAparecio from "@/components/BotonYaAparecio";
 import BotonesCompartir from "@/components/BotonesCompartir";
@@ -244,6 +245,8 @@ export default function DetalleReporte({
               Editar mis datos de contacto y fotos
             </Link>
           )}
+
+          {puedeGestionar && <BotonEliminarReporte id={reporte.id} />}
 
           {puedeGestionar && reporte.estado === "ACTIVO" && (
             <section className="tarjeta space-y-3 p-5">

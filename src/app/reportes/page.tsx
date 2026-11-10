@@ -4,6 +4,7 @@ import { buscarReportes } from "@/lib/busqueda";
 import FiltrosReportes from "@/components/FiltrosReportes";
 import TarjetaReporte from "@/components/TarjetaReporte";
 import {
+  ORDENES,
   contarFiltrosActivos,
   leerFiltros,
   urlConFiltros,
@@ -81,6 +82,15 @@ export default async function ReportesPage({
       </div>
 
       <FiltrosReportes filtros={filtros} />
+
+      <Segmentos
+        etiqueta="Ordenar por fecha"
+        opciones={ORDENES.map((o) => ({
+          etiqueta: o.etiqueta,
+          href: urlConFiltros(filtros, { orden: o.valor }),
+          activa: filtros.orden === o.valor,
+        }))}
+      />
 
       <div className="flex flex-wrap items-center gap-2">
         <p className="mr-1 text-sm font-semibold text-tinta-600">

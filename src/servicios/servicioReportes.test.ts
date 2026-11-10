@@ -193,4 +193,36 @@ describe("ServicioReportes (con dobles en memoria, sin base de datos)", () => {
       expect(!cerrado.ok && cerrado.falla.tipo).toBe("CONFLICTO");
     });
   });
+
+  describe("eliminar (HU-26)", () => {
+    it("el dueño elimina su reporte, se borra la foto y se avisa del cambio", async () => {
+      const original = await publicado();
+      const avisosAntes = cambios.avisosReportes;
+      const r = await servicio.eliminar({ id: original.id, sesion: DUENO });
+      expect(r.ok).toBe(true);
+      expect(repo.filas.has(original.id)).toBe(false);
+      expect(fotos.eliminadas).toEqual([original.fotoUrl]);
+      expect(cambios.avisosReportes).toBe(avisosAntes + 1);
+    });
+
+    it("el admin puede eliminar un reporte sin dueño", async () => {
+      const original = await publicado(null);
+      expect((await servicio.eliminar({ id: original.id, sesion: ADMIN })).ok).toBe(true);
+    });
+
+    it("sin sesión da SIN_SESION; otro usuario, PROHIBIDO; y no borra nada", async () => {
+      const original = await publicado();
+      const sinSesion = await servicio.eliminar({ id: original.id, sesion: VISITANTE });
+      const ajeno = await servicio.eliminar({ id: original.id, sesion: OTRO });
+      expect(!sinSesion.ok && sinSesion.falla.tipo).toBe("SIN_SESION");
+      expect(!ajeno.ok && ajeno.falla.tipo).toBe("PROHIBIDO");
+      expect(repo.filas.has(original.id)).toBe(true);
+      expect(fotos.eliminadas).toHaveLength(0);
+    });
+
+    it("un reporte inexistente da NO_ENCONTRADO", async () => {
+      const r = await servicio.eliminar({ id: "nada", sesion: ADMIN });
+      expect(!r.ok && r.falla.tipo).toBe("NO_ENCONTRADO");
+    });
+  });
 });

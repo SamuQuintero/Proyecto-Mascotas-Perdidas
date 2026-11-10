@@ -5,6 +5,7 @@ import {
   contarFiltrosActivos,
   leerFiltros,
   urlConFiltros,
+  construirOrden,
 } from "./filtros";
 
 describe("leerFiltros — HU-6", () => {
@@ -53,6 +54,7 @@ describe("leerFiltros — HU-6", () => {
       color: undefined,
       desde: undefined,
       hasta: undefined,
+      orden: "recientes",
     });
   });
 
@@ -145,5 +147,36 @@ describe("urlConFiltros", () => {
   it("elimina un filtro al pasar undefined y omite el estado por defecto", () => {
     const filtros = leerFiltros({ especie: "Gato" });
     expect(urlConFiltros(filtros, { especie: undefined })).toBe("/reportes");
+  });
+});
+
+describe("orden del listado (HU-27)", () => {
+  it("por defecto es 'recientes' y no aparece en la URL", () => {
+    const filtros = leerFiltros({});
+    expect(filtros.orden).toBe("recientes");
+    expect(urlConFiltros(filtros)).toBe("/reportes");
+  });
+
+  it("acepta los cuatro órdenes y descarta valores desconocidos", () => {
+    for (const orden of ["recientes", "antiguos", "suceso-reciente", "suceso-antiguo"]) {
+      expect(leerFiltros({ orden }).orden).toBe(orden);
+    }
+    expect(leerFiltros({ orden: "al-azar" }).orden).toBe("recientes");
+  });
+
+  it("conserva el orden elegido al cambiar otros filtros", () => {
+    const filtros = leerFiltros({ orden: "antiguos" });
+    expect(urlConFiltros(filtros, { tipo: "PERDIDA" })).toContain("orden=antiguos");
+  });
+
+  it("traduce cada orden a su ORDER BY, siempre con desempate por id", () => {
+    expect(construirOrden("recientes")).toEqual([{ renovadoEn: "desc" }, { id: "desc" }]);
+    expect(construirOrden("antiguos")).toEqual([{ creadoEn: "asc" }, { id: "asc" }]);
+    expect(construirOrden("suceso-reciente")).toEqual([{ fecha: "desc" }, { id: "desc" }]);
+    expect(construirOrden("suceso-antiguo")).toEqual([{ fecha: "asc" }, { id: "asc" }]);
+  });
+
+  it("el orden no cuenta como filtro activo", () => {
+    expect(contarFiltrosActivos(leerFiltros({ orden: "antiguos" }))).toBe(0);
   });
 });

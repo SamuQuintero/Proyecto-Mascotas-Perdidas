@@ -13,6 +13,19 @@ import type { Tamano, TipoReporte } from "@/lib/tipos";
 
 export type EstadoFiltro = "ACTIVO" | "REENCONTRADA" | "TODOS";
 
+// HU-27: orden del listado por fecha. "recientes" es el valor por defecto y
+// mantiene el comportamiento de siempre: lo último publicado o renovado
+// (HU-19) primero. Las otras opciones ordenan por la fecha en que se publicó
+// o por la fecha en que ocurrió la pérdida o el hallazgo.
+export type OrdenReporte = "recientes" | "antiguos" | "suceso-reciente" | "suceso-antiguo";
+
+export const ORDENES: { valor: OrdenReporte; etiqueta: string }[] = [
+  { valor: "recientes", etiqueta: "Recién publicados" },
+  { valor: "antiguos", etiqueta: "Publicados hace más" },
+  { valor: "suceso-reciente", etiqueta: "Ocurrió hace poco" },
+  { valor: "suceso-antiguo", etiqueta: "Ocurrió hace más" },
+];
+
 export interface FiltrosReporte {
   tipo?: TipoReporte;
   estado: EstadoFiltro;
@@ -22,6 +35,7 @@ export interface FiltrosReporte {
   color?: string;
   desde?: string; // YYYY-MM-DD
   hasta?: string; // YYYY-MM-DD
+  orden: OrdenReporte;
 }
 
 type Parametros = Record<string, string | string[] | undefined>;
@@ -46,6 +60,7 @@ export function leerFiltros(parametros: Parametros): FiltrosReporte {
   const estado = leerTexto(parametros, "estado");
   const especie = leerTexto(parametros, "especie");
   const tamano = leerTexto(parametros, "tamano");
+  const orden = leerTexto(parametros, "orden");
 
   let desde = leerFecha(parametros, "desde");
   let hasta = leerFecha(parametros, "hasta");
@@ -68,7 +83,26 @@ export function leerFiltros(parametros: Parametros): FiltrosReporte {
     color: leerTexto(parametros, "color"),
     desde,
     hasta,
+    orden: ORDENES.find((o) => o.valor === orden)?.valor ?? "recientes",
   };
+}
+
+// HU-27: traduce el orden elegido al ORDER BY de Prisma. Siempre desempata
+// por id para que el orden sea estable entre una página y la siguiente.
+export function construirOrden(
+  orden: OrdenReporte
+): Prisma.ReporteOrderByWithRelationInput[] {
+  switch (orden) {
+    case "antiguos":
+      return [{ creadoEn: "asc" }, { id: "asc" }];
+    case "suceso-reciente":
+      return [{ fecha: "desc" }, { id: "desc" }];
+    case "suceso-antiguo":
+      return [{ fecha: "asc" }, { id: "asc" }];
+    default:
+      // HU-19: un reporte renovado vuelve a aparecer arriba.
+      return [{ renovadoEn: "desc" }, { id: "desc" }];
+  }
 }
 
 export function construirConsulta(
@@ -143,6 +177,7 @@ export function urlConFiltros(
   for (const [clave, valor] of Object.entries(combinados)) {
     if (!valor) continue;
     if (clave === "estado" && valor === "ACTIVO") continue; // valor por defecto
+    if (clave === "orden" && valor === "recientes") continue; // valor por defecto
     parametros.set(clave, valor);
   }
   const query = parametros.toString();

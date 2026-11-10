@@ -102,6 +102,10 @@ export class RepositorioReportesEnMemoria implements RepositorioReportes {
     this.filas.set(id, fila);
     return fila;
   }
+
+  async eliminar(id: string): Promise<void> {
+    this.filas.delete(id);
+  }
 }
 
 export class RepositorioMascotasEnMemoria implements RepositorioMascotas {

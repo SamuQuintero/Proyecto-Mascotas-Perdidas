@@ -63,6 +63,7 @@ export interface RepositorioReportes {
   // `ahora` entra por parámetro: el repositorio no consulta el reloj.
   cambiarEstado(id: string, estado: EstadoReporte, ahora: Date): Promise<ReporteBD>;
   renovar(id: string, ahora: Date): Promise<ReporteBD>;
+  eliminar(id: string): Promise<void>;
 }
 
 export type DatosNuevaMascota = ReturnType<typeof camposMascotaParaGuardar> & {

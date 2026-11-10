@@ -43,6 +43,11 @@ export class RepositorioReportesPrisma implements RepositorioReportes {
       data: { renovadoEn: ahora, renovaciones: { increment: 1 } },
     });
   }
+
+  // Los mensajes del chat se borran en cascada (onDelete: Cascade).
+  async eliminar(id: string) {
+    await this.prisma.reporte.delete({ where: { id } });
+  }
 }
 
 export class RepositorioMascotasPrisma implements RepositorioMascotas {
