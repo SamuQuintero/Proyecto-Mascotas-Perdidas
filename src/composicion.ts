@@ -7,6 +7,7 @@
 
 import { prisma } from "@/lib/db";
 import { AlmacenFotosDisco } from "@/infraestructura/almacenFotosDisco";
+import { AlmacenFotosSupabase } from "@/infraestructura/almacenFotosSupabase";
 import { NotificadorCacheNext } from "@/infraestructura/notificadorCacheNext";
 import {
   RepositorioMascotasPrisma,
@@ -17,7 +18,12 @@ import { ServicioMascotas } from "@/servicios/servicioMascotas";
 import { ServicioReportes } from "@/servicios/servicioReportes";
 import { ServicioResguardo } from "@/servicios/servicioResguardo";
 
-const fotos = new AlmacenFotosDisco();
+// En producción (Vercel no tiene disco persistente) las fotos van a Supabase
+// Storage; sin esas variables se usa el disco local (desarrollo).
+const fotos =
+  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY
+    ? new AlmacenFotosSupabase(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+    : new AlmacenFotosDisco();
 const cambios = new NotificadorCacheNext();
 
 export const servicioReportes = new ServicioReportes(

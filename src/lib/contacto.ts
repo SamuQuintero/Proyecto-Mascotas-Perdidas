@@ -20,6 +20,7 @@ export function enlaceTelefono(telefono: string): string {
 const HOST_VALIDO = /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:\d{1,5})?$/i;
 
 export async function urlAbsoluta(ruta: string): Promise<string> {
+  if (/^https?:\/\//.test(ruta)) return ruta; // foto en la nube: ya es absoluta
   const fija = process.env.URL_PUBLICA?.replace(/\/$/, "");
   if (fija) return `${fija}${ruta}`;
   const h = await headers();

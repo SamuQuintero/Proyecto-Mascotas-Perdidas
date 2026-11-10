@@ -20,34 +20,39 @@ const CARPETA_DESTINO = path.join(process.cwd(), "public", "uploads");
 // sin depender de este módulo concreto.
 export class ErrorArchivoInvalido extends ErrorFotoInvalida {}
 
-export async function guardarFotoReporte(archivo: File): Promise<string> {
-  if (!FOTO_TIPOS_PERMITIDOS.includes(archivo.type)) {
-    throw new ErrorArchivoInvalido(
-      "Formato de imagen no soportado. Usa JPG, PNG o WEBP."
-    );
-  }
+export interface FotoPreparada {
+  contenido: Uint8Array;
+  tipo: string;
+  extension: "jpg" | "png" | "webp";
+}
 
+// Valida una foto subida y la deja lista para guardar, sea cual sea el
+// almacén (disco o la nube): comprueba tipo declarado, tamaño y tipo real por
+// los primeros bytes, y quita los metadatos (GPS) de los JPEG.
+export async function prepararFoto(archivo: File): Promise<FotoPreparada> {
+  if (!FOTO_TIPOS_PERMITIDOS.includes(archivo.type)) {
+    throw new ErrorArchivoInvalido("Formato de imagen no soportado. Usa JPG, PNG o WEBP.");
+  }
   if (archivo.size > FOTO_TAMANO_MAXIMO_BYTES) {
     throw new ErrorArchivoInvalido("La imagen no puede superar 5 MB.");
   }
-
-  // El tipo declarado lo controla quien sube el archivo: se comprueba con los
-  // primeros bytes y se descartan los metadatos (GPS) de los JPEG.
   const original = new Uint8Array(await archivo.arrayBuffer());
   const tipoReal = detectarTipoImagen(original);
   if (!tipoReal || tipoReal !== archivo.type) {
     throw new ErrorArchivoInvalido("El archivo no es una imagen válida (JPG, PNG o WEBP).");
   }
-  const contenido = tipoReal === "image/jpeg" ? limpiarJpeg(original) : original;
+  return {
+    contenido: tipoReal === "image/jpeg" ? limpiarJpeg(original) : original,
+    tipo: tipoReal,
+    extension: tipoReal === "image/png" ? "png" : tipoReal === "image/webp" ? "webp" : "jpg",
+  };
+}
 
+export async function guardarFotoReporte(archivo: File): Promise<string> {
+  const foto = await prepararFoto(archivo);
   await mkdir(CARPETA_DESTINO, { recursive: true });
-
-  const extension = tipoReal === "image/png" ? "png" : tipoReal === "image/webp" ? "webp" : "jpg";
-  const nombreArchivo = `${randomUUID()}.${extension}`;
-  const rutaCompleta = path.join(CARPETA_DESTINO, nombreArchivo);
-
-  await writeFile(rutaCompleta, contenido);
-
+  const nombreArchivo = `${randomUUID()}.${foto.extension}`;
+  await writeFile(path.join(CARPETA_DESTINO, nombreArchivo), foto.contenido);
   return `/uploads/${nombreArchivo}`;
 }
 
