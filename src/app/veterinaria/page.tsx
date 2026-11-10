@@ -178,6 +178,7 @@ export default async function VeterinariaPage(
                       id: v.id,
                       nombre: v.nombre,
                       fecha: v.fecha.toISOString(),
+                      proximaCita: v.proximaCita?.toISOString() ?? null,
                       veterinaria: v.veterinaria,
                     }))}
                   />

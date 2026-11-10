@@ -140,6 +140,11 @@ export default async function PerfilMascotaPage(props: { params: Promise<{ id: s
                   <p className="truncate text-xs text-tinta-500">
                     Aplicada por {vacuna.veterinaria}
                   </p>
+                  {vacuna.proximaCita && vacuna.proximaCita.getTime() >= Date.now() - 24 * 60 * 60 * 1000 && (
+                    <p className="truncate text-xs font-semibold text-encontrada-600">
+                      Próxima cita: {formatearFecha(vacuna.proximaCita, "larga")}
+                    </p>
+                  )}
                 </div>
                 <span className="shrink-0 text-sm font-bold text-tinta-700">
                   {formatearFecha(vacuna.fecha, "larga")}

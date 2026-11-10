@@ -207,6 +207,7 @@ model Vacuna {
   mascota     Mascota  @relation(fields: [mascotaId], references: [id], onDelete: Cascade)
   nombre      String // p. ej. "Rabia", "Parvovirus", "Moquillo"
   fecha       DateTime // fecha en que se aplicó
+  proximaCita DateTime? // cita agendada para la próxima dosis o control (hoy o futura)
   veterinaria String // nombre de la clínica que la registró
   creadoEn    DateTime @default(now())
 

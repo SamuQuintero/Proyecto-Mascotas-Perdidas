@@ -8,6 +8,7 @@ interface Vacuna {
   id: string;
   nombre: string;
   fecha: string;
+  proximaCita?: string | null;
   veterinaria: string;
 }
 

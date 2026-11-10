@@ -9,6 +9,7 @@ interface Vacuna {
   id: string;
   nombre: string;
   fecha: string;
+  proximaCita?: string | null;
   veterinaria: string;
 }
 
@@ -26,6 +27,7 @@ export default function PanelVacunas({
   const [vacunas, setVacunas] = useState(vacunasIniciales);
   const [nombre, setNombre] = useState("");
   const [fecha, setFecha] = useState(fechaParaInput(new Date()));
+  const [proximaCita, setProximaCita] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [borrando, setBorrando] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,15 +41,16 @@ export default function PanelVacunas({
       const respuesta = await fetch(`/api/mascotas/${mascotaId}/vacunas`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, fecha }),
+        body: JSON.stringify({ nombre, fecha, proximaCita }),
       });
       const data = await respuesta.json().catch(() => ({}));
       if (!respuesta.ok) {
-        setError(data.errores?.nombre ?? data.errores?.fecha ?? data.error ?? "No se pudo registrar.");
+        setError(data.errores?.nombre ?? data.errores?.fecha ?? data.errores?.proximaCita ?? data.error ?? "No se pudo registrar.");
         return;
       }
       setVacunas((anteriores) => [data.vacuna, ...anteriores]);
       setNombre("");
+      setProximaCita("");
       router.refresh();
     } catch {
       setError("No se pudo conectar con el servidor.");
@@ -87,6 +90,11 @@ export default function PanelVacunas({
               <div className="min-w-0">
                 <span className="font-semibold text-tinta-800">{vacuna.nombre}</span>
                 <span className="text-tinta-500"> · {formatearFecha(vacuna.fecha)}</span>
+                {vacuna.proximaCita && (
+                  <span className="block text-xs font-semibold text-encontrada-600">
+                    Próxima cita: {formatearFecha(vacuna.proximaCita)}
+                  </span>
+                )}
               </div>
               <button
                 onClick={() => borrar(vacuna.id)}
@@ -116,12 +124,22 @@ export default function PanelVacunas({
           />
         </label>
         <label>
-          <span className="mb-1 block text-xs font-semibold text-tinta-500">Fecha</span>
+          <span className="mb-1 block text-xs font-semibold text-tinta-500">Fecha de aplicación</span>
           <input
             type="date"
             value={fecha}
             max={fechaParaInput(new Date())}
             onChange={(e) => setFecha(e.target.value)}
+            className="rounded-lg border border-tinta-200 px-2.5 py-1.5 text-sm"
+          />
+        </label>
+        <label>
+          <span className="mb-1 block text-xs font-semibold text-tinta-500">Próxima cita (opcional)</span>
+          <input
+            type="date"
+            value={proximaCita}
+            min={fechaParaInput(new Date())}
+            onChange={(e) => setProximaCita(e.target.value)}
             className="rounded-lg border border-tinta-200 px-2.5 py-1.5 text-sm"
           />
         </label>

@@ -50,6 +50,9 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
       mascotaId: params.id,
       nombre: resultado.data.nombre,
       fecha: new Date(`${resultado.data.fecha}T12:00:00.000Z`),
+      proximaCita: resultado.data.proximaCita
+        ? new Date(`${resultado.data.proximaCita}T12:00:00.000Z`)
+        : null,
       veterinaria: usuario!.nombreClinica || usuario!.nombre,
     },
   });
