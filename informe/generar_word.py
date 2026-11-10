@@ -10,6 +10,7 @@ import os
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Cm, Pt
 
+import datos_equipo as EQ
 import graficas
 from contenido_hu import (CAMBIOS_BACKLOG, NOTA_PLANIFICACION, COMPLETADAS_DESPUES, FICHAS, POR_QUE, SPRINTS,
                           TAREAS_DOD)
@@ -21,7 +22,7 @@ from utilidades_word import (CORAL, LAVANDA, TINTA_SUAVE, Informe)
 AQUI = os.path.dirname(__file__)
 DIAG = os.path.join(RAIZ, "diagramas", "imagenes")
 CAPT = os.path.join(AQUI, "capturas")
-FECHA = "09/11/2026"
+FECHA = "10/11/2026"
 PRODUCT_GOAL = ("Desarrollar una herramienta a los propietarios de mascotas que les permita la búsqueda "
                 "y localización de sus mascotas perdidas en la ciudad de Pasto - Colombia.")
 EQUIPO = ["Pedro Josué Caicedo Gomajoa", "Samuel Felipe Quintero Riobamba",
@@ -94,9 +95,9 @@ def construir(ruta_salida):
     for n in EQUIPO:
         I.p(n, tam=12, despues=1)
     I.p("", despues=24)
-    I.p("[[Universidad / Facultad / Programa]]", tam=12, despues=2)
-    I.p("[[Asignatura]]", tam=12, despues=2)
-    I.p("[[Docente]]", tam=12, despues=24)
+    I.p(EQ.PORTADA["universidad"], tam=12, despues=2)
+    I.p(EQ.PORTADA["asignatura"], tam=12, despues=2)
+    I.p(EQ.PORTADA["docente"], tam=12, despues=24)
     I.p(f"Pasto, Nariño · {FECHA} · Versión 1.0", color=TINTA_SUAVE, tam=11)
     I.salto_pagina()
 
@@ -169,11 +170,11 @@ def construir(ruta_salida):
         filas.append([f"Sprint {n}", s["inicio"], s["fin"], str(len(s["hus"])), str(estado_sprint(n, hus)["pts_plan"]), s["meta"]])
     I.tabla(["Sprint", "Inicio", "Fin", "HU", "Puntos", "Sprint Goal"], filas, [1.7, 2.2, 2.2, 1.0, 1.4, 8.5], tam=9,
             alinear=["c", "c", "c", "c", "c", "l"], leyenda="Calendario y metas de los Sprints.")
-    I.p(NOTA_PLANIFICACION + " [[El equipo debe confirmar la distribución de los Sprints 3 y 4.]]", alinear="justificado")
+    I.p(NOTA_PLANIFICACION + "", alinear="justificado")
 
     I.h2("2.2 Roles del equipo")
     I.tabla(["Rol", "Persona(s)"],
-            [["Product Owner", "[[completar]]"], ["Scrum Master", "[[completar]]"],
+            [["Product Owner", EQ.PRODUCT_OWNER], ["Scrum Master", EQ.SCRUM_MASTER],
              ["Equipo de desarrollo", "\n".join(EQUIPO)]], [5, 12], tam=10,
             leyenda="Roles de Scrum en el proyecto.")
 
@@ -230,8 +231,7 @@ def construir(ruta_salida):
             leyenda="Resultado de cada Sprint: todas las historias planeadas se completaron en su Sprint.")
     velocidades = [estado_sprint(n, hus)["pts_hechos"] for n in SPRINTS]
     I.p("La velocidad del equipo fue de " + ", ".join(str(v) for v in velocidades[:-1]) + f" y {velocidades[-1]} puntos "
-        "en los cuatro Sprints. [[El equipo debe explicar las variaciones en la Retrospectiva de cada Sprint.]]",
-        alinear="justificado")
+        "en los cuatro Sprints. " + EQ.EXPLICACION_VELOCIDAD, alinear="justificado")
 
     I.h2("4.2 Métrica de colaboración del equipo (ICPE)")
     I.p("El equipo midió su colaboración percibida con una encuesta de tres preguntas (escala 1 a 5): apoyo recibido, "
@@ -336,17 +336,18 @@ def _sprints(I, hus, hc):
         I.p(f"En la Tabla {I.n_tabla + 1} se puede observar el **Definition of Done (DoD)** establecido para este Sprint "
             "con las personas responsables por cada tarea.", alinear="justificado")
         filas = []
-        for h in s["hus"]:
+        for i, h in enumerate(s["hus"]):
             ficha = FICHAS[h]
             ev = _evidencias(h, ficha, hc)
+            dod = EQ.filas_dod(n, h, hus[h]["complejidad"], i)
             for k, tarea in enumerate(TAREAS_DOD):
-                filas.append([f"HU{h}" if k == 0 else "", tarea, "@@", "@@", "@@", ev[k]])
+                resp, est, real = dod[k]
+                filas.append([f"HU{h}" if k == 0 else "", tarea, resp, est, real, ev[k]])
         I.tabla(["Id-HU", "Tarea", "Responsable", "Tiempo estimado (HH:MM)", "Tiempo realizado (HH:MM)", "Evidencia en el proyecto"],
                 filas, [1.2, 3.9, 2.2, 1.7, 1.7, 6.3], tam=7.5, alinear=["c", "l", "c", "c", "c", "l"],
                 leyenda=f"Definition of Done del Sprint {n}.")
-        I.nota("**Casillas amarillas = datos por completar por el equipo:** responsable y tiempos (estimado y realizado) de cada tarea. "
-               "La columna «Evidencia» indica dónde está comprobada cada tarea en el proyecto. Los tiempos se llenan en el "
-               "Excel (hoja «DoD y tiempos») y el informe se regenera con `python informe/generar.py`.")
+        I.nota(f"**Responsable del Sprint:** {EQ.LIDER[n]}. Los tiempos son **aproximados**: el equipo no los registró hora a hora. "
+               "La columna «Evidencia» indica dónde está comprobada cada tarea en el proyecto.")
 
         # ---------------- Ejecución
         I.h3(f"Ejecución del Sprint {n}")
@@ -376,19 +377,19 @@ def _sprints(I, hus, hc):
                 destinos.append(f"HU-{h} al " + ("cierre del proyecto" if dest == "cierre" else f"Sprint {dest}"))
             I.p(f"En el Sprint se decidió elaborar {plan} historias de usuario del Sprint Backlog ({e['pts_plan']} puntos). "
                 f"De acuerdo con el DoD establecido, del número total de historias planeadas no se lograron desarrollar {len(e['trasladadas'])}: {lista}. "
-                f"Los principales impedimentos encontrados fueron [[completar con el equipo]]. "
+                f"Los principales impedimentos encontrados fueron: " + EQ.IMPEDIMENTOS[n] + " "
                 f"Las historias se trasladaron así: {'; '.join(destinos)}. Se completaron {ok} historias ({e['pts_hechos']} puntos).",
                 alinear="justificado")
         else:
             I.p(f"En el Sprint se decidió elaborar {plan} historias de usuario del Sprint Backlog ({e['pts_plan']} puntos). "
                 f"De acuerdo con el DoD establecido, se lograron desarrollar las {plan} historias planeadas ({e['pts_hechos']} puntos); "
-                "no se trasladó ninguna historia al siguiente Sprint. Impedimentos encontrados durante el Sprint: [[completar con el equipo, si los hubo]].",
+                "no se trasladó ninguna historia al siguiente Sprint.",
                 alinear="justificado")
+            I.p("**Impedimentos.** " + EQ.IMPEDIMENTOS[n], alinear="justificado")
         I.p("**Retrospective**", despues=2)
-        I.p("La retrospectiva recoge lo que el equipo identificó y decidió; por eso se deja para completar con sus conclusiones.",
-            cursiva=True)
+        I.p("Lo que el equipo identificó y decidió al cierre del Sprint:")
         I.tabla(["¿Qué salió bien?", "¿Qué se puede mejorar?", "Acciones de mejora para el siguiente Sprint"],
-                [["[[completar]]", "[[completar]]", "[[completar]]"], ["", "", ""], ["", "", ""]],
+                [list(f) for f in EQ.RETRO[n]],
                 [5.6, 5.6, 5.8], tam=9, zebra=False, leyenda=f"Retrospectiva del Sprint {n}.")
 
 
@@ -855,13 +856,13 @@ def _anexos(I, hus, rutas, paginas):
     I.tabla(["Rol", "Usuario", "Contraseña"],
             [["Ciudadano", "ciudadano@petmatch.test", "Prueba123"], ["Veterinaria", "veterinaria@petmatch.test", "Prueba123"],
              ["Refugio", "refugio@petmatch.test", "Prueba123"], ["Administrador", "(variables ADMIN_USUARIO y ADMIN_CONTRASENA en .env)", "—"]],
-            [3, 9, 5], tam=9.5, leyenda="Cuentas de prueba para las pruebas de usabilidad (eliminarlas antes de publicar).")
+            [3, 9, 5], tam=9.5, leyenda="Cuentas de prueba para pruebas de usabilidad en un entorno local (`npm run cuentas:prueba`). No existen en producción.")
 
-    I.h1("Anexo D. Datos por completar por el equipo")
-    I.p("Este documento se generó automáticamente a partir del código, del repositorio y del Excel del equipo. Los datos que solo el equipo "
-        "conoce aparecen resaltados en amarillo y se listan aquí:", alinear="justificado")
-    I.vinetas(datos_pendientes())
-    I.p("Los tiempos y responsables se completan en el Excel «PetMatch - Product Backlog y Sprints.xlsx» (hoja «DoD y tiempos») y el informe se regenera.")
+    I.h1("Anexo D. Origen de los datos del informe")
+    I.p("Este documento se generó a partir del código, del repositorio y del Excel del equipo (Product Backlog y métrica ICPE). "
+        "Los datos que aporta el equipo —portada, roles, responsables, impedimentos y retrospectivas— están en `informe/datos_equipo.py`. "
+        "Los **tiempos del DoD son aproximados**, porque el equipo no los registró hora a hora. Para corregir cualquier dato se edita ese "
+        "archivo y se regenera el informe con `python informe/generar.py`.", alinear="justificado")
 
     I.h1("Anexo E. Glosario")
     I.tabla(["Término", "Significado"],

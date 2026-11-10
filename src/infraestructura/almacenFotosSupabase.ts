@@ -16,20 +16,28 @@ export class AlmacenFotosSupabase implements AlmacenFotos {
     this.base = urlProyecto.replace(/\/$/, "");
   }
 
+  // Las claves nuevas (sb_secret_…) no son JWT: van solo en `apikey`. Las
+  // antiguas (service_role, un JWT) también se envían como Authorization.
+  private cabeceras(extra: Record<string, string> = {}): Record<string, string> {
+    const base: Record<string, string> = { apikey: this.claveServicio, ...extra };
+    if (!this.claveServicio.startsWith("sb_")) base.Authorization = `Bearer ${this.claveServicio}`;
+    return base;
+  }
+
   async guardar(archivo: File): Promise<string> {
     const foto = await prepararFoto(archivo);
     const nombre = `${randomUUID()}.${foto.extension}`;
     const respuesta = await fetch(`${this.base}/storage/v1/object/${BUCKET}/${nombre}`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.claveServicio}`,
-        apikey: this.claveServicio,
+      headers: this.cabeceras({
         "Content-Type": foto.tipo,
         "Cache-Control": "public, max-age=31536000, immutable",
-      },
+      }),
       body: foto.contenido as unknown as BodyInit,
     });
     if (!respuesta.ok) {
+      // El motivo real queda en los logs del servidor (no se envía al navegador).
+      console.error("[fotos] Supabase Storage respondió", respuesta.status, await respuesta.text().catch(() => ""));
       throw new Error(`No se pudo guardar la foto (${respuesta.status}).`);
     }
     return `${this.base}/storage/v1/object/public/${BUCKET}/${nombre}`;
@@ -42,7 +50,7 @@ export class AlmacenFotosSupabase implements AlmacenFotos {
     if (!/^[\w-]+\.(jpg|png|webp)$/.test(nombre)) return;
     await fetch(`${this.base}/storage/v1/object/${BUCKET}/${nombre}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${this.claveServicio}`, apikey: this.claveServicio },
+      headers: this.cabeceras(),
     }).catch(() => {});
   }
 }

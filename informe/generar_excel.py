@@ -8,6 +8,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
+import datos_equipo as EQ
 from contenido_hu import COMPLETADAS_DESPUES, POR_QUE, SPRINTS, TAREAS_DOD
 from datos_proyecto import cargar_backlog, datos_icpe, estado_sprint, sprint_de_cierre
 
@@ -123,7 +124,7 @@ def generar(ruta_salida):
         wr[f"{col}7"].font = Font(bold=True)
         wr[f"{col}7"].alignment = Alignment(horizontal="center")
     wr.cell(9, 1, "Nota: los Sprints 1 y 2 salen del Excel del equipo; los Sprints 3 y 4 reparten el resto de las historias "
-                  "por prioridad (valor × urgencia) y dependencias. El equipo debe confirmarlos.")
+                  "por prioridad (valor × urgencia) y dependencias. ")
     wr.cell(9, 1).font = Font(italic=True, size=9)
 
     # ------------------------------------------------------------ DoD tiempos
@@ -132,16 +133,18 @@ def generar(ruta_salida):
                 [9, 9, 42, 28, 20, 20])
     fila = 2
     for n, s in SPRINTS.items():
-        for hu in s["hus"]:
-            for t in TAREAS_DOD:
+        for i, hu in enumerate(s["hus"]):
+            dod = EQ.filas_dod(n, hu, hus[hu]["complejidad"], i)
+            for k, t in enumerate(TAREAS_DOD):
                 wd.cell(fila, 1, n)
                 wd.cell(fila, 2, f"HU{hu}")
                 wd.cell(fila, 3, t)
-                _estilo_fila(wd, fila, 6, zebra=hu % 2 == 0, centradas=(1, 2))
-                for col in (4, 5, 6):
-                    wd.cell(fila, col).fill = PatternFill("solid", fgColor=AMARILLO)
+                wd.cell(fila, 4, dod[k][0])
+                wd.cell(fila, 5, dod[k][1])
+                wd.cell(fila, 6, dod[k][2])
+                _estilo_fila(wd, fila, 6, zebra=hu % 2 == 0, centradas=(1, 2, 5, 6))
                 fila += 1
-    wd.cell(fila + 1, 3, "Completar las celdas amarillas (responsable y horas). Luego ejecutar: python informe/generar.py").font = Font(italic=True, size=9)
+    wd.cell(fila + 1, 3, "Los tiempos son aproximados (el equipo no los registró hora a hora).").font = Font(italic=True, size=9)
 
     # ---------------------------------------------------------------- ICPE
     wi = wb.create_sheet("Métrica ICPE")

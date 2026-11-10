@@ -17,6 +17,17 @@ describe("AlmacenFotosSupabase", () => {
     expect(opciones.headers.Authorization).toBe("Bearer clave");
   });
 
+  it("con una clave nueva (sb_secret_) no envía Authorization", async () => {
+    const fetchFalso = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    vi.stubGlobal("fetch", fetchFalso);
+    await new AlmacenFotosSupabase("https://abc.supabase.co", "sb_secret_x").guardar(
+      new File([PNG], "a.png", { type: "image/png" })
+    );
+    const { headers } = fetchFalso.mock.calls[0][1];
+    expect(headers.apikey).toBe("sb_secret_x");
+    expect(headers.Authorization).toBeUndefined();
+  });
+
   it("rechaza archivos que no son imágenes sin llamar a la red", async () => {
     const fetchFalso = vi.fn();
     vi.stubGlobal("fetch", fetchFalso);
@@ -26,7 +37,8 @@ describe("AlmacenFotosSupabase", () => {
   });
 
   it("falla con claridad si Supabase responde con error", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 403 }));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 403, text: async () => "" }));
     await expect(almacen().guardar(new File([PNG], "a.png", { type: "image/png" }))).rejects.toThrow(/403/);
   });
 
