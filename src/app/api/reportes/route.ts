@@ -33,10 +33,19 @@ export async function POST(request: NextRequest) {
   // dueño puede renovarlo (HU-19) y editarlo (HU-23).
   const usuario = await usuarioActual();
 
-  const resultado = await servicioReportes.publicar({
-    datos: formulario.datos,
-    foto: formulario.foto,
-    usuarioId: usuario?.id ?? null,
-  });
-  return responder(resultado, (reporte) => NextResponse.json({ reporte }, { status: 201 }));
+  try {
+    const resultado = await servicioReportes.publicar({
+      datos: formulario.datos,
+      foto: formulario.foto,
+      usuarioId: usuario?.id ?? null,
+    });
+    return responder(resultado, (reporte) => NextResponse.json({ reporte }, { status: 201 }));
+  } catch (error) {
+    // El motivo real queda en los logs del servidor; al navegador solo un mensaje genérico.
+    console.error("[reportes] No se pudo publicar:", error);
+    return NextResponse.json(
+      { error: "No se pudo guardar el reporte. Inténtalo de nuevo en un momento." },
+      { status: 500 }
+    );
+  }
 }
