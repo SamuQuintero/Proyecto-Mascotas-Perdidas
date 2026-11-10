@@ -5,7 +5,8 @@ import { exigirRefugio } from "@/lib/cuenta";
 
 // HU-20: marcar un animal como entregado (a su dueño o adoptado): deja de
 // aparecer en el listado público. Cada refugio solo gestiona los suyos.
-export async function PATCH(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { usuario, error } = await exigirRefugio();
   if (error) return error;
 
@@ -17,7 +18,8 @@ export async function PATCH(_request: NextRequest, { params }: { params: { id: s
 }
 
 // Borrar una publicación hecha por error.
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { usuario, error } = await exigirRefugio();
   if (error) return error;
 

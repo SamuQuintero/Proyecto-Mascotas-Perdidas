@@ -12,17 +12,18 @@ export const metadata = {
 
 // HU-8: placa imprimible con el código QR que lleva al perfil de la mascota.
 // Al imprimir solo sale la placa (el resto de la página se oculta).
-export default async function PlacaMascotaPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { nuevo?: string };
-}) {
+export default async function PlacaMascotaPage(
+  props: {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ nuevo?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const mascota = await prisma.mascota.findUnique({ where: { id: params.id } });
   if (!mascota) notFound();
 
-  const urlPerfil = urlAbsoluta(`/mascotas/${mascota.id}`);
+  const urlPerfil = await urlAbsoluta(`/mascotas/${mascota.id}`);
   const opciones = { margin: 1, errorCorrectionLevel: "M" as const, color: { dark: "#1C1829", light: "#FFFFFF" } };
   const [svgQr, pngQr] = await Promise.all([
     QRCode.toString(urlPerfil, { ...opciones, type: "svg" }),

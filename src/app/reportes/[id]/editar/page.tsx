@@ -10,11 +10,12 @@ export const metadata = {
 };
 
 // HU-25 / HU-23: edición de un reporte existente (administrador o su dueño).
-export default async function EditarReportePage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function EditarReportePage(
+  props: {
+    params: Promise<{ id: string }>;
+  }
+) {
+  const params = await props.params;
   const reporte = await prisma.reporte.findUnique({
     where: { id: params.id },
   });

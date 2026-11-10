@@ -8,6 +8,8 @@
 const fs = require("fs");
 const path = require("path");
 const { chromium } = require("playwright-core");
+const { exigirBaseLocal } = require("./_guardia");
+exigirBaseLocal("capturas");
 const { PrismaClient } = require("@prisma/client");
 
 const BASE = process.env.BASE_URL || "http://localhost:3000";

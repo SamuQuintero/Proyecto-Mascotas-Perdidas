@@ -60,10 +60,7 @@ def burnup():
     for n in SPRINTS:
         suma += estado_sprint(n, hus)["pts_hechos"]
         acumulado.append(suma)
-    # Puntos completados en el cierre (HU-26 y HU-27).
-    suma += hus[26]["complejidad"] + hus[27]["complejidad"]
-    acumulado.append(suma)
-    etiquetas = ["Inicio", "S1", "S2", "S3", "S4", "Cierre"]
+    etiquetas = ["Inicio", "S1", "S2", "S3", "S4"]
     fig, ax = plt.subplots(figsize=(7.2, 3.6), dpi=170)
     ax.plot(etiquetas, acumulado, marker="o", color=MENTA, linewidth=2.6, label="Puntos completados (acumulado)")
     ax.axhline(total, color=CORAL, linestyle="--", linewidth=1.6, label=f"Alcance total: {total} puntos")

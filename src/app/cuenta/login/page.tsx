@@ -15,11 +15,12 @@ function destinoSeguro(siguiente: string | undefined): string {
   return siguiente?.startsWith("/") && !siguiente.startsWith("//") ? siguiente : "/cuenta";
 }
 
-export default async function LoginCuentaPage({
-  searchParams,
-}: {
-  searchParams: { siguiente?: string };
-}) {
+export default async function LoginCuentaPage(
+  props: {
+    searchParams: Promise<{ siguiente?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const usuario = await usuarioActual();
   const siguiente = destinoSeguro(searchParams.siguiente);
   if (usuario) redirect(usuario.rol === "CIUDADANO" ? siguiente : rutaPanel(usuario.rol));

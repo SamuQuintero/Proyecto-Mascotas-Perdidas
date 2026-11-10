@@ -20,7 +20,7 @@ export const metadata = {
 
 // HU-16: panel del ciudadano suscrito a avisos de cercanía.
 export default async function CuentaPage() {
-  const sesion = usuarioSesionLigera();
+  const sesion = await usuarioSesionLigera();
   if (!sesion) redirect("/cuenta/login");
 
   // Todo lo que se necesita se pide a la vez (con el id firmado de la

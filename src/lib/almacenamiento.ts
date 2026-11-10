@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
+import { detectarTipoImagen, limpiarJpeg } from "@/lib/imagen";
 import { ErrorFotoInvalida } from "@/lib/puertos";
 import {
   FOTO_TAMANO_MAXIMO_BYTES,
@@ -30,14 +31,22 @@ export async function guardarFotoReporte(archivo: File): Promise<string> {
     throw new ErrorArchivoInvalido("La imagen no puede superar 5 MB.");
   }
 
+  // El tipo declarado lo controla quien sube el archivo: se comprueba con los
+  // primeros bytes y se descartan los metadatos (GPS) de los JPEG.
+  const original = new Uint8Array(await archivo.arrayBuffer());
+  const tipoReal = detectarTipoImagen(original);
+  if (!tipoReal || tipoReal !== archivo.type) {
+    throw new ErrorArchivoInvalido("El archivo no es una imagen válida (JPG, PNG o WEBP).");
+  }
+  const contenido = tipoReal === "image/jpeg" ? limpiarJpeg(original) : original;
+
   await mkdir(CARPETA_DESTINO, { recursive: true });
 
-  const extension = archivo.type === "image/png" ? "png" : archivo.type === "image/webp" ? "webp" : "jpg";
+  const extension = tipoReal === "image/png" ? "png" : tipoReal === "image/webp" ? "webp" : "jpg";
   const nombreArchivo = `${randomUUID()}.${extension}`;
   const rutaCompleta = path.join(CARPETA_DESTINO, nombreArchivo);
 
-  const buffer = Buffer.from(await archivo.arrayBuffer());
-  await writeFile(rutaCompleta, buffer);
+  await writeFile(rutaCompleta, contenido);
 
   return `/uploads/${nombreArchivo}`;
 }

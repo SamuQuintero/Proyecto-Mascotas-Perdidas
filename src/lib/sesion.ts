@@ -1,4 +1,5 @@
 import { createHash, createHmac, timingSafeEqual } from "crypto";
+import { leerSecreto } from "@/lib/secretos";
 
 // Sesión del administrador. No hay cuentas de usuario en la aplicación: el
 // público sigue usando todo sin iniciar sesión, y solo el administrador
@@ -13,6 +14,9 @@ import { createHash, createHmac, timingSafeEqual } from "crypto";
 export const COOKIE_ADMIN = "petmatch_admin";
 export const DURACION_SESION_MS = 8 * 60 * 60 * 1000; // 8 horas
 
+export const LARGO_MINIMO_CONTRASENA_ADMIN = 12;
+let avisoDebil = false;
+
 interface Configuracion {
   usuario: string;
   contrasena: string;
@@ -24,13 +28,25 @@ function leerConfiguracion(): Configuracion | null {
   const contrasena = process.env.ADMIN_CONTRASENA;
   if (!usuario || !contrasena) return null;
 
-  // Si no se define ADMIN_SECRETO se deriva uno de las credenciales, así
-  // cambiar la contraseña invalida automáticamente las sesiones abiertas.
-  const secreto =
-    process.env.ADMIN_SECRETO ||
-    createHash("sha256")
-      .update(`petmatch-admin:${usuario}:${contrasena}`)
-      .digest("hex");
+  // En producción no se acepta una contraseña de administrador débil: se
+  // deshabilita el acceso hasta que se configure una larga.
+  if (process.env.NODE_ENV === "production" && contrasena.length < LARGO_MINIMO_CONTRASENA_ADMIN) {
+    if (!avisoDebil) {
+      avisoDebil = true;
+      console.error(
+        `[seguridad] ADMIN_CONTRASENA tiene menos de ${LARGO_MINIMO_CONTRASENA_ADMIN} caracteres: ` +
+          "el acceso de administrador queda deshabilitado en producción."
+      );
+    }
+    return null;
+  }
+
+  // En producción ADMIN_SECRETO es obligatorio (ver secretos.ts). En
+  // desarrollo, si falta, se deriva de las credenciales.
+  const derivado = createHash("sha256")
+    .update(`petmatch-admin:${usuario}:${contrasena}`)
+    .digest("hex");
+  const secreto = leerSecreto("ADMIN_SECRETO", derivado);
 
   return { usuario, contrasena, secreto };
 }

@@ -1,7 +1,8 @@
 {
  "por_archivo": {
-  "src/lib/almacenamiento.test.ts": 5,
+  "src/lib/almacenamiento.test.ts": 6,
   "src/lib/coincidencias.test.ts": 25,
+  "src/lib/coincidencias/puntuacion.test.ts": 4,
   "src/lib/colores.test.ts": 12,
   "src/lib/compartir.test.ts": 7,
   "src/lib/contrasenas.test.ts": 4,
@@ -12,6 +13,7 @@
   "src/lib/indicadores.test.ts": 11,
   "src/lib/renovacion.test.ts": 14,
   "src/lib/resguardo.test.ts": 6,
+  "src/lib/seguridad.test.ts": 18,
   "src/lib/sesion.test.ts": 9,
   "src/lib/sesionUsuario.test.ts": 4,
   "src/lib/texto.test.ts": 3,
@@ -19,21 +21,20 @@
   "src/lib/validacionCuenta.test.ts": 14,
   "src/lib/validacionVacuna.test.ts": 4,
   "src/servicios/servicioMascotasResguardo.test.ts": 8,
-  "src/servicios/servicioReportes.test.ts": 20,
-  "src/lib/coincidencias/puntuacion.test.ts": 4
+  "src/servicios/servicioReportes.test.ts": 20
  },
  "cobertura": {
-  "lines": 69.46,
-  "statements": 69.46,
-  "functions": 86.95,
-  "branches": 89.06
+  "lines": 72.97,
+  "statements": 72.97,
+  "functions": 88.88,
+  "branches": 89.47
  },
- "total_pruebas": 218,
- "codigo_archivos": 160,
- "codigo_lineas": 13897,
- "pruebas_archivos": 21,
- "pruebas_lineas": 2045,
+ "total_pruebas": 237,
+ "codigo_archivos": 165,
+ "codigo_lineas": 14313,
+ "pruebas_archivos": 22,
+ "pruebas_lineas": 2250,
  "paginas": 21,
  "rutas_api": 24,
- "componentes": 49
+ "componentes": 39
 }

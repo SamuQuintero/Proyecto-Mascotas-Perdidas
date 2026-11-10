@@ -12,10 +12,8 @@ const cuerpoSchema = z.object({
 // por error). El administrador puede todo; el dueño del reporte (la cuenta
 // con la que se publicó) solo puede marcarlo como reencontrada. La regla
 // vive en ServicioReportes.cambiarEstado.
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const resultado = cuerpoSchema.safeParse(
     await request.json().catch(() => null)
   );

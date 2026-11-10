@@ -28,12 +28,13 @@ const COLOR_ESPECIE = {
 } as const;
 
 // HU-22: ¿la plataforma está cerrando la brecha entre perros y gatos?
-export default async function IndicadoresPage({
-  searchParams,
-}: {
-  searchParams: { periodo?: string };
-}) {
-  if (!adminActual()) redirect("/admin/login?siguiente=/admin/indicadores");
+export default async function IndicadoresPage(
+  props: {
+    searchParams: Promise<{ periodo?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  if (!(await adminActual())) redirect("/admin/login?siguiente=/admin/indicadores");
 
   const periodo = leerPeriodo(searchParams.periodo);
   const reportes = await prisma.reporte.findMany({

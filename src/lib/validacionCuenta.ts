@@ -3,11 +3,33 @@ import { z } from "zod";
 // Validación de cuentas reales (HU-16 ciudadano, HU-17 veterinaria).
 // Separado de validacion.ts (que es sobre reportes) para no mezclar temas.
 
+// Política de contraseñas del registro: 10 a 100 caracteres, con letras y
+// números, que no sea una contraseña típica ni contenga el correo.
+const COMUNES = [
+  "contrasena", "contraseña", "password", "123456789", "1234567890", "qwertyuiop",
+  "petmatch", "mascotas", "colombia", "abcdefghij", "0123456789", "iloveyou",
+];
+
+export function errorDeContrasena(contrasena: string, email = ""): string | null {
+  if (contrasena.length < 10) return "La contraseña debe tener al menos 10 caracteres.";
+  if (!/[a-zA-ZáéíóúñÁÉÍÓÚÑ]/.test(contrasena) || !/\d/.test(contrasena)) {
+    return "Usa letras y números en la contraseña.";
+  }
+  const minuscula = contrasena.toLowerCase();
+  if (COMUNES.some((c) => minuscula.includes(c))) return "Esa contraseña es demasiado común.";
+  if (/^(.)\1+$/.test(contrasena)) return "La contraseña no puede repetir un solo carácter.";
+  const usuarioCorreo = email.split("@")[0]?.toLowerCase();
+  if (usuarioCorreo && usuarioCorreo.length >= 4 && minuscula.includes(usuarioCorreo)) {
+    return "La contraseña no debe contener tu correo.";
+  }
+  return null;
+}
+
 export const registroSchema = z
   .object({
     nombre: z.string().trim().min(1, "El nombre es obligatorio.").max(80),
     email: z.string().trim().email("Correo inválido.").max(120).toLowerCase(),
-    contrasena: z.string().min(6, "La contraseña debe tener al menos 6 caracteres.").max(100),
+    contrasena: z.string().min(1, "La contraseña es obligatoria.").max(100),
     rol: z.enum(["CIUDADANO", "VETERINARIA", "REFUGIO"], {
       errorMap: () => ({ message: "Selecciona un tipo de cuenta." }),
     }),
@@ -15,6 +37,10 @@ export const registroSchema = z
     nombreRefugio: z.string().trim().max(120).optional().or(z.literal("")),
   })
   .superRefine((datos, ctx) => {
+    const errorClave = errorDeContrasena(datos.contrasena, datos.email);
+    if (errorClave) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contrasena"], message: errorClave });
+    }
     if (datos.rol === "VETERINARIA" && !datos.nombreClinica) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

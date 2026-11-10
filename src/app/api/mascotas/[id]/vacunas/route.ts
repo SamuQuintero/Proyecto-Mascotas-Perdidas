@@ -7,10 +7,8 @@ import { vacunaSchema } from "@/lib/validacionVacuna";
 // HU-17: carnet de vacunas de una mascota. Leer es público (es el carnet
 // digital: el dueño, o quien escanee el QR, debe poder verlo); escribir
 // requiere sesión de veterinaria.
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const existente = await prisma.mascota.findUnique({
     where: { id: params.id },
     select: { id: true },
@@ -26,10 +24,8 @@ export async function GET(
   return NextResponse.json({ vacunas });
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { usuario, error } = await exigirVeterinaria();
   if (error) return error;
 

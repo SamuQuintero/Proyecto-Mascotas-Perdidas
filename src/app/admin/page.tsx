@@ -27,12 +27,13 @@ const VISTAS = [
 ] as const;
 
 // Panel del administrador para llevar el control de todos los reportes.
-export default async function PanelAdminPage({
-  searchParams,
-}: {
-  searchParams: { ver?: string };
-}) {
-  const admin = adminActual();
+export default async function PanelAdminPage(
+  props: {
+    searchParams: Promise<{ ver?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const admin = await adminActual();
   if (!admin) {
     redirect("/admin/login?siguiente=/admin");
   }

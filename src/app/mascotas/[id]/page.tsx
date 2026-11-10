@@ -9,7 +9,8 @@ import { resumenSenasFelinas } from "@/lib/felinos";
 import { formatearFecha } from "@/lib/formato";
 import { ETIQUETA_TAMANO } from "@/lib/tipos";
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const mascota = await prisma.mascota.findUnique({
     where: { id: params.id },
     select: { nombre: true },
@@ -19,7 +20,8 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 
 // HU-8: perfil público de la mascota. Es la página que abre el QR de su
 // placa, pensada para quien la encontró y la está viendo desde el celular.
-export default async function PerfilMascotaPage({ params }: { params: { id: string } }) {
+export default async function PerfilMascotaPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const mascota = await prisma.mascota.findUnique({
     where: { id: params.id },
     include: { vacunas: { orderBy: { fecha: "desc" } } },

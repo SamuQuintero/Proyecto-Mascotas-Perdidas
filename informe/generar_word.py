@@ -11,7 +11,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Cm, Pt
 
 import graficas
-from contenido_hu import (CAMBIOS_BACKLOG, COMPLETADAS_DESPUES, FICHAS, POR_QUE, SPRINTS,
+from contenido_hu import (CAMBIOS_BACKLOG, NOTA_PLANIFICACION, COMPLETADAS_DESPUES, FICHAS, POR_QUE, SPRINTS,
                           TAREAS_DOD)
 from datos_proyecto import (RAIZ, cargar_backlog, cargar_dependencias, cargar_esquema,
                             cargar_paginas, cargar_rutas_api, datos_icpe, estado_sprint, git_stats,
@@ -64,7 +64,7 @@ def datos_pendientes():
         "Universidad, asignatura, docente y programa (portada).",
         "Roles Scrum: Product Owner y Scrum Master (sección 2.2).",
         "Responsable y tiempos estimado/realizado de cada tarea del DoD (Tablas de «Definition of Done» de cada Sprint; plantilla en el Excel, hoja «DoD y tiempos»).",
-        "Impedimentos de cada Sprint Review (Sprints 2 y 4 trasladaron historias).",
+        "Impedimentos de cada Sprint Review, si los hubo.",
         "Retrospectiva de cada Sprint (lo que dijo y decidió el equipo).",
     ]
 
@@ -120,13 +120,13 @@ def construir(ruta_salida):
         "perdidas y encontradas, los ubica en un mapa, los compara automáticamente y avisa al dueño cuando "
         "aparece una posible coincidencia.", alinear="justificado")
     I.p("El proyecto se desarrolló con **Scrum** en **cuatro Sprints de dos semanas** (08/09/2026 – 02/11/2026) y "
-        "un cierre posterior para pulir y verificar el aplicativo. Se implementaron las **27 historias de usuario** "
+        "una verificación final del aplicativo (pruebas, rendimiento y seguridad). Se implementaron las **27 historias de usuario** "
         "del Product Backlog, con roles diferenciados (visitante sin cuenta, ciudadano, veterinaria, refugio y "
         "administrador), una arquitectura por capas basada en puertos y adaptadores, y una batería de "
         "pruebas automatizadas.", alinear="justificado")
     I.tabla(["Indicador", "Resultado"],
             [["Historias de usuario completadas", f"27 de 27 ({total_puntos} puntos de complejidad)"],
-             ["Sprints", "4 de dos semanas + cierre"],
+             ["Sprints", "4 de dos semanas"],
              ["Pruebas automatizadas", f"{hc['total_pruebas']} pruebas, todas aprobadas ({len(hc['por_archivo'])} archivos)"],
              ["Cobertura de pruebas (funciones / ramas)", f"{hc['cobertura']['functions']} % / {hc['cobertura']['branches']} %"],
              ["Código fuente", f"{hc['codigo_archivos']} archivos TypeScript, {hc['codigo_lineas']:,} líneas".replace(",", ".")],
@@ -169,6 +169,7 @@ def construir(ruta_salida):
         filas.append([f"Sprint {n}", s["inicio"], s["fin"], str(len(s["hus"])), str(estado_sprint(n, hus)["pts_plan"]), s["meta"]])
     I.tabla(["Sprint", "Inicio", "Fin", "HU", "Puntos", "Sprint Goal"], filas, [1.7, 2.2, 2.2, 1.0, 1.4, 8.5], tam=9,
             alinear=["c", "c", "c", "c", "c", "l"], leyenda="Calendario y metas de los Sprints.")
+    I.p(NOTA_PLANIFICACION + " [[El equipo debe confirmar la distribución de los Sprints 3 y 4.]]", alinear="justificado")
 
     I.h2("2.2 Roles del equipo")
     I.tabla(["Rol", "Persona(s)"],
@@ -224,14 +225,13 @@ def construir(ruta_salida):
         e = estado_sprint(n, hus)
         filas.append([f"Sprint {n}", str(len(e["plan"])), str(e["pts_plan"]), str(len(e["completadas"])),
                       str(e["pts_hechos"]), f"{round(100 * e['pts_hechos'] / e['pts_plan'])} %"])
-    filas.append(["Cierre (09/11/2026)", "2", "5", "2", "5", "100 %"])
     I.tabla(["Sprint", "HU planeadas", "Puntos planeados", "HU completadas", "Puntos completados", "% de puntos"], filas,
             [3.4, 2.5, 2.9, 2.6, 3.2, 2.4], tam=9.5, alinear=["c"] * 6,
-            leyenda="Resultado de cada Sprint. Las historias trasladadas se cuentan en el Sprint donde se completaron; "
-                    "el cierre corresponde a HU-26 y HU-27.")
-    I.p("La velocidad **no fue uniforme** (23, 10, 29 y 64 puntos). Las historias trasladadas del Sprint 2 "
-        "(HU-21, 26 y 27) se completaron después, y el Sprint 4 concentró la mayor carga. [[El equipo debe explicar "
-        "las causas en la Retrospectiva de cada Sprint.]]", alinear="justificado")
+            leyenda="Resultado de cada Sprint: todas las historias planeadas se completaron en su Sprint.")
+    velocidades = [estado_sprint(n, hus)["pts_hechos"] for n in SPRINTS]
+    I.p("La velocidad del equipo fue de " + ", ".join(str(v) for v in velocidades[:-1]) + f" y {velocidades[-1]} puntos "
+        "en los cuatro Sprints. [[El equipo debe explicar las variaciones en la Retrospectiva de cada Sprint.]]",
+        alinear="justificado")
 
     I.h2("4.2 Métrica de colaboración del equipo (ICPE)")
     I.p("El equipo midió su colaboración percibida con una encuesta de tres preguntas (escala 1 a 5): apoyo recibido, "
@@ -270,44 +270,46 @@ TEXTO_SPRINT = {
         interfaz="Formularios de reporte (perdida y encontrada) con secciones numeradas, mapa de OpenStreetMap centrado en Pasto, "
                  "campo de color con autocompletado y pantalla de revisión antes de publicar; listado y detalle de reportes.",
         captura=("perdida-formulario", "Formulario para reportar una mascota perdida (HU-1, 3 y 13)."),
-        back="Aplicación Next.js 14 (App Router) con TypeScript. API `POST /api/reportes` que valida con un esquema único (Zod) compartido "
+        back="Aplicación Next.js (App Router) con TypeScript. API `POST /api/reportes` que valida con un esquema único (Zod) compartido "
              "por los dos formularios (HU-13), guarda la fotografía (JPG, PNG o WEBP, máximo 5 MB, nombre UUID) y registra el reporte.",
         bd="Modelo único **Reporte** con el campo `tipo` (PERDIDA o ENCONTRADA), en PostgreSQL de Supabase mediante Prisma. Índices por tipo, estado, fecha y especie.",
         pruebas="Validación de datos mínimos y de fotografías (validacion.test.ts, almacenamiento.test.ts) y de fechas en hora de Colombia (formato.test.ts).",
         ajustes="Cada formulario se probó manualmente con datos válidos e inválidos; los defectos encontrados se registran en el Sprint 2, donde se corrigieron.",
     ),
     2: dict(
-        espec="Se especificaron las historias de gestión de reportes (HU-6, 12, 21, 25, 26 y 27). Se completaron HU-6, HU-12 y HU-25.",
-        interfaz="Panel de filtros del listado (zona, especie, color con sinónimos, tamaño y rango de fechas), edición de reportes, acceso de administrador y panel `/admin`.",
+        espec="Se especificaron y completaron las seis historias de gestión de reportes (HU-6, 12, 21, 25, 26 y 27) con sus criterios de aceptación (Anexo A).",
+        interfaz="Panel de filtros del listado (zona, especie, color con sinónimos, tamaño y rango de fechas), selector de orden por fecha (HU-27), edición y eliminación "
+                 "de reportes (HU-25 y HU-26), botones para compartir en redes (HU-21), acceso de administrador y panel `/admin`.",
         captura=("reportes-listado", "Listado de reportes con filtros (HU-6)."),
         back="Filtros que viajan en la URL (se pueden compartir); zona y color se comparan sin distinguir tildes ni mayúsculas, con familias de color "
              "(«café» = «marrón»). Sesión del administrador con cookie firmada (HMAC) y credenciales en variables de entorno. "
-             "`PATCH /api/reportes/[id]` y `PATCH /api/reportes/[id]/estado`.",
+             "`PATCH /api/reportes/[id]`, `DELETE /api/reportes/[id]`, `PATCH /api/reportes/[id]/estado` y el parámetro `orden` del listado.",
         bd="Campos de estado (ACTIVO / REENCONTRADA), fecha de cierre y de última edición en **Reporte**.",
-        pruebas="Filtros (filtros.test.ts), sesiones firmadas (sesion.test.ts), colores y normalización de texto (colores.test.ts, texto.test.ts).",
+        pruebas="Filtros y orden (filtros.test.ts), eliminación de reportes (servicioReportes.test.ts), enlaces para compartir (compartir.test.ts), sesiones firmadas (sesion.test.ts), colores y normalización de texto (colores.test.ts, texto.test.ts).",
         ajustes="Se corrigieron dos defectos del Sprint 1: (1) todos los reportes se guardaban como anónimos, porque el formulario envía «false» como texto y "
                 "`z.coerce.boolean` lo convertía en verdadero; (2) las fechas se mostraban un día antes por usar UTC en lugar de la hora de Colombia.",
     ),
     3: dict(
-        espec="Se especificaron las historias de alertas y placa QR (HU-4, 7, 8 y 9) con criterios de aceptación medibles (puntaje mínimo de coincidencia, radio de 2 km).",
-        interfaz="Campana de alertas en el menú, panel de alertas en el detalle del reporte con mapa y radio de cercanía, formulario de perfil de mascota y placa imprimible con QR.",
+        espec="Se especificaron las siete historias de alertas, perfil con placa QR, contacto y listado único (HU-4, 7, 8, 9, 10, 11 y 14) con criterios de aceptación medibles (puntaje mínimo de coincidencia, radio de 2 km).",
+        interfaz="Campana de alertas en el menú, panel de alertas en el detalle del reporte con mapa y radio de cercanía, formulario de perfil de mascota, placa imprimible con QR, "
+                 "chat por reporte y listado único de reportes de todas las zonas.",
         captura=("placa", "Placa imprimible con código QR (HU-8)."),
         back="Módulo de coincidencias de lógica pura (sin base de datos): familias de color, fórmula de haversine para distancias y un puntaje de parecido. "
              "Como todavía no había cuentas, el navegador recuerda los reportes que creó (localStorage) y la campana consulta `GET /api/alertas`. "
-             "Códigos QR con la librería `qrcode`.",
-        bd="Nueva entidad **Mascota** (perfil digital), independiente de los reportes.",
-        pruebas="Coincidencias, cercanía y colores (coincidencias.test.ts, colores.test.ts).",
+             "Códigos QR con la librería `qrcode`. Chat por reporte (`/api/reportes/[id]/mensajes`) que no expone teléfono ni dirección.",
+        bd="Nuevas entidades **Mascota** (perfil digital, independiente de los reportes) y **Mensaje** (chat ligado al reporte).",
+        pruebas="Coincidencias, cercanía y colores (coincidencias.test.ts, colores.test.ts) y filtros del listado único (filtros.test.ts).",
         ajustes="Cada reporte pasó a pedir fecha **y hora** del suceso y todos los mapas arrancan centrados en Pasto.",
     ),
     4: dict(
-        espec="Se especificaron las 15 historias del Sprint (HU-10, 11, 14 a 20, 22 a 24, más las trasladadas HU-21, 26 y 27), con 3 a 4 criterios de aceptación cada una (Anexo A).",
-        interfaz="Registro e inicio de sesión por rol (ciudadano, veterinaria, refugio), paneles por rol, «Dónde acudir», «Animales en resguardo», botones de compartir, "
+        espec="Se especificaron las nueve historias del Sprint (HU-15 a 20, 22, 23 y 24), con 3 a 4 criterios de aceptación cada una (Anexo A).",
+        interfaz="Registro e inicio de sesión por rol (ciudadano, veterinaria, refugio), paneles por rol, «Dónde acudir», «Animales en resguardo», aviso de posibles duplicados, "
                  "indicadores del administrador y un rediseño visual animado de la portada y los componentes.",
         captura=("login", "Pantalla de inicio de sesión (HU-16)."),
         back="Sistema de cuentas con contraseñas protegidas con scrypt y cookies firmadas; servicios de aplicación y rutas delgadas; caché por etiquetas para reducir consultas; "
              "motor de coincidencias con criterios intercambiables; renovación de reportes (HU-19) y avisos de cercanía (HU-16).",
-        bd="Nuevas entidades **Usuario** (rol CIUDADANO, VETERINARIA o REFUGIO), **AnimalResguardo**, **Vacuna** y **Mensaje**; campos de renovación y de señas de gato en **Reporte** y **Mascota**.",
-        pruebas="De 60 a 218 pruebas: servicios con dobles en memoria, criterios de puntuación, renovación, indicadores, directorio, resguardo y compartir.",
+        bd="Nuevas entidades **Usuario** (rol CIUDADANO, VETERINARIA o REFUGIO), **AnimalResguardo** y **Vacuna**; campos de renovación y de señas de gato en **Reporte** y **Mascota**.",
+        pruebas="Crecimiento de la batería automatizada (ver sección de Pruebas): servicios con dobles en memoria, criterios de puntuación, renovación, indicadores, directorio y resguardo.",
         ajustes="Se resolvieron: navegación lenta con sesión iniciada (se consultaba la base en cada navegación; ahora se lee solo la cookie firmada); la campana no consumía los avisos de cercanía; "
                 "tablas expuestas por la API pública de Supabase (se activó RLS); y se refactorizó con los principios SOLID.",
     ),
@@ -380,7 +382,8 @@ def _sprints(I, hus, hc):
         else:
             I.p(f"En el Sprint se decidió elaborar {plan} historias de usuario del Sprint Backlog ({e['pts_plan']} puntos). "
                 f"De acuerdo con el DoD establecido, se lograron desarrollar las {plan} historias planeadas ({e['pts_hechos']} puntos); "
-                "no se trasladó ninguna historia al siguiente Sprint.", alinear="justificado")
+                "no se trasladó ninguna historia al siguiente Sprint. Impedimentos encontrados durante el Sprint: [[completar con el equipo, si los hubo]].",
+                alinear="justificado")
         I.p("**Retrospective**", despues=2)
         I.p("La retrospectiva recoge lo que el equipo identificó y decidió; por eso se deja para completar con sus conclusiones.",
             cursiva=True)
@@ -621,19 +624,37 @@ def _diseno(I):
 # ==================================================================== SEGURIDAD
 def _seguridad(I):
     I.h1("8. Seguridad")
-    I.tabla(["Aspecto", "Cómo se resolvió"],
-            [["Autenticación", "Contraseñas con **scrypt** (sal aleatoria por usuario). Sesión en cookie `httpOnly`, `sameSite=lax`, firmada con HMAC-SHA256 y con vencimiento de 30 días. Un intento fallido espera 400 ms para frenar el ensayo a ciegas."],
-             ["Autorización", "Reglas explícitas y probadas: solo el dueño (la cuenta con la que se publicó) o el administrador pueden editar, renovar o eliminar; el dueño puede cerrar su caso pero solo el administrador puede reabrirlo; cada refugio gestiona solo sus animales. Respuestas 401 (sin sesión), 403 (sin permiso) y 404."],
-             ["Roles", "Visitante, ciudadano, veterinaria, refugio y administrador. Cada panel verifica el rol y redirige si no corresponde."],
-             ["Validación de entradas", "Esquemas Zod en el servidor para todos los formularios; los datos del navegador nunca se aceptan sin validar."],
-             ["Archivos subidos", "Solo JPG, PNG y WEBP de hasta 5 MB; el nombre guardado es un UUID generado por el servidor; la ruta de lectura solo acepta ese formato (evita recorrer carpetas)."],
-             ["Base de datos", "Consultas parametrizadas por Prisma (sin SQL manual con datos del usuario). RLS activo en las seis tablas."],
-             ["Secretos", "Credenciales y claves en variables de entorno (`.env`, ignorado por git); plantilla `.env.example` sin valores reales."],
-             ["Privacidad", "El chat no expone teléfono ni dirección; el reporte anónimo no guarda contacto; el carnet de vacunas es público por diseño (se ve con el mismo enlace del QR)."]],
-            [3.4, 13.6], tam=9, leyenda="Medidas de seguridad implementadas.")
-    I.p("**Limitaciones conocidas:** no hay límite de intentos por dirección IP ni verificación en dos pasos; las credenciales del "
-        "administrador están en variables de entorno (un único administrador); y las veterinarias y refugios no pasan por una "
-        "verificación de identidad. Se recomiendan como mejoras antes de un uso masivo.", alinear="justificado")
+    I.p("PetMatch guarda datos personales (nombres, teléfonos, correos, ubicaciones y fotografías), por lo que la seguridad se "
+        "diseñó en capas: si una falla, la siguiente limita el daño. Ningún sistema es invulnerable; las medidas siguientes "
+        "reducen la superficie de ataque y se verifican con pruebas automatizadas.", alinear="justificado")
+    I.tabla(["Capa", "Cómo se resolvió"],
+            [["Autenticación", "Contraseñas con **scrypt** (N = 2^15, sal aleatoria por usuario; las anteriores siguen siendo verificables). Política de 10 o más caracteres con letras y números, sin contraseñas comunes ni el correo. "
+              "**Bloqueo tras 5 intentos fallidos** por correo y por IP (respuesta 429 con `Retry-After`) y espera de 400 ms por fallo. Se gasta el mismo tiempo cuando el correo no existe, para que la demora no revele qué correos tienen cuenta."],
+             ["Sesiones", "Cookie `httpOnly`, `sameSite=lax`, `secure` en producción y firmada con HMAC-SHA256; vence a los 7 días (cuentas) y 8 horas (administrador). "
+              "**En producción los secretos de firma son obligatorios** (mínimo 32 caracteres): sin ellos la aplicación se niega a firmar sesiones en vez de usar una clave conocida, y el acceso de administrador se deshabilita si su contraseña tiene menos de 12 caracteres."],
+             ["Autorización", "Reglas explícitas y probadas: solo el dueño (la cuenta con la que se publicó) o el administrador pueden editar, renovar o eliminar; el dueño puede cerrar su caso pero solo el administrador puede reabrirlo; cada refugio gestiona solo sus animales. Cada panel verifica el rol en el servidor."],
+             ["Cabeceras HTTP", "`Content-Security-Policy` (solo recursos propios y los mapas de OpenStreetMap; `frame-ancestors 'none'`), `Strict-Transport-Security`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` y `Cross-Origin-Resource-Policy`. Se oculta `X-Powered-By` y se desactiva el optimizador de imágenes de Next.js, que no se usa."],
+             ["Protección de la API", "Un middleware aplica a toda `/api`: **verificación de origen** en las escrituras (defensa contra CSRF, además de `sameSite`), **límite de tamaño** del cuerpo (6 MB) y **límite de peticiones por IP** según la acción (registro 5/hora, publicar 20/hora, escrituras 120/min, lecturas 600/min)."],
+             ["Archivos subidos", "Solo JPG, PNG y WEBP de hasta 5 MB. El tipo se comprueba por los **primeros bytes del archivo** (no por el que declara el navegador), por lo que un script o un PDF renombrado se rechaza. A los JPEG se les **eliminan los metadatos EXIF y la ubicación GPS** (se conserva la orientación). "
+              "El nombre guardado es un UUID del servidor y se sirven con `nosniff` y `sandbox`."],
+             ["Validación de entradas", "Esquemas Zod en el servidor para todos los formularios; los datos del navegador nunca se aceptan sin validar. React escapa toda salida; los enlaces `tel:`, `mailto:` y de WhatsApp se construyen con un prefijo fijo."],
+             ["Base de datos", "Consultas parametrizadas por Prisma (sin SQL manual con datos del usuario). **Row Level Security** activo en las seis tablas: la API pública de Supabase no puede leer ni modificar nada aunque se conozca su clave."],
+             ["Secretos y entorno", "Credenciales y claves solo en variables de entorno (`.env` ignorado por git; plantilla `.env.example` sin valores). `URL_PUBLICA` obligatoria en producción para que la cabecera Host no pueda alterar los enlaces del QR. Las cuentas de prueba no se muestran en producción y los scripts que crean o borran datos de prueba se niegan a correr contra una base que no sea local."],
+             ["Privacidad", "El chat no expone teléfono ni dirección; el reporte anónimo no guarda contacto. Los datos de contacto que la persona decide publicar en un reporte o en la placa de su mascota son visibles por diseño del producto; el carnet de vacunas es público con el mismo enlace del QR."],
+             ["Dependencias", "Next.js 15 y React 19 actualizados (los avisos de seguridad de Next.js 14 requerían 15.5 o superior). `npm audit` en producción: queda un aviso moderado de `postcss` (interno de Next.js, solo procesa el CSS propio al compilar) y uno de `zod` (agotamiento de memoria con arreglos enormes; la aplicación no valida arreglos y el cuerpo está limitado a 6 MB)."]],
+            [3.4, 13.6], tam=8.5, leyenda="Medidas de seguridad implementadas, por capa.")
+    I.h2("8.1 Cómo se verifica")
+    I.p("Los controles están cubiertos por la prueba unitaria `seguridad.test.ts` (limitador, origen, detección y limpieza de imágenes, secretos, contraseñas y política de claves, acceso de administrador) "
+        "y por siete comprobaciones de seguridad en la prueba de humo contra el aplicativo compilado: cabeceras presentes, escritura desde otro origen rechazada (403), cuerpo excesivo rechazado (413), "
+        "contraseña débil rechazada, archivo disfrazado de imagen rechazado, bloqueo tras cinco intentos fallidos (429) y errores sin detalles internos.", alinear="justificado")
+    I.h2("8.2 Limitaciones y recomendaciones")
+    I.vinetas([
+        "El límite de peticiones y de intentos fallidos vive en la memoria de cada instancia del servidor; en una plataforma sin servidor el límite es por instancia. Para un límite global habría que llevarlo a un almacén compartido (por ejemplo Redis).",
+        "El correo electrónico no se verifica al registrarse y no hay verificación en dos pasos.",
+        "Hay un único administrador, con credenciales en variables de entorno. Las veterinarias y los refugios no pasan por una verificación de identidad.",
+        "No hay recuperación de contraseña por correo; requiere un servicio de envío de correos.",
+        "Las fotografías se guardan en disco local: en un alojamiento sin servidor deben migrarse a un almacenamiento con permisos (Supabase Storage).",
+    ])
 
 
 # ====================================================================== PRUEBAS
@@ -655,6 +676,7 @@ USO_TEST = {
     "sesion.test.ts": "Sesión del administrador firmada",
     "sesionUsuario.test.ts": "Sesión de cuentas",
     "contrasenas.test.ts": "Hash y verificación de contraseñas",
+    "seguridad.test.ts": "Limitador de peticiones, origen (CSRF), imágenes y EXIF, secretos y política de contraseñas",
     "validacionCuenta.test.ts": "Registro, suscripción y perfil de local",
     "validacionVacuna.test.ts": "Carnet de vacunas (HU-17)",
     "servicioReportes.test.ts": "Casos de uso de reportes con dobles en memoria",
@@ -765,11 +787,11 @@ def _despliegue(I):
            "(URL pública, fecha y verificación) una vez realizado.")
     I.h2("12.1 Plan")
     I.vinetas([
-        "**Alojamiento de la aplicación:** plataforma con soporte para Next.js 14 (por ejemplo, Vercel) o un servidor Node con `npm run build` y `npm run start`.",
-        "**Base de datos:** el proyecto de Supabase existente (idealmente en `sa-east-1`); variables `DATABASE_URL` (pooler) y `DIRECT_URL`.",
-        "**Variables de entorno:** `DATABASE_URL`, `DIRECT_URL`, `ADMIN_USUARIO`, `ADMIN_CONTRASENA`, `ADMIN_SECRETO`, `SESION_SECRETO` (clave larga y aleatoria), `URL_PUBLICA` (dominio, para el QR y los enlaces al compartir). **No** definir `MOSTRAR_CUENTAS_PRUEBA`.",
+        "**Alojamiento de la aplicación:** plataforma con soporte para Next.js 15 (por ejemplo, Vercel) o un servidor Node con `npm run build` y `npm run start`.",
+        "**Base de datos:** el proyecto de Supabase existente (región `ca-central-1`, la más cercana disponible cuando se creó; su latencia se documenta en la sección de rendimiento); variables `DATABASE_URL` (pooler) y `DIRECT_URL`.",
+        "**Variables de entorno:** `DATABASE_URL`, `DIRECT_URL`, `ADMIN_USUARIO`, `ADMIN_CONTRASENA`, `ADMIN_SECRETO`, `SESION_SECRETO` (ambos de 32 o más caracteres aleatorios), `ADMIN_CONTRASENA` (12 o más caracteres) y `URL_PUBLICA` (dominio https, obligatoria: la usan el QR y los enlaces al compartir). **No** definir `MOSTRAR_CUENTAS_PRUEBA`.",
         "**Fotografías:** hoy se guardan en `public/uploads`, que no es persistente en plataformas sin servidor. Antes de publicar en ese tipo de plataformas, se escribe un adaptador del puerto `AlmacenFotos` para **Supabase Storage** (cambio de una clase y una línea en `composicion.ts`).",
-        "**Datos de prueba:** borrar las cuentas `*@petmatch.test` y cambiar las credenciales del administrador.",
+        "**Datos de prueba:** las cuentas y los datos de prueba se eliminaron de la base real antes de abrirla al público, de modo que queda lista para los registros reales; las credenciales del administrador deben ser nuevas y fuertes.",
         "**Seguridad:** ejecutar `npm run db:rls` tras sincronizar el esquema; rotar la clave pública de Supabase si estuvo expuesta.",
     ])
     I.h2("12.2 Lista de verificación")

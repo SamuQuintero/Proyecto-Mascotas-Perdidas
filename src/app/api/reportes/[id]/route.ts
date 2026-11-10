@@ -5,10 +5,8 @@ import { responder } from "@/infraestructura/respuestasHttp";
 import { prisma } from "@/lib/db";
 import { sesionGestion } from "@/lib/cuenta";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const reporte = await prisma.reporte.findUnique({
     where: { id: params.id },
   });
@@ -26,10 +24,8 @@ export async function GET(
 // HU-25 / HU-23: editar un reporte (el administrador, o su dueño: la cuenta
 // con la que se publicó). Recibe el mismo multipart/form-data que la
 // creación; la foto es opcional. Las reglas viven en ServicioReportes.
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const formulario = await leerFormulario(request);
   if (!formulario) {
     return NextResponse.json(
@@ -49,10 +45,8 @@ export async function PATCH(
 
 // HU-26: eliminar un reporte (el administrador o su dueño). Las reglas viven
 // en ServicioReportes.eliminar.
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const resultado = await servicioReportes.eliminar({
     id: params.id,
     sesion: await sesionGestion(),

@@ -1,9 +1,9 @@
 {
  "fecha": "9/11/2026",
- "base": "http://localhost:3500",
+ "base": "http://localhost:3100",
  "entorno": "aplicativo compilado para producción (next build + next start) con una base PostgreSQL local con el mismo esquema de Prisma",
- "total": 73,
- "aprobadas": 73,
+ "total": 80,
+ "aprobadas": 80,
  "resultados": [
   {
    "nombre": "GET / responde 200",
@@ -367,6 +367,41 @@
   },
   {
    "nombre": "El ciudadano configura su suscripción de avisos (HU-16)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Las respuestas llevan las cabeceras de seguridad",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Una escritura desde otro origen se rechaza (CSRF, 403)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Un cuerpo demasiado grande se rechaza (413)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El registro rechaza una contraseña débil (400)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Un archivo que se hace pasar por imagen se rechaza (400)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El inicio de sesión se bloquea tras 5 fallos (429)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Las rutas de la API no filtran trazas internas en un error",
    "ok": true,
    "detalle": ""
   }

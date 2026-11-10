@@ -5,6 +5,6 @@ export const metadata = {
   title: "Reportar mascota encontrada — PetMatch",
 };
 
-export default function NuevoReporteEncontradaPage() {
-  return <FormularioReporte tipo="ENCONTRADA" conSesion={usuarioSesionLigera() !== null} />;
+export default async function NuevoReporteEncontradaPage() {
+  return <FormularioReporte tipo="ENCONTRADA" conSesion={(await usuarioSesionLigera()) !== null} />;
 }

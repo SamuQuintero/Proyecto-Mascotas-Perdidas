@@ -10,6 +10,8 @@
 // formato que src/lib/contrasenas.ts: "<salt-hex>:<hash-hex>" con scrypt.
 
 const { randomBytes, scryptSync } = require("crypto");
+const { exigirBaseLocal } = require("./_guardia");
+exigirBaseLocal("crear-cuentas-prueba");
 const { PrismaClient } = require("@prisma/client");
 const { contrasena, cuentas } = require("../prisma/cuentas-prueba.json");
 

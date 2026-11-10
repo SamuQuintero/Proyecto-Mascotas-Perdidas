@@ -17,8 +17,13 @@ const ETIQUETAS = {
   REFUGIO: "Refugio",
 } as const;
 
+// Nunca se muestran en producción, aunque la variable esté activa por error.
+function visibles(): boolean {
+  return process.env.MOSTRAR_CUENTAS_PRUEBA === "true" && process.env.NODE_ENV !== "production";
+}
+
 export function cuentasPrueba(): CuentaPrueba[] | null {
-  if (process.env.MOSTRAR_CUENTAS_PRUEBA !== "true") return null;
+  if (!visibles()) return null;
   return datos.cuentas.map((cuenta) => ({
     etiqueta: ETIQUETAS[cuenta.rol as keyof typeof ETIQUETAS],
     usuario: cuenta.email,
@@ -28,7 +33,7 @@ export function cuentasPrueba(): CuentaPrueba[] | null {
 
 // El administrador no vive en la base de datos: sale de .env.
 export function cuentaPruebaAdmin(): CuentaPrueba | null {
-  if (process.env.MOSTRAR_CUENTAS_PRUEBA !== "true") return null;
+  if (!visibles()) return null;
   const usuario = process.env.ADMIN_USUARIO;
   const contrasena = process.env.ADMIN_CONTRASENA;
   return usuario && contrasena ? { etiqueta: "Administrador", usuario, contrasena } : null;

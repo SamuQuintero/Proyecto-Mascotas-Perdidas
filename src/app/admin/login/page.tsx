@@ -18,13 +18,14 @@ function destinoSeguro(siguiente: string | undefined): string {
     : "/admin";
 }
 
-export default function LoginAdminPage({
-  searchParams,
-}: {
-  searchParams: { siguiente?: string };
-}) {
+export default async function LoginAdminPage(
+  props: {
+    searchParams: Promise<{ siguiente?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const siguiente = destinoSeguro(searchParams.siguiente);
-  if (adminActual()) {
+  if (await adminActual()) {
     redirect(siguiente);
   }
 

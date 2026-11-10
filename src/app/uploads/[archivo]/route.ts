@@ -13,10 +13,8 @@ const TIPOS: Record<string, string> = {
   webp: "image/webp",
 };
 
-export async function GET(
-  _request: Request,
-  { params }: { params: { archivo: string } }
-) {
+export async function GET(_request: Request, props: { params: Promise<{ archivo: string }> }) {
+  const params = await props.params;
   // Solo nombres generados por guardarFotoReporte: evita leer fuera de la carpeta.
   const coincidencia = /^[\w-]+\.(jpg|png|webp)$/.exec(params.archivo);
   if (!coincidencia) {
@@ -32,6 +30,8 @@ export async function GET(
         "Content-Type": TIPOS[coincidencia[1]],
         // El nombre es un UUID único: el archivo nunca cambia.
         "Cache-Control": "public, max-age=31536000, immutable",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'none'; sandbox",
       },
     });
   } catch {

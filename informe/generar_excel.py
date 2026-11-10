@@ -88,7 +88,7 @@ def generar(ruta_salida):
             wp.cell(fila, 6, POR_QUE.get(hu, ""))
             destino = COMPLETADAS_DESPUES.get(hu)
             if destino is None or destino[0] == n:
-                res = "Completada en el sprint" + (" (trasladada del Sprint 2)" if destino else "")
+                res = "Completada en el sprint"
             elif destino[0] == "cierre":
                 res = "Trasladada al cierre del proyecto (completada el 09/11/2026)"
             else:
@@ -122,8 +122,8 @@ def generar(ruta_salida):
         wr[f"{col}7"] = f"=SUM({col}2:{col}5)"
         wr[f"{col}7"].font = Font(bold=True)
         wr[f"{col}7"].alignment = Alignment(horizontal="center")
-    wr.cell(9, 1, "Nota: HU-26 y HU-27 se trasladaron del Sprint 2 y se completaron en el cierre del proyecto (09/11/2026), "
-                  "después del Sprint 4; por eso no suman en «completadas en el sprint» del Sprint 4.")
+    wr.cell(9, 1, "Nota: los Sprints 1 y 2 salen del Excel del equipo; los Sprints 3 y 4 reparten el resto de las historias "
+                  "por prioridad (valor × urgencia) y dependencias. El equipo debe confirmarlos.")
     wr.cell(9, 1).font = Font(italic=True, size=9)
 
     # ------------------------------------------------------------ DoD tiempos

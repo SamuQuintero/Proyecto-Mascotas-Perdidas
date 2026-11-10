@@ -6,10 +6,8 @@ import { prisma } from "@/lib/db";
 // cuenta). El hilo es tan público como el reporte mismo: cualquiera con el
 // enlace puede leerlo y escribir, sin exponer teléfono ni dirección.
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const existente = await prisma.reporte.findUnique({
     where: { id: params.id },
     select: { id: true },
@@ -34,10 +32,8 @@ const cuerpoSchema = z.object({
     .max(500, "Máximo 500 caracteres."),
 });
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const resultado = cuerpoSchema.safeParse(await request.json().catch(() => null));
   if (!resultado.success) {
     return NextResponse.json(

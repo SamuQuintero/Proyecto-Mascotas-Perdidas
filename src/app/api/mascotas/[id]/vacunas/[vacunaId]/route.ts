@@ -5,8 +5,9 @@ import { prisma } from "@/lib/db";
 // HU-17: borrar una vacuna mal registrada. Solo veterinarias.
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string; vacunaId: string } }
+  props: { params: Promise<{ id: string; vacunaId: string }> }
 ) {
+  const params = await props.params;
   const { error } = await exigirVeterinaria();
   if (error) return error;
 

@@ -27,11 +27,12 @@ export const metadata = {
 // admin (los mismos indicadores y el mismo listado), pero de solo lectura
 // — sin editar, sin marcar reencontrada. A cambio, puede buscar mascotas
 // con perfil QR (HU-8) y llevarles el carnet de vacunas.
-export default async function VeterinariaPage({
-  searchParams,
-}: {
-  searchParams: { q?: string };
-}) {
+export default async function VeterinariaPage(
+  props: {
+    searchParams: Promise<{ q?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const q = searchParams.q?.trim() ?? "";
 
   // El usuario y los datos del panel se piden a la vez (ver /cuenta).

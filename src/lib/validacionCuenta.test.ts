@@ -6,7 +6,7 @@ describe("registroSchema — HU-16 / HU-17", () => {
     const resultado = registroSchema.safeParse({
       nombre: "Ana",
       email: "ana@correo.com",
-      contrasena: "123456",
+      contrasena: "Tres-gatos-77",
       rol: "CIUDADANO",
     });
     expect(resultado.success).toBe(true);
@@ -16,7 +16,7 @@ describe("registroSchema — HU-16 / HU-17", () => {
     const resultado = registroSchema.safeParse({
       nombre: "Dr. Pérez",
       email: "vet@correo.com",
-      contrasena: "123456",
+      contrasena: "Tres-gatos-77",
       rol: "VETERINARIA",
     });
     expect(resultado.success).toBe(false);
@@ -26,7 +26,7 @@ describe("registroSchema — HU-16 / HU-17", () => {
     const resultado = registroSchema.safeParse({
       nombre: "Dr. Pérez",
       email: "vet@correo.com",
-      contrasena: "123456",
+      contrasena: "Tres-gatos-77",
       rol: "VETERINARIA",
       nombreClinica: "Veterinaria San Francisco",
     });
@@ -47,7 +47,7 @@ describe("registroSchema — HU-16 / HU-17", () => {
     const resultado = registroSchema.safeParse({
       nombre: "Ana",
       email: "ANA@CORREO.COM",
-      contrasena: "123456",
+      contrasena: "Tres-gatos-77",
       rol: "CIUDADANO",
     });
     expect(resultado.success && resultado.data.email).toBe("ana@correo.com");
@@ -77,7 +77,7 @@ describe("suscripcionSchema — HU-16 (radio de aviso)", () => {
 });
 
 describe("registro de refugio (HU-20)", () => {
-  const base = { nombre: "Ana", email: "a@b.co", contrasena: "secreta1", rol: "REFUGIO" as const };
+  const base = { nombre: "Ana", email: "a@b.co", contrasena: "Tres-gatos-77", rol: "REFUGIO" as const };
 
   it("exige el nombre del refugio", () => {
     const r = registroSchema.safeParse(base);

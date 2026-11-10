@@ -9,7 +9,8 @@ export const metadata = {
 };
 
 // HU-23: el dueño actualiza la foto y los datos de contacto del perfil.
-export default async function EditarMascotaPage({ params }: { params: { id: string } }) {
+export default async function EditarMascotaPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const mascota = await prisma.mascota.findUnique({ where: { id: params.id } });
   if (!mascota) notFound();
 

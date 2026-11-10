@@ -18,7 +18,7 @@ export const metadata = {
 // HU-20: panel del refugio o rescatista. Publica los animales que tiene
 // bajo resguardo (y desde cuándo) y gestiona los que ya entregó.
 export default async function RefugioPage() {
-  const sesion = usuarioSesionLigera();
+  const sesion = await usuarioSesionLigera();
   if (!sesion) redirect("/cuenta/login?siguiente=/refugio");
 
   // El usuario y sus animales se piden a la vez (ver /cuenta).

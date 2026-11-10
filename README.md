@@ -33,17 +33,19 @@ vacunas o publicar animales en resguardo.
 
 ## Historias de usuario y Sprints (27 de 27 completadas)
 
-Cuatro Sprints de dos semanas (08/09/2026 – 02/11/2026) más un cierre. El detalle
+Cuatro Sprints de dos semanas (08/09/2026 – 02/11/2026). El detalle
 —Sprint Backlog, Sprint Goal, Definition of Done, Review y Retrospective— está en
 el informe; las fichas con criterios de aceptación de cada historia, en su Anexo A.
 
 | Sprint | Fechas | Historias |
 |---|---|---|
 | 1 | 08/09 – 21/09 | HU-1, 2, 3, 5, 13 — registrar pérdidas y hallazgos con foto y mapa |
-| 2 | 22/09 – 05/10 | HU-6, 12, 25 completadas (filtrar, cerrar, editar); HU-21, 26 y 27 trasladadas |
-| 3 | 06/10 – 19/10 | HU-4, 7, 8, 9 — alertas de coincidencia y cercanía, placa con QR |
-| 4 | 20/10 – 02/11 | HU-10, 11, 14 a 20, 21, 22, 23, 24 — comunidad, cuentas, refugios, difusión e indicadores |
-| Cierre | 09/11 | HU-26 (eliminar reporte) y HU-27 (ordenar por fecha), más verificación del aplicativo |
+| 2 | 22/09 – 05/10 | HU-6, 12, 21, 25, 26, 27 — filtrar, ordenar, editar, eliminar, cerrar y compartir reportes |
+| 3 | 06/10 – 19/10 | HU-4, 7, 8, 9, 10, 11, 14 — alertas de coincidencia y cercanía, perfil con placa QR, chat y listado único |
+| 4 | 20/10 – 02/11 | HU-15 a 20, 22, 23, 24 — cuentas por rol, refugios, duplicados, renovación e indicadores |
+
+Los Sprints 1 y 2 salen del Excel del equipo (`Product Backlog.xlsx`); los Sprints 3 y 4 reparten el resto
+por prioridad (valor × urgencia) y dependencias.
 
 | HU | Historia |
 |---|---|
@@ -71,7 +73,7 @@ Notas de diseño:
 
 ## Tecnologías
 
-- **Next.js 14** (App Router) + **TypeScript** — frontend y backend en un
+- **Next.js 15** (App Router, React 19) + **TypeScript** — frontend y backend en un
   solo proyecto.
 - **Tailwind CSS** — estilos.
 - **Prisma ORM** + **PostgreSQL (Supabase)** — persistencia.
@@ -206,17 +208,39 @@ Con `MOSTRAR_CUENTAS_PRUEBA=true`, el login muestra botones que rellenan el
 formulario. **Borra estas cuentas y quita la variable antes de publicar la
 app.**
 
+## Seguridad
+
+La aplicación guarda datos personales (nombres, teléfonos, correos, ubicaciones), así
+que la seguridad se trata en capas. Ningún sistema es «inhackeable»: estas medidas
+reducen la superficie de ataque y limitan el daño si algo falla.
+
+| Capa | Medida |
+|---|---|
+| Transporte y navegador | Cabeceras `Content-Security-Policy`, `Strict-Transport-Security` (sobre HTTPS), `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `COOP/CORP`; sin `X-Powered-By` |
+| Autenticación | Contraseñas con scrypt (N=2^15) y sal propia; política de 10+ caracteres con letras y números, sin contraseñas comunes ni el correo; bloqueo tras 5 fallos por correo e IP (429); igualación de tiempos para no revelar qué correos existen |
+| Sesiones | Cookie firmada con HMAC, `httpOnly`, `sameSite=lax`, `secure` en producción; 7 días (ciudadano) y 8 horas (admin); en producción los secretos de firma (≥ 32 caracteres) y la contraseña de admin (≥ 12) son obligatorios |
+| Peticiones | `middleware` con verificación de origen (CSRF), límite de tamaño del cuerpo (6 MB) y límite de peticiones por IP (registro, acceso, publicación, escritura, lectura) |
+| Archivos | Las fotos se identifican por sus primeros bytes (no por el tipo declarado), se les quitan los metadatos EXIF/GPS (se conserva la orientación) y se sirven con `nosniff` y `sandbox` |
+| Datos | Row Level Security activado en las 6 tablas (`npm run db:rls`); Prisma parametriza todas las consultas; Zod valida cada entrada; React escapa toda salida |
+| Operación | Los scripts que crean datos de prueba (`demo`, `cuentas:prueba`, `humo`, `capturas`) se niegan a correr contra una base que no sea local; las cuentas de prueba nunca se muestran en producción; `next/image` desactivado |
+
+Limitaciones conocidas (se documentan en el informe): el límite de peticiones vive en la
+memoria de cada instancia del servidor (en serverless sería por instancia; para uno
+global haría falta Redis); el correo no se verifica al registrarse; los datos de contacto
+que la persona decide publicar en un reporte son visibles para cualquiera por diseño del
+producto.
+
 ## Pruebas
 
 ```bash
-npm test            # 218 pruebas unitarias y de servicios (vitest)
-npm run humo        # prueba de humo: 73 comprobaciones de todos los roles contra el aplicativo en ejecución
+npm test            # 237 pruebas unitarias y de servicios (vitest)
+npm run humo        # prueba de humo: 80 comprobaciones de todos los roles contra el aplicativo en ejecución
 npm run capturas    # capturas de pantalla de cada rol (Microsoft Edge)
 npm run informe     # regenera el informe Word y el Excel de sprints
 npm run diagramas   # regenera los diagramas UML
 ```
 
-- **218 pruebas unitarias:** la lógica pura (validación, coincidencias y duplicados,
+- **237 pruebas unitarias:** la lógica pura (validación, coincidencias y duplicados,
   señas felinas, renovación y permisos, indicadores, directorio, resguardo,
   compartir, sesiones, contraseñas y fechas) y los casos de uso de
   `src/servicios/` con dobles en memoria, sin base de datos. Cobertura de los
@@ -269,5 +293,5 @@ latencia, y paginación del listado de reportes cuando crezca el volumen.
 
 ## Estado del proyecto
 
-**27 de 27 historias implementadas en 4 Sprints.** Pasan las 218 pruebas automatizadas
-(`npm test`), la prueba de humo (73/73) y el proyecto compila (`npm run build`). Pendiente: el despliegue.
+**27 de 27 historias implementadas en 4 Sprints.** Pasan las 237 pruebas automatizadas
+(`npm test`), la prueba de humo (80/80) y el proyecto compila (`npm run build`). Pendiente: el despliegue.

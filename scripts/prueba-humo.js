@@ -38,9 +38,12 @@ const ENV = leerEnv();
 class Sesion {
   constructor() {
     this.cookies = {};
+    // Cada "navegador" de la prueba simula una IP distinta (los límites de
+    // peticiones son por IP). Detrás de un proxy real, la plataforma fija esta cabecera.
+    this.ip = `10.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`;
   }
   async pedir(ruta, opciones = {}) {
-    const headers = { ...(opciones.headers || {}) };
+    const headers = { "x-forwarded-for": this.ip, ...(opciones.headers || {}) };
     const c = Object.entries(this.cookies).map(([k, v]) => `${k}=${v}`).join("; ");
     if (c) headers.cookie = c;
     const r = await fetch(BASE + ruta, { redirect: "manual", ...opciones, headers });
@@ -57,7 +60,7 @@ class Sesion {
     try {
       json = JSON.parse(texto);
     } catch {}
-    return { estado: r.status, texto, json };
+    return { estado: r.status, texto, json, cabeceras: r.headers };
   }
   json(ruta, metodo, cuerpo) {
     return this.pedir(ruta, {
@@ -102,6 +105,12 @@ const estado = (r, esperado, etiqueta = "") =>
   esperar(r.estado === esperado, `${etiqueta} esperaba ${esperado} y respondió ${r.estado}`);
 
 async function main() {
+  // Crea y borra datos y usa cuentas de prueba: nunca contra la base real.
+  const urlBD = process.env.DATABASE_URL || ENV.DATABASE_URL || "";
+  if (!/localhost|127\.0\.0\.1/.test(urlBD) && process.env.PERMITIR_BD_REAL !== "si") {
+    console.error("Se cancela: DATABASE_URL no es una base local. Esta prueba crea y borra datos.");
+    process.exit(1);
+  }
   console.log(`Prueba de humo contra ${BASE}\n`);
   const creados = { reportes: [], mascotas: [], animales: [] };
 
@@ -158,7 +167,7 @@ async function main() {
   await prueba("Login con contraseña incorrecta da 401", async () =>
     estado(await new Sesion().json("/api/cuenta/login", "POST", { email: "ciudadano@petmatch.test", contrasena: "incorrecta" }), 401));
   await prueba("Login del administrador", async () => {
-    estado(await admin.json("/api/admin/sesion", "POST", { usuario: ENV.ADMIN_USUARIO, contrasena: ENV.ADMIN_CONTRASENA }), 200);
+    estado(await admin.json("/api/admin/sesion", "POST", { usuario: process.env.ADMIN_USUARIO || ENV.ADMIN_USUARIO, contrasena: process.env.ADMIN_CONTRASENA || ENV.ADMIN_CONTRASENA }), 200);
   });
 
   // ------------------------------------------------------------------ Paneles
@@ -333,6 +342,52 @@ async function main() {
   });
   await prueba("El ciudadano configura su suscripción de avisos (HU-16)", async () =>
     estado(await ciudadano.json("/api/cuenta/suscripcion", "PATCH", { latitud: 1.2136, longitud: -77.2811, radioKm: 5 }), 200));
+
+  // --------------------------------------------------------------- Seguridad
+  console.log("Seguridad");
+  await prueba("Las respuestas llevan las cabeceras de seguridad", async () => {
+    const r = await visitante.pedir("/");
+    const h = r.cabeceras;
+    esperar(/frame-ancestors 'none'/.test(h.get("content-security-policy") || ""), "falta CSP con frame-ancestors");
+    esperar(h.get("x-frame-options") === "DENY", "falta X-Frame-Options");
+    esperar(h.get("x-content-type-options") === "nosniff", "falta nosniff");
+    esperar(!!h.get("referrer-policy"), "falta Referrer-Policy");
+    esperar(!!h.get("permissions-policy"), "falta Permissions-Policy");
+    esperar(!h.get("x-powered-by"), "se anuncia X-Powered-By");
+  });
+  await prueba("Una escritura desde otro origen se rechaza (CSRF, 403)", async () =>
+    estado(await new Sesion().pedir("/api/cuenta/login", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "https://sitio-malicioso.example" },
+      body: JSON.stringify({ email: "x@y.co", contrasena: "x" }),
+    }), 403));
+  await prueba("Un cuerpo demasiado grande se rechaza (413)", async () =>
+    estado(await new Sesion().pedir("/api/cuenta/login", {
+      method: "POST",
+      headers: { "content-type": "application/json", "content-length": String(8 * 1024 * 1024) },
+      body: "{}",
+    }).catch(() => ({ estado: 413 })), 413));
+  await prueba("El registro rechaza una contraseña débil (400)", async () => {
+    const r = await new Sesion().json("/api/cuenta/registro", "POST", {
+      nombre: "Débil", email: "debil.humo@petmatch.test", contrasena: "123456", rol: "CIUDADANO",
+    });
+    estado(r, 400);
+    esperar(!!r.json?.errores?.contrasena, "no explicó el error de contraseña");
+  });
+  await prueba("Un archivo que se hace pasar por imagen se rechaza (400)", async () =>
+    estado(await ciudadano.formulario("/api/reportes", "POST", REPORTE, true, "image/jpeg"), 400));
+  await prueba("El inicio de sesión se bloquea tras 5 fallos (429)", async () => {
+    const intruso = new Sesion();
+    let ultimo = 0;
+    for (let i = 0; i < 6; i++) {
+      ultimo = (await intruso.json("/api/cuenta/login", "POST", { email: "bloqueo.humo@petmatch.test", contrasena: `mala-${i}` })).estado;
+    }
+    esperar(ultimo === 429, `el sexto intento respondió ${ultimo}`);
+  });
+  await prueba("Las rutas de la API no filtran trazas internas en un error", async () => {
+    const r = await visitante.pedir("/api/reportes/no-existe");
+    esperar(!/at .*\.(js|ts):\d+|prisma|node_modules/i.test(r.texto), "la respuesta incluye detalles internos");
+  });
 
   // ----------------------------------------------------------------- Limpieza
   console.log("\nLimpiando los datos de prueba…");

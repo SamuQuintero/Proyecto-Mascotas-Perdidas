@@ -7,10 +7,8 @@ import { sesionGestion } from "@/lib/cuenta";
 // reporte vuelve a difundirse: sube en el listado y reaparece en los avisos
 // de cercanía de quienes están suscritos a su zona. La regla (dueño, caso
 // abierto, no más de una vez al día) vive en ServicioReportes.renovar.
-export async function POST(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const resultado = await servicioReportes.renovar({
     id: params.id,
     sesion: await sesionGestion(),

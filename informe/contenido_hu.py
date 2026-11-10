@@ -20,23 +20,30 @@ SPRINTS = {
                  "mascota reaparece.",
             hus=[6, 12, 21, 25, 26, 27]),
     3: dict(inicio="06/10/2026", fin="19/10/2026",
-            meta="Avisar al dueño cuando aparece una mascota que puede ser la suya y "
-                 "darle una placa con código QR para prevenir pérdidas.",
-            hus=[4, 7, 8, 9]),
+            meta="Avisar al dueño cuando aparece una mascota que puede ser la suya, darle un "
+                 "perfil con placa QR para prevenir pérdidas y permitir el contacto seguro "
+                 "entre dueño y hallador.",
+            hus=[4, 7, 8, 9, 10, 11, 14]),
     4: dict(inicio="20/10/2026", fin="02/11/2026",
             meta="Ampliar la plataforma a toda la comunidad: cuentas de ciudadano, "
-                 "veterinaria y refugio, difusión sostenida de los casos e indicadores "
-                 "para el equipo administrador.",
-            hus=[10, 11, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 21, 26, 27]),
+                 "veterinaria y refugio, prevención de duplicados, difusión sostenida de los "
+                 "casos e indicadores para el equipo administrador.",
+            hus=[15, 16, 17, 18, 19, 20, 22, 23, 24]),
 }
 
-# HU que se planearon en un sprint pero se completaron después.
-# {hu: (sprint donde se completó o 'cierre', nota)}
-COMPLETADAS_DESPUES = {
-    21: (4, "Trasladada del Sprint 2 al Sprint 4."),
-    26: ("cierre", "Trasladada del Sprint 2; completada en el cierre del proyecto (09/11/2026)."),
-    27: ("cierre", "Trasladada del Sprint 2; completada en el cierre del proyecto (09/11/2026)."),
-}
+# Historias planeadas en un sprint y completadas en otro. Vacío: según el Excel
+# del equipo, cada historia se completó en el Sprint en que se planeó.
+# {hu: (sprint donde se completó, nota)}
+COMPLETADAS_DESPUES = {}
+
+# El Excel del equipo (hoja «Planificación de Sprints») detalla los Sprints 1 y 2.
+# Los Sprints 3 y 4 se ordenan por la prioridad del Product Backlog (valor × urgencia).
+NOTA_PLANIFICACION = (
+    "El Excel del equipo detalla los Sprints 1 y 2 (con las historias HU-25, 26 y 27 dentro del Sprint 2). "
+    "Los Sprints 3 y 4 reparten las historias restantes en orden de prioridad del Product Backlog "
+    "(valor × urgencia), respetando las dependencias entre historias (el perfil de HU-8 antes de HU-9, 10 y 23; "
+    "las cuentas de HU-16 antes de HU-17, 18, 20 y 23)."
+)
 
 # Por qué va cada historia en su sprint (S1 y S2: textos del Excel del equipo).
 POR_QUE = {
@@ -54,8 +61,8 @@ POR_QUE = {
     9: "Cierra el ciclo de HU-8: quien encuentra la placa ve el contacto",
     10: "Extiende HU-4 a mascotas que aún no se han reportado como perdidas",
     11: "Permite coordinar la entrega sin exponer teléfono ni dirección",
-    14: "Listado único de todas las zonas (cubierto por el listado global)",
-    15: "Evita reportes duplicados del mismo animal",
+    14: "Siguiente en prioridad (35): un solo listado con los reportes de todas las zonas",
+    15: "Evita reportes duplicados del mismo animal (prioridad 30)",
     16: "Primera historia que introduce cuentas: base para HU-17, 18, 19 y 20",
     17: "Rol de veterinaria sobre la base de cuentas de HU-16",
     18: "Conecta a quien encuentra un animal con refugios y veterinarias",

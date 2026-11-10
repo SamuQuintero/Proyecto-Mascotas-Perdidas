@@ -8,10 +8,8 @@ import { sesionGestion } from "@/lib/cuenta";
 // actualiza los datos de contacto, las señas o la foto de la mascota. La foto
 // es opcional y solo se reemplaza si se envía una nueva. Las reglas viven en
 // ServicioMascotas.editar.
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const formulario = await leerFormulario(request);
   if (!formulario) {
     return NextResponse.json(

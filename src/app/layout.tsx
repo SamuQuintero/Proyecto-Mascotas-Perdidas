@@ -23,16 +23,16 @@ export const metadata: Metadata = {
     "Registra y encuentra reportes de mascotas perdidas y encontradas con foto y ubicación.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const admin = adminActual();
+  const admin = await adminActual();
   // Lectura ligera, sin consultar la base de datos (ver cuenta.ts): el
   // layout se ejecuta en cada navegación, y una consulta a Supabase ahí
   // hacía lenta hasta la página más simple cuando había sesión iniciada.
-  const sesion = usuarioSesionLigera();
+  const sesion = await usuarioSesionLigera();
   const usuario = sesion ? { nombre: sesion.nombre, rol: sesion.rol } : null;
 
   return (

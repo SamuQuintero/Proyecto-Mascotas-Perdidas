@@ -29,11 +29,12 @@ const PESTANAS_ESTADO = [
   { valor: "TODOS", etiqueta: "Todos" },
 ] as const;
 
-export default async function ReportesPage({
-  searchParams,
-}: {
-  searchParams: Record<string, string | string[] | undefined>;
-}) {
+export default async function ReportesPage(
+  props: {
+    searchParams: Promise<Record<string, string | string[] | undefined>>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const filtros = leerFiltros(searchParams);
 
   const reportes = await buscarReportes(filtros);

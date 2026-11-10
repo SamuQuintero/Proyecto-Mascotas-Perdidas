@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
+import { leerSecreto } from "@/lib/secretos";
 
 // Sesión de cuentas reales (ciudadano HU-16, veterinaria HU-17, refugio HU-20). Es un
 // módulo separado de src/lib/sesion.ts (el admin único, por variables de
@@ -7,23 +8,12 @@ import { createHmac, timingSafeEqual } from "crypto";
 // base de datos en cada petición.
 
 export const COOKIE_USUARIO = "petmatch_usuario";
-export const DURACION_SESION_MS = 30 * 24 * 60 * 60 * 1000; // 30 días
+export const DURACION_SESION_MS = 7 * 24 * 60 * 60 * 1000; // 7 días
 
-// Si no se define SESION_SECRETO en .env, se usa una clave fija de
-// desarrollo: las sesiones funcionan igual, pero no son seguras en
-// producción. Se avisa una sola vez por proceso.
-let avisoDado = false;
+// En producción SESION_SECRETO es obligatorio (ver secretos.ts); en
+// desarrollo se usa una clave fija con aviso.
 function secreto(): string {
-  const valor = process.env.SESION_SECRETO;
-  if (valor) return valor;
-  if (!avisoDado) {
-    avisoDado = true;
-    console.warn(
-      "[sesionUsuario] SESION_SECRETO no está definido en .env; usando una clave de desarrollo. " +
-        "Genera una con: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
-    );
-  }
-  return "clave-de-desarrollo-petmatch-no-usar-en-produccion";
+  return leerSecreto("SESION_SECRETO", "clave-de-desarrollo-petmatch-no-usar-en-produccion");
 }
 
 const ROLES = ["CIUDADANO", "VETERINARIA", "REFUGIO"];

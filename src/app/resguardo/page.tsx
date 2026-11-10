@@ -15,11 +15,12 @@ export const dynamic = "force-dynamic";
 
 // HU-20: animales que refugios y rescatistas tienen bajo su cuidado, para
 // que sus dueños los reconozcan antes de que entren en adopción.
-export default async function ResguardoPage({
-  searchParams,
-}: {
-  searchParams: { especie?: string; color?: string };
-}) {
+export default async function ResguardoPage(
+  props: {
+    searchParams: Promise<{ especie?: string; color?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const especie = ESPECIES.find((e) => e === searchParams.especie);
   const color = searchParams.color?.trim() ?? "";
 

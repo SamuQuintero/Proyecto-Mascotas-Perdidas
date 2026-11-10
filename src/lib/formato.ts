@@ -36,12 +36,18 @@ export function formatearFecha(
 }
 
 export function formatearHora(valor: string | Date): string {
-  return aFecha(valor).toLocaleTimeString("es-CO", {
-    timeZone: ZONA_HORARIA,
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  return (
+    aFecha(valor)
+      .toLocaleTimeString("es-CO", {
+        timeZone: ZONA_HORARIA,
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+      // Node y los navegadores usan espacios distintos (U+202F, U+00A0) antes
+      // de "p. m."; si difieren entre servidor y cliente, React falla al hidratar.
+      .replace(/[  ]/g, " ")
+  );
 }
 
 // "8 de septiembre de 2026 · 3:30 p. m."

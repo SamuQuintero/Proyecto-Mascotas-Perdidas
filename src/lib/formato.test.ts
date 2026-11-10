@@ -22,6 +22,8 @@ describe("fecha y hora en hora de Colombia", () => {
 
   it("muestra la hora en formato de 12 horas", () => {
     expect(formatearHora(instanteColombia("2026-09-08", "15:30"))).toMatch(/3:30\s?p/);
+    // Sin espacios especiales (U+202F/U+00A0): evitan errores de hidratación.
+    expect(formatearHora(instanteColombia("2026-09-08", "15:30"))).not.toMatch(/[  ]/);
   });
 
   it("una fecha sin hora no se muestra un día antes", () => {

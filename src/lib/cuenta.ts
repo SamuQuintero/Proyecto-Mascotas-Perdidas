@@ -9,7 +9,7 @@ import { COOKIE_USUARIO, verificarTokenUsuario } from "@/lib/sesionUsuario";
 // admin único.
 
 export async function usuarioActual() {
-  const datos = verificarTokenUsuario(cookies().get(COOKIE_USUARIO)?.value);
+  const datos = verificarTokenUsuario((await cookies()).get(COOKIE_USUARIO)?.value);
   if (!datos) return null;
   const usuario = await prisma.usuario.findUnique({ where: { id: datos.id } });
   // La cuenta pudo borrarse después de emitir la cookie; no confiar solo en el token.
@@ -23,8 +23,8 @@ export async function usuarioActual() {
 // una consulta a Supabase en cada clic. No es apta para decidir permisos:
 // para eso siempre se usa usuarioActual() o exigirCiudadano/exigirVeterinaria,
 // que sí verifican contra la base de datos que la cuenta sigue existiendo.
-export function usuarioSesionLigera() {
-  return verificarTokenUsuario(cookies().get(COOKIE_USUARIO)?.value);
+export async function usuarioSesionLigera() {
+  return verificarTokenUsuario((await cookies()).get(COOKIE_USUARIO)?.value);
 }
 
 export async function exigirCiudadano() {
@@ -85,6 +85,6 @@ export async function exigirVeterinaria() {
 // necesita confirmar en la base de datos que la cuenta sigue existiendo (si
 // se borró, sus recursos quedaron sin dueño), y así se ahorra una consulta.
 export async function sesionGestion() {
-  const sesion = usuarioSesionLigera();
-  return { usuarioId: sesion?.id ?? null, esAdmin: adminActual() !== null };
+  const sesion = await usuarioSesionLigera();
+  return { usuarioId: sesion?.id ?? null, esAdmin: (await adminActual()) !== null };
 }
