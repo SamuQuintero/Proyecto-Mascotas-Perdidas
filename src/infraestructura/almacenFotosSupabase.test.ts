@@ -42,6 +42,20 @@ describe("AlmacenFotosSupabase", () => {
     await expect(almacen().guardar(new File([PNG], "a.png", { type: "image/png" }))).rejects.toThrow(/403/);
   });
 
+  it("si el bucket no existe, lo crea y reintenta", async () => {
+    const fetchFalso = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 400, clone: () => ({ text: async () => '{"message":"Bucket not found"}' }), text: async () => "" })
+      .mockResolvedValueOnce({ ok: true, status: 200 })
+      .mockResolvedValueOnce({ ok: true, status: 200 });
+    vi.stubGlobal("fetch", fetchFalso);
+    const url = await almacen().guardar(new File([PNG], "a.png", { type: "image/png" }));
+    expect(url).toMatch(/\/public\/fotos\/[\w-]+\.png$/);
+    expect(fetchFalso.mock.calls[1][0]).toMatch(/\/storage\/v1\/bucket$/);
+    expect(JSON.parse(fetchFalso.mock.calls[1][1].body).public).toBe(true);
+    expect(fetchFalso).toHaveBeenCalledTimes(3);
+  });
+
   it("solo borra fotos de su propio bucket", async () => {
     const fetchFalso = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal("fetch", fetchFalso);

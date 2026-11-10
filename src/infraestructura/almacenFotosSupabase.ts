@@ -24,10 +24,19 @@ export class AlmacenFotosSupabase implements AlmacenFotos {
     return base;
   }
 
-  async guardar(archivo: File): Promise<string> {
-    const foto = await prepararFoto(archivo);
-    const nombre = `${randomUUID()}.${foto.extension}`;
-    const respuesta = await fetch(`${this.base}/storage/v1/object/${BUCKET}/${nombre}`, {
+  // Crea el bucket público la primera vez que falta (por ejemplo, si se
+  // creó con otro nombre): así la aplicación no depende de un paso manual.
+  private async crearBucket(): Promise<void> {
+    const r = await fetch(`${this.base}/storage/v1/bucket`, {
+      method: "POST",
+      headers: this.cabeceras({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ id: BUCKET, name: BUCKET, public: true, file_size_limit: 5 * 1024 * 1024 }),
+    });
+    if (!r.ok) console.error("[fotos] No se pudo crear el bucket", r.status, await r.text().catch(() => ""));
+  }
+
+  private subir(nombre: string, foto: { contenido: Uint8Array; tipo: string }) {
+    return fetch(`${this.base}/storage/v1/object/${BUCKET}/${nombre}`, {
       method: "POST",
       headers: this.cabeceras({
         "Content-Type": foto.tipo,
@@ -35,6 +44,19 @@ export class AlmacenFotosSupabase implements AlmacenFotos {
       }),
       body: foto.contenido as unknown as BodyInit,
     });
+  }
+
+  async guardar(archivo: File): Promise<string> {
+    const foto = await prepararFoto(archivo);
+    const nombre = `${randomUUID()}.${foto.extension}`;
+    let respuesta = await this.subir(nombre, foto);
+    if (!respuesta.ok && (respuesta.status === 404 || respuesta.status === 400)) {
+      const detalle = await respuesta.clone().text().catch(() => "");
+      if (/bucket not found/i.test(detalle)) {
+        await this.crearBucket();
+        respuesta = await this.subir(nombre, foto);
+      }
+    }
     if (!respuesta.ok) {
       // El motivo real queda en los logs del servidor (no se envía al navegador).
       console.error("[fotos] Supabase Storage respondió", respuesta.status, await respuesta.text().catch(() => ""));
