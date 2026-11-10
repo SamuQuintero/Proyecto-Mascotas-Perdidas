@@ -1,5 +1,8 @@
 # Arquitectura — Sprint 1 (PetMatch)
 
+> **Documento histórico (Sprint 1).** Describe el proyecto al cierre del primer Sprint. La documentación vigente está en [`informe/entrega/`](../informe/entrega) y [`diagramas/`](../diagramas/README.md).
+
+
 > Nota sobre los diagramas: se generaron con Mermaid (texto embebido en este
 > archivo) porque la skill `excalidraw-diagram` no está disponible en el
 > entorno donde se construyó este Sprint. GitHub y la mayoría de visores de

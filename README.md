@@ -9,8 +9,10 @@ veterinarias, y cuentas opcionales para quien quiera más funciones.
 **Equipo Scrum:** Pedro Josué Caicedo Gomajoa, Samuel Felipe Quintero
 Riobamba, Jose Manuelito Cabrera Riobobo, Germán Andrés Tulcan Cifuentes.
 
-Fuente oficial de las historias de usuario: [`Product Backlog.xlsx`](./Product%20Backlog.xlsx)
-y [docs/DISENO_PRODUCTO.md](./docs/DISENO_PRODUCTO.md).
+**Documentación del proceso (entrega):** el informe completo (Scrum, sprints, arquitectura,
+base de datos, diagramas, pruebas y manual) está en
+[`informe/entrega/`](./informe/entrega) — un Word y un Excel con el Product Backlog, los sprints y
+la métrica del equipo. Los diagramas UML están en [`diagramas/`](./diagramas/README.md).
 
 ## Qué se puede hacer
 
@@ -29,52 +31,30 @@ vacunas o publicar animales en resguardo.
 | Refugio | `/cuenta/login` | Publica animales en resguardo, aparece en "Dónde acudir" |
 | Administrador | `/admin/login` | Edita y cierra cualquier reporte, ve indicadores |
 
-## Historias de usuario implementadas (24)
+## Historias de usuario y Sprints (27 de 27 completadas)
 
-### Sprint 1 — Registrar reportes
-| ID | Historia |
-|---|---|
-| HU-1 | Reporte de mascota perdida con foto, fecha, zona y señas |
-| HU-2 | Reportar un hallazgo en menos de un minuto y sin cuenta |
-| HU-3 | Ubicar en un mapa el punto y la fecha de la última vez vista |
-| HU-5 | Reportar una mascota encontrada en el mismo lugar que las pérdidas |
-| HU-13 | Formulario con datos mínimos fijos (especie, raza, color, tamaño, collar, zona, fecha) |
+Cuatro Sprints de dos semanas (08/09/2026 – 02/11/2026) más un cierre. El detalle
+—Sprint Backlog, Sprint Goal, Definition of Done, Review y Retrospective— está en
+el informe; las fichas con criterios de aceptación de cada historia, en su Anexo A.
 
-### Sprint 2 — Gestión
-| ID | Historia |
-|---|---|
-| HU-6 | Filtrar reportes por zona, especie, color, tamaño y fechas (`/reportes`) |
-| HU-12 | Marcar un reporte como "reencontrada" (admin; también su dueño, ver HU-19) |
-| HU-25 | Editar un reporte (admin; también su dueño, ver HU-23) |
+| Sprint | Fechas | Historias |
+|---|---|---|
+| 1 | 08/09 – 21/09 | HU-1, 2, 3, 5, 13 — registrar pérdidas y hallazgos con foto y mapa |
+| 2 | 22/09 – 05/10 | HU-6, 12, 25 completadas (filtrar, cerrar, editar); HU-21, 26 y 27 trasladadas |
+| 3 | 06/10 – 19/10 | HU-4, 7, 8, 9 — alertas de coincidencia y cercanía, placa con QR |
+| 4 | 20/10 – 02/11 | HU-10, 11, 14 a 20, 21, 22, 23, 24 — comunidad, cuentas, refugios, difusión e indicadores |
+| Cierre | 09/11 | HU-26 (eliminar reporte) y HU-27 (ordenar por fecha), más verificación del aplicativo |
 
-### Sprint 3 — Alertas y placa QR
-| ID | Historia |
+| HU | Historia |
 |---|---|
-| HU-4 | Alerta cuando se publica un reporte que coincide por características |
-| HU-7 | Aviso de hallazgos a menos de 2 km de donde se perdió |
-| HU-8 | Perfil de mascota con código QR imprimible (`/mascotas`) |
-
-### Sprint 4 — Comunidad y cuentas
-| ID | Historia |
-|---|---|
-| HU-9 | Escanear el QR para ver el contacto (es el perfil público de la mascota) |
-| HU-10 | Alerta si se publica un hallazgo con las características de una mascota con placa QR |
-| HU-11 | Chat por reporte, sin cuentas |
-| HU-14 | Listado global filtrable (cubierto por `/reportes`) |
-| HU-15 | Advertir posibles reportes duplicados antes de publicar |
-| HU-16 | Cuentas de ciudadano con avisos de cercanía (mapa + radio en km) |
-| HU-17 | Cuenta de veterinaria: reportes de solo lectura y carnet de vacunas |
-
-### Sprint 5 — Refugios, difusión e indicadores
-| ID | Historia |
-|---|---|
-| HU-18 | **Dónde acudir** (`/donde-acudir`): veterinarias y refugios que reciben mascotas encontradas, ordenados por cercanía |
-| HU-19 | **Renovar** un reporte para volver a difundirlo: sube en el listado, vuelve a avisar por cercanía y a los 7 días la campana pregunta "¿sigue perdida?". El dueño puede cerrarlo con "¡Ya apareció!" |
-| HU-20 | **Refugios** (`/refugio`, `/resguardo`): publican animales bajo resguardo y desde cuándo; generan alertas contra pérdidas parecidas |
-| HU-21 | **Compartir** un reporte en WhatsApp, Facebook, X o copiando el enlace, con vista previa (Open Graph) |
-| HU-22 | **Indicadores** del admin (`/admin/indicadores`): reportes, coincidencias y reunificaciones por especie, zona y mes, y la brecha perros vs gatos |
-| HU-23 | El dueño **edita** contacto y foto de sus reportes y placas (solo con la cuenta con la que los creó) |
-| HU-24 | **Señas de gato**: patrón y largo del pelaje, color de ojos, interior; afinan la coincidencia entre gatos |
+| HU-1, 2, 3, 5, 13 | Publicar pérdida o hallazgo con foto, fecha, zona y mapa; datos mínimos fijos; sin cuenta |
+| HU-4, 7, 10, 24 | Alertas por coincidencia de características, cercanía (2 km), perfil con QR y señas de gato |
+| HU-6, 14, 27 | Filtros del listado, listado único de todas las zonas y orden por fecha |
+| HU-8, 9 | Perfil de la mascota con placa QR imprimible y perfil público al escanearlo |
+| HU-11, 15 | Chat por reporte sin exponer contacto; advertencia de duplicados |
+| HU-12, 19, 23, 25, 26 | Cerrar, renovar, editar y eliminar reportes (el dueño o el administrador) |
+| HU-16, 17, 18, 20 | Cuentas: avisos por zona (ciudadano), carnet de vacunas (veterinaria), «Dónde acudir» y animales en resguardo (refugio) |
+| HU-21, 22 | Compartir en redes con vista previa; indicadores por especie, zona y tiempo |
 
 Notas de diseño:
 
@@ -82,13 +62,12 @@ Notas de diseño:
   iniciada tienen dueño. Lo anterior (o lo publicado sin cuenta) solo lo
   gestiona el administrador.
 - **Re-difusión (HU-19)** no es automática: no hay tareas programadas, la
-  confirma el dueño (o el admin).
-- **Campana 🔔:** reúne avisos de los reportes publicados desde ese
-  navegador (coincidencias, cercanía, animales en resguardo), de las
-  mascotas con placa QR, y, con sesión, los avisos de cercanía y los
+  confirma el dueño (o el administrador).
+- **Campana 🔔:** reúne avisos de los reportes publicados desde ese navegador, de las
+  mascotas con placa QR y, con sesión, los avisos de cercanía y los
   recordatorios de renovación.
-- **"Interior" (HU-24)** solo se muestra; no cambia el puntaje de
-  coincidencia.
+- **Cambios de alcance** respecto al backlog original: HU-7, HU-10 y HU-17 se
+  redefinieron por factibilidad técnica (ver el informe, sección 2.5).
 
 ## Tecnologías
 
@@ -202,6 +181,17 @@ activo (se pisan archivos de Prisma y Next) y ten un solo servidor de
 desarrollo abierto. `prisma db push` con el servidor activo puede tumbarlo;
 reinícialo después.
 
+### Datos de demostración
+
+```bash
+npm run cuentas:prueba   # crea las cuentas de ejemplo
+npm run demo             # 10 reportes, 2 placas, carnet de vacunas, resguardo y chat
+npm run demo -- --borrar # los elimina
+```
+
+Las fotos de la demostración son ilustraciones propias (`prisma/demo-fotos`), no
+imágenes de terceros.
+
 ### Cuentas de prueba (pruebas de usabilidad)
 
 ```bash
@@ -219,13 +209,22 @@ app.**
 ## Pruebas
 
 ```bash
-npm test
+npm test            # 218 pruebas unitarias y de servicios (vitest)
+npm run humo        # prueba de humo: 73 comprobaciones de todos los roles contra el aplicativo en ejecución
+npm run capturas    # capturas de pantalla de cada rol (Microsoft Edge)
+npm run informe     # regenera el informe Word y el Excel de sprints
+npm run diagramas   # regenera los diagramas UML
 ```
 
-209 pruebas unitarias: la lógica pura (validación, coincidencias y duplicados,
-señas felinas, renovación y permisos, indicadores, directorio, resguardo,
-compartir, sesiones, contraseñas y fechas) y los casos de uso de
-`src/servicios/` con dobles en memoria.
+- **218 pruebas unitarias:** la lógica pura (validación, coincidencias y duplicados,
+  señas felinas, renovación y permisos, indicadores, directorio, resguardo,
+  compartir, sesiones, contraseñas y fechas) y los casos de uso de
+  `src/servicios/` con dobles en memoria, sin base de datos. Cobertura de los
+  módulos de reglas de negocio superior al 92 % de líneas.
+- **Prueba de humo (`npm run humo`):** con el aplicativo en marcha, recorre los flujos de
+  visitante, ciudadano, veterinaria, refugio y administrador por HTTP (permisos 401, 403, 404,
+  409 y 429, publicar, editar, renovar, cerrar y eliminar reportes, chat, placas, vacunas,
+  resguardo y directorio) y limpia lo que crea. Resultado en `informe/datos/prueba_humo.json`.
 
 ## Estructura del proyecto
 
@@ -236,8 +235,12 @@ compartir, sesiones, contraseñas y fechas) y los casos de uso de
 ├─ prisma/
 │  ├─ schema.prisma              # Reporte, Mensaje, Usuario, Mascota, Vacuna, AnimalResguardo
 │  └─ cuentas-prueba.json        # Datos de las cuentas de prueba
+├─ informe/                      # Informe de proceso (Word), Excel de sprints y su generador (npm run informe)
 ├─ scripts/
 │  ├─ crear-cuentas-prueba.js    # npm run cuentas:prueba
+│  ├─ datos-demo.js              # npm run demo
+│  ├─ prueba-humo.js             # npm run humo
+│  ├─ capturas.js                # npm run capturas
 │  └─ activar-rls.js             # npm run db:rls
 ├─ public/uploads/               # Fotos subidas (en tiempo de ejecución)
 └─ src/
@@ -266,5 +269,5 @@ latencia, y paginación del listado de reportes cuando crezca el volumen.
 
 ## Estado del proyecto
 
-**24 historias implementadas.** Pasan las 209 pruebas automatizadas
-(`npm test`) y el proyecto compila (`npm run build`).
+**27 de 27 historias implementadas en 4 Sprints.** Pasan las 218 pruebas automatizadas
+(`npm test`), la prueba de humo (73/73) y el proyecto compila (`npm run build`). Pendiente: el despliegue.

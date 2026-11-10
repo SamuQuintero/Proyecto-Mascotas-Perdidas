@@ -24,3 +24,11 @@ Thumbs.db
 
 # Herramientas descargadas para generar los diagramas (npm run diagramas)
 /diagramas/herramientas/
+
+# Informe de cobertura de vitest
+/coverage/
+
+# Archivos generados del informe (gráficas, temporales de Word) y builds de prueba
+/informe/img/
+~$*
+/.next-qa/

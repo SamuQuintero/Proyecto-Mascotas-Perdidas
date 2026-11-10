@@ -1,0 +1,374 @@
+{
+ "fecha": "9/11/2026",
+ "base": "http://localhost:3500",
+ "entorno": "aplicativo compilado para producción (next build + next start) con una base PostgreSQL local con el mismo esquema de Prisma",
+ "total": 73,
+ "aprobadas": 73,
+ "resultados": [
+  {
+   "nombre": "GET / responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /reportes responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /reportes?orden=antiguos responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /reportes?orden=suceso-reciente responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /reportes?tipo=PERDIDA&estado=TODOS responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /donde-acudir responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /resguardo responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /mascotas responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /mascotas/nueva responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /perdida/nuevo responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /encontrada/nuevo responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /cuenta/login responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /cuenta/registro responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "GET /admin/login responde 200",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El listado acepta los 4 órdenes por fecha (HU-27)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "«Dónde acudir» lista veterinarias y refugios (HU-18)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "/cuenta redirige al inicio de sesión",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "/veterinaria redirige al inicio de sesión",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "/refugio redirige al inicio de sesión",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "/admin redirige al inicio de sesión",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "/admin/indicadores redirige al inicio de sesión",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Login de ciudadano",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Login de veterinaria",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Login de refugio",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Login de otra ciudadana (para probar permisos)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Login con contraseña incorrecta da 401",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Login del administrador",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Panel del ciudadano (/cuenta)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Panel de la veterinaria (/veterinaria)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Panel del refugio (/refugio)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Panel del administrador (/admin)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Indicadores del administrador (HU-22)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Un rol no entra al panel de otro (ciudadano → /refugio)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Publicar sin foto da 400 (HU-1)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Publicar con archivo que no es imagen da 400",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Publicar con datos inválidos da 400 (HU-13)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Publicar una pérdida con sesión de ciudadano (HU-1, 3)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Publicar un hallazgo anónimo sin cuenta (HU-2)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El detalle del reporte se ve y trae la vista previa para redes (HU-21)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El reporte aparece en el listado (caché invalidada)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Chat: escribir un mensaje y leerlo (HU-11)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Alertas del reporte (HU-4, 7)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Alertas de cercanía y recordatorios del ciudadano (HU-16, 19)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Alertas de animales en resguardo (HU-20)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Duplicados: advierte de un reporte muy parecido antes de publicar (HU-15)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Renovar enseguida da 429 (HU-19)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Renovar sin sesión da 403",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Otra cuenta no puede editar el reporte (403, HU-23)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Sin sesión no se edita (401)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El dueño edita su reporte y cambia la foto (HU-23, 25)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El administrador edita cualquier reporte (HU-25)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Otra cuenta no puede cerrar el caso (403)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El dueño cierra su caso «Ya apareció» (HU-12)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El dueño no puede reabrir el caso (403); el admin sí",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Otra cuenta no puede eliminar el reporte (403, HU-26)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El dueño elimina su reporte (HU-26) y ya no existe",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Crear el perfil de una mascota con sesión (HU-8)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "La placa con QR se genera (HU-8)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El perfil público muestra el contacto: Llamar / WhatsApp (HU-9)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Otra cuenta no puede editar la placa (403, HU-23)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El dueño edita su placa (HU-23)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Solo una veterinaria agrega vacunas (ciudadano → 401)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "La veterinaria agrega una vacuna al carnet (HU-17)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "La veterinaria borra la vacuna (HU-17)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Señas de gato solo se guardan en gatos (HU-24)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Un ciudadano no puede publicar animales en resguardo (401)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El refugio publica un animal en resguardo (HU-20)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El animal aparece en el listado público (caché invalidada)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El refugio lo marca entregado y sale del listado",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "Una veterinaria no puede borrar animales en resguardo (401)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El refugio borra la publicación",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "La veterinaria actualiza su perfil del directorio (HU-18)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "nombre": "El ciudadano configura su suscripción de avisos (HU-16)",
+   "ok": true,
+   "detalle": ""
+  }
+ ]
+}

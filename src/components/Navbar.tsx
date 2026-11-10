@@ -29,7 +29,7 @@ const ENLACES = [
   { href: "/encontrada/nuevo", etiqueta: "Encontré una" },
   { href: "/mascotas", etiqueta: "Placa QR" },
   { href: "/donde-acudir", etiqueta: "Dónde acudir" },
-  { href: "/resguardo", etiqueta: "En resguardo" },
+  { href: "/resguardo", etiqueta: "Resguardo" },
 ];
 
 export interface UsuarioNavbar {
@@ -126,7 +126,7 @@ export default function Navbar({
         className="progreso-scroll absolute inset-x-0 bottom-[-1px] h-[2px] bg-gradient-to-r from-perdida-500 via-sol-400 to-reencontrada-500"
         aria-hidden="true"
       />
-      <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link href="/" className="group shrink-0" aria-label="PetMatch, inicio">
           <Logo />
         </Link>
@@ -176,7 +176,7 @@ export default function Navbar({
                       desliza: previa !== null,
                     }));
                   }}
-                  className={`relative block whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-semibold transition-colors duration-300 ${
+                  className={`relative block whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold transition-colors duration-300 ${
                     esActivo
                       ? `text-white ${pastilla ? "" : "bg-tinta-900 shadow-sm"}`
                       : "text-tinta-600 hover:text-tinta-900"
@@ -204,7 +204,7 @@ export default function Navbar({
                 ) : (
                   <Radar className="h-4 w-4 text-reencontrada-600" />
                 )}
-                {usuario.nombre}
+                <span className="max-w-[7.5rem] truncate whitespace-nowrap">{usuario.nombre}</span>
               </Link>
               <button
                 onClick={cerrarSesionCuenta}
@@ -228,7 +228,7 @@ export default function Navbar({
             <div className="hidden items-center gap-1 rounded-full border border-reencontrada-200 bg-reencontrada-50 p-1 xl:flex">
               <Link
                 href="/admin"
-                className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold text-reencontrada-700 transition hover:bg-white"
+                className="flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-reencontrada-700 transition hover:bg-white"
               >
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-reencontrada-500 text-xs font-bold uppercase text-white">
                   {admin.charAt(0)}

@@ -1,5 +1,8 @@
 # Diseño de producto — Backend, Frontend, Base de datos, Interfaz y Roadmap de historias
 
+> **Documento histórico (Sprint 1).** Describe el proyecto al cierre del primer Sprint. La documentación vigente está en [`informe/entrega/`](../informe/entrega) y [`diagramas/`](../diagramas/README.md).
+
+
 > Este documento complementa a `docs/ARQUITECTURA.md` (que ya detalla el
 > modelo de datos, RLS y Storage propuestos para Supabase). Aquí se
 > consolida el diseño completo del sistema — backend, frontend, interfaz
